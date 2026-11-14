@@ -612,8 +612,8 @@ header.bar {
 
 /* ---------------------------------------------------------------- glass: dark, see-through panels used everywhere */
 :root {
-  --glass: rgba(16, 13, 11, 0.9);
-  --glass-strong: rgba(16, 13, 11, 0.94);
-  --glass-line: rgba(236, 228, 218, 0.12);
-  --glass-blur: blur(18px) saturate(1.15);
+  --glass: rgba(16, 13, 11, 0.7);
+  --glass-strong: rgba(16, 13, 11, 0.78);
+  --glass-line: rgba(236, 228, 218, 0.14);
+  --glass-blur: blur(12px) saturate(1.2);
 }
