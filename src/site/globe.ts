@@ -27,7 +27,7 @@ export class Globe {
   /** called every frame with Gale Crater's screen position (CSS px) and how much it faces us (0..1) */
   onSpot: ((x: number, y: number, facing: number) => void) | null = null;
   /** the free band for the globe, in CSS px from the top of the screen; set by the page */
-  area: (() => { top: number; bottom: number }) | null = null;
+  area: (() => { top: number; bottom: number; left?: number; right?: number }) | null = null;
   private tmpV = new THREE.Vector3();
   private tmpN = new THREE.Vector3();
 
@@ -194,20 +194,27 @@ export class Globe {
     // the globe fills the space between the top bar and whatever sits below it (measured by
     // the page through `area`), and leaves room for "Ares" and "Sight" on either side
     const phone = w < 720;
-    const font = Math.min(150, Math.max(46, 0.088 * w));
     const a = this.area?.() ?? { top: phone ? 130 : 64, bottom: h - (phone ? 330 : 274) };
-    const sideRoom = phone ? w - 24 : w - 2 * (2.4 * font + 0.22 * font + 12);
-    const d = Math.max(160, 0.86 * Math.min(a.bottom - a.top - 10, sideRoom));
+    const left = a.left ?? 0;
+    const right = a.right ?? w;
+    // the title scales with the space the globe and title share, not the whole window
+    const font = Math.min(150, Math.max(46, 0.088 * (right - left)));
+    const cx = (left + right) / 2;
+    const sideRoom = phone ? w - 24 : right - left - 2 * (2.4 * font + 0.22 * font + 12);
+    const d = Math.max(160, Math.min(0.86 * Math.min(a.bottom - a.top - 10, sideRoom), 0.6 * h));
     const cy = (a.top + a.bottom) / 2;
     const half = h / d; // world units from the screen centre to its top edge (radius 1 = d/2 px)
     const lift = ((h / 2 - cy) * 2) / d;
     this.camera.aspect = w / Math.max(1, h);
     this.camera.position.set(0, -lift, half / Math.tan((this.camera.fov / 2) * D2R));
     this.camera.lookAt(0, -lift, 0);
+    // shift the picture so the globe's centre lands on cx
+    this.camera.setViewOffset(w, h, w / 2 - cx, 0, w, h);
     this.camera.updateProjectionMatrix();
     const root = document.documentElement.style;
     root.setProperty("--globe-d", `${Math.round(d)}px`);
     root.setProperty("--globe-y", `${Math.round(cy)}px`);
+    root.setProperty("--globe-x", `${Math.round(cx)}px`);
     root.setProperty("--title-size", `${Math.round(font)}px`);
   }
 

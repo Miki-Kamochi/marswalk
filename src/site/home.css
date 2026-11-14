@@ -1,6 +1,7 @@
 /* Home: black space, a faceted pixel Mars in the middle, "Ares" and "Sight" either side,
    one search bar and a row of cards below. --globe-d / --globe-y come from globe.ts. */
 :root {
+  --globe-x: 50vw;
   --globe-d: min(calc(100vh - 346px), 60vw);
   --globe-y: calc(32px + (100vh - 274px) / 2);
   --gap: clamp(20px, 3vw, 48px);
@@ -45,7 +46,7 @@ body.home::after {
 /* a soft warm glow behind the planet, so its outline reads against black even on the night side */
 .halo {
   position: absolute;
-  left: calc(50% - var(--globe-d) * 0.7);
+  left: calc(var(--globe-x) - var(--globe-d) * 0.7);
   top: calc(var(--globe-y) - var(--globe-d) * 0.7);
   width: calc(var(--globe-d) * 1.4);
   height: calc(var(--globe-d) * 1.4);
@@ -95,11 +96,11 @@ body.home::after {
   animation: fade 1.4s var(--ease) 0.2s both;
 }
 .title .w1 {
-  right: calc(50% + var(--globe-d) / 2 + var(--title-size, 80px) * 0.22);
+  right: calc(100% - var(--globe-x) + var(--globe-d) / 2 + var(--title-size, 80px) * 0.22);
   font-weight: 600;
 }
 .title .w2 {
-  left: calc(50% + var(--globe-d) / 2 + var(--title-size, 80px) * 0.22);
+  left: calc(var(--globe-x) + var(--globe-d) / 2 + var(--title-size, 80px) * 0.22);
   font-weight: 300;
 }
 @keyframes fade {
@@ -112,7 +113,7 @@ body.home::after {
 .start {
   position: absolute;
   z-index: 3;
-  left: 50%;
+  left: var(--globe-x);
   bottom: 48px;
   transform: translateX(-50%);
   width: min(620px, calc(100vw - 32px));
@@ -246,13 +247,108 @@ body.home::after {
 }
 
 /* ---------------------------------------------------------------- cards below the search */
+/* recent plans / science targets: a dropdown at the bottom right, closed at first */
+.dd {
+  position: absolute;
+  z-index: 4;
+  right: clamp(16px, 3vw, 44px);
+  bottom: 52px;
+  animation: fade 1s var(--ease) 0.5s both;
+}
+.dd-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 46px;
+  padding: 0 16px 0 15px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ui-text);
+  background: rgba(20, 17, 15, 0.82);
+  border: 1px solid rgba(236, 228, 218, 0.14);
+  border-radius: 99px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.dd-btn:hover,
+.dd-btn[aria-expanded="true"] {
+  border-color: rgba(255, 107, 44, 0.6);
+  background: rgba(32, 26, 22, 0.9);
+}
+.dd-btn .ico {
+  width: 18px;
+  height: 18px;
+  color: var(--accent);
+}
+.dd-count {
+  min-width: 20px;
+  padding: 0 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+  color: #1a0b04;
+  background: var(--accent);
+  border-radius: 99px;
+}
+.dd-count:empty {
+  display: none;
+}
+.dd-btn .chev {
+  width: 15px;
+  height: 15px;
+  color: var(--ui-text-2);
+  transition: transform 0.2s var(--ease);
+}
+.dd-btn[aria-expanded="true"] .chev {
+  transform: rotate(180deg);
+}
 .below {
-  margin-bottom: 18px;
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  width: 310px;
+  max-height: min(62vh, 520px);
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: 14px 12px 12px;
+  background: rgba(20, 17, 15, 0.9);
+  border: 1px solid rgba(236, 228, 218, 0.12);
+  border-radius: 24px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+  transform-origin: 100% 100%;
+  animation: dd-open 0.22s var(--ease) both;
+}
+.below::-webkit-scrollbar {
+  display: none;
+}
+.below[hidden] {
+  display: none;
+}
+@keyframes dd-open {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+.below .cards {
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+  animation: none;
+}
+.below .card {
+  background: rgba(255, 255, 255, 0.03);
 }
 .below .head {
   display: flex;
   align-items: baseline;
-  margin: 0 6px 10px;
+  margin: 0 6px 12px;
 }
 .below h2 {
   margin: 0;
@@ -397,7 +493,7 @@ body.no-globe #globe {
 body.no-globe #globe::before {
   content: "";
   position: absolute;
-  left: calc(50% - var(--globe-d) / 2);
+  left: calc(var(--globe-x) - var(--globe-d) / 2);
   top: calc(var(--globe-y) - var(--globe-d) / 2);
   width: var(--globe-d);
   height: var(--globe-d);
@@ -440,8 +536,14 @@ body.no-globe #globe::before {
     display: none;
   }
 }
-@media (max-height: 640px) {
-  .below {
-    display: none;
+
+@media (max-width: 1000px) {
+  /* the search bar takes the width: the dropdown sits just above its right end */
+  .dd {
+    right: 16px;
+    bottom: calc(48px + 56px + 12px);
+  }
+  .dd-btn {
+    height: 40px;
   }
 }

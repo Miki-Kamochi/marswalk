@@ -17,8 +17,6 @@ const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
 let places: Place[] = [];
-/** re-fits the globe when the content below the search bar changes height */
-let relayout = () => {};
 const open = (p: Place) => location.assign(`/sim.html?dest=${encodeURIComponent(p.id)}`);
 
 /** what each science target is for, in a few words */
@@ -77,13 +75,31 @@ function renderBelow(): void {
     `<button role="tab" data-tab="${id}" aria-selected="${tab === id}">${esc(label)}</button>`;
   const head = plans.length
     ? `<div class="head" role="tablist">${tabBtn("plans", tr("Recent plans", "最近の計画"))}${tabBtn("targets", tr("Science targets", "科学目標"))}${
-        tab === "plans" && plans.length > 3 ? `<span class="count">${esc(tr(`${plans.length} saved`, `${plans.length}件保存`))}</span>` : ""
+        tab === "plans" && plans.length > 6 ? `<span class="count">${esc(tr(`${plans.length} saved`, `${plans.length}件保存`))}</span>` : ""
       }</div>`
     : `<div class="head"><h2>${esc(tr("Start with a science target", "科学目標から始める"))}</h2></div>`;
-  const cards = tab === "plans" ? plans.slice(0, 3).map(planCard) : stops.map((p) => targetCard(p, base));
+  const cards = tab === "plans" ? plans.slice(0, 6).map(planCard) : stops.map((p) => targetCard(p, base));
   box.innerHTML = `${head}<ul class="cards">${cards.join("")}</ul>`;
-  relayout();
+  renderButton();
 }
+
+function renderButton(): void {
+  const n = listProjects().length;
+  $("ddLabel").textContent = n ? tr("My plans", "計画") : tr("Science targets", "科学目標");
+  $("ddCount").textContent = n ? String(n) : "";
+}
+
+function setOpen(open: boolean): void {
+  $("below").hidden = !open;
+  $("ddBtn").setAttribute("aria-expanded", String(open));
+}
+$("ddBtn").addEventListener("click", () => setOpen($("below").hidden === true));
+document.addEventListener("pointerdown", (e) => {
+  if (!$("dd").contains(e.target as Node)) setOpen(false);
+});
+addEventListener("keydown", (e) => {
+  if (e.key === "Escape") setOpen(false);
+});
 
 function renderText(): void {
   ($("q") as HTMLInputElement).placeholder = tr("Search a place in Gale Crater", "ゲール・クレーターの場所を検索");
@@ -129,10 +145,12 @@ async function start(): Promise<void> {
   g.area = () => {
     const phone = innerWidth < 720;
     const top = phone ? document.querySelector(".title")!.getBoundingClientRect().bottom + 8 : document.querySelector(".bar")!.getBoundingClientRect().bottom - 16;
-    return { top, bottom: document.querySelector(".start")!.getBoundingClientRect().top };
+    let bottom = document.querySelector(".start")!.getBoundingClientRect().top;
+    // on narrow screens the dropdown button sits just above the search bar
+    if (innerWidth <= 1000) bottom = Math.min(bottom, $("ddBtn").getBoundingClientRect().top);
+    return { top, bottom };
   };
   g.resize();
-  relayout = () => g.resize();
   // the "Gale Crater" label follows the marker while it faces us
   const spot = $("spot");
   g.onSpot = (x, y, facing) => {
