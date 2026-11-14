@@ -8,7 +8,7 @@ home. Built on real NASA data. Runs in a browser with no backend.
 
 | Page | What it is |
 |---|---|
-| `/` | EVA briefing: science objectives, conditions (Curiosity REMS) and the 3D site view with the planned walk |
+| `/` | Home: title and menu over the 3D Gale Crater; the planner's view shows the planned walk |
 | `/sim.html` | **Route simulator**: pick a destination on the 2D map or in 3D, compare four routes |
 | `/how.html` | How it works: the problem, the layers, the route rules, every assumption |
 | `/game.html` | Walk preview: the earlier first-person prototype (see below) |

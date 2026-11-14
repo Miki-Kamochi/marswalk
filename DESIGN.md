@@ -6,11 +6,12 @@ How Marswalk should look and behave.
 
 Marswalk is **a planning display inside the crew's habitat**. It is one of the formats the challenge suggests. The crew uses it to prepare an EVA (spacewalk on foot) at Gale Crater. It is a working tool for astronauts, **not a game**. Every screen should look like it belongs on a mission console: calm and operational, with real data and one clear next action.
 
-- **First screen: the EVA briefing.** It shows the site, the science objectives, current conditions, the 3D site view with the planned walk, and one action, "Plan EVA route".
+- **First screen: home.** The title and menu sit over the real 3D Gale Crater terrain. Each item flies the camera to its own view, and the planner's view shows the planned walk. The wording is about crew tasks, not game modes.
 - **Planner:** choose a destination and compare routes. This is the core tool.
 - **Walk preview:** the first-person view, reframed as a preview of what the ground looks like along the route (the challenge suggests point-of-view images). It must not use game wording.
 - **Conditions** come from Curiosity's REMS weather station and are shown for information only. Routes are planned from terrain, not weather.
-- **Ruled out:** a game title screen, game menus, pixel-art or retro styling, and a marketing landing page.
+- **Balance:** a cinematic presentation (creativity and presentation are judged), but framed as mission software, with practical working screens.
+- **Ruled out:** game wording ("play", "start", "expedition"), a separate title screen, pixel-art or retro styling, a marketing landing page, and generic dashboard cards.
 
 The three reference images set the general mood: dark, warm, quiet. We borrow qualities, not layouts or artwork.
 
@@ -221,21 +222,25 @@ Japanese gets the same treatment: plain words first (迷いやすさ, 位置確�
 - **Clicked on no-go or unreachable ground:** an inline card next to the pin says, in one sentence, why there is no route, and offers "Move to the nearest safe spot".
 - **Calculating:** route cards show skeleton shimmer. Routes appear one by one.
 
-## 6. EVA briefing (first screen)
+## 6. Home (first screen)
 
-Built (`index.html`). It fits one screen at 1280×720.
+Built (`index.html`).
 
-- **Header:**
-  - the Marswalk mark and "EVA planning";
-  - the site (Gale Crater, foot of Mount Sharp);
-  - the live Gale local solar time, computed with Mars24;
-  - the language switch.
-- **Left: 3D site view.** The real terrain with the four planned routes (recommended in orange) and markers for Base Camp and the stops. Pointing at an objective flies the view there. "Show the whole walk" returns.
-- **Right column:**
-  - **Science objectives for EVA-1.** Each shows why it matters, which instrument found it and how far it is. "Plan →" opens the planner with that destination.
-  - **Conditions.** Curiosity's latest REMS report, labelled with its sol and date.
-  - **"Plan EVA route",** the only accent-coloured button. It is always visible at the bottom of the column.
-  - **Secondary links:** Walk preview, How it works, Data & credits.
+- **Background:** the real Gale Crater terrain in 3D, with a slowly drifting camera that follows the pointer a little, blowing dust and light film grain.
+- **Left:** the "MARSWALK" title, a one-line purpose, and four tasks:
+  1. Plan EVA route;
+  2. Walk preview;
+  3. How it works;
+  4. Data & credits.
+
+  The selected task has an orange bar, and a short description sits below the list.
+- **Camera views:** each task flies the camera to its own view. "Plan EVA route" shows the planned routes, Base Camp and the science stops.
+- **Corners:**
+  - the site name;
+  - the language switch;
+  - what the view shows and where it is looking (position, elevation, local solar time).
+- **Keys:** ↑↓ to select, Enter to open, L to switch language.
+- **Possible additions:** the EVA-1 objectives and Curiosity's latest weather report were built on a briefing panel (commit `4ed029f`) and can be brought back in.
 
 ## 7. Learn page (today's "How it works")
 

@@ -4,93 +4,73 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Marswalk — EVA planning</title>
-    <meta name="description" content="EVA planning display for astronauts at Gale Crater, Mars: science objectives, conditions and safe routes from NASA data." />
-    <meta name="theme-color" content="#0d0b0a" />
+    <meta name="description" content="EVA planning for the first crews on Mars, built on real NASA data of Gale Crater." />
+    <meta name="theme-color" content="#0b0908" />
     <link rel="stylesheet" href="/src/site/site.css" />
     <link rel="stylesheet" href="/src/site/home.css" />
   </head>
-  <body class="brief">
-    <header class="hdr">
-      <div class="id">
-        <span class="mark" aria-hidden="true"></span>
-        <span class="name">MARSWALK</span>
-        <span class="sep" aria-hidden="true"></span>
-        <span class="role"><span data-l="en">EVA planning</span><span data-l="ja">船外活動の計画</span></span>
-      </div>
-      <div class="site">
-        <span class="label"><span data-l="en">Site</span><span data-l="ja">地点</span></span>
-        <span><span data-l="en">Gale Crater · foot of Mount Sharp</span><span data-l="ja">ゲール・クレーター · シャープ山のふもと</span></span>
-      </div>
-      <div class="clock" title="Local true solar time at Gale Crater, computed with NASA GISS Mars24">
-        <span class="label"><span data-l="en">Gale local time</span><span data-l="ja">ゲール現地時刻</span></span>
-        <span class="num" id="ltst">--:--</span>
-      </div>
+  <body class="home">
+    <div id="bg" aria-hidden="true"></div>
+    <div class="scrim" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+
+    <div class="corner tl">
+      <span><span data-l="en">GALE CRATER · MARS</span><span data-l="ja">火星 · ゲール・クレーター</span></span>
+      <span class="dim">NASA SPACE APPS 2026 · INTERPLANETARY SURVIVAL GUIDE</span>
+    </div>
+    <div class="corner tr">
       <div class="seg" role="group" aria-label="Language">
         <button data-set-lang="en">EN</button>
         <button data-set-lang="ja">日本語</button>
       </div>
-    </header>
+    </div>
 
-    <main class="grid">
-      <!-- ============================================================ site view -->
-      <section class="viewer" aria-labelledby="viewTitle">
-        <div id="scene" aria-hidden="true"></div>
-        <div class="v-top">
-          <p class="label"><span data-l="en">Site view · 3D terrain, HiRISE</span><span data-l="ja">現地の3D地形 · HiRISE</span></p>
-          <h2 id="viewTitle"></h2>
-        </div>
-        <div class="v-bottom">
-          <ul class="legend">
-            <li><i class="ln rec"></i><span data-l="en">Recommended route</span><span data-l="ja">おすすめのルート</span></li>
-            <li><i class="ln alt"></i><span data-l="en">Other routes</span><span data-l="ja">ほかのルート</span></li>
-            <li><i class="flag base"></i><span data-l="en">Base Camp</span><span data-l="ja">ベースキャンプ</span></li>
-            <li><i class="flag stop"></i><span data-l="en">Science stop</span><span data-l="ja">科学目標</span></li>
-          </ul>
-          <button class="ghost" id="overview" hidden>
-            <span data-l="en">Show the whole walk</span><span data-l="ja">ルート全体を表示</span>
-          </button>
-        </div>
-        <p class="loading" id="loading"><span data-l="en">Loading terrain…</span><span data-l="ja">地形を読み込み中…</span></p>
-      </section>
+    <main class="menu-col">
+      <h1>MARSWALK</h1>
+      <p class="tagline">
+        <span data-l="en">EVA planning for the first crews on Mars. No GPS, limited oxygen: every walk must bring you home.</span>
+        <span data-l="ja">火星の最初のクルーのための、船外活動の計画。GPSはなく、酸素には限りがある。どの歩行も、必ず帰ってこられなければならない。</span>
+      </p>
 
-      <!-- ============================================================ briefing -->
-      <aside class="side">
-        <div class="scroll">
-        <section class="panel" aria-labelledby="objTitle">
-          <p class="label">EVA-1 · <span data-l="en">The lake rocks</span><span data-l="ja">湖の岩</span></p>
-          <h2 id="objTitle"><span data-l="en">Science objectives</span><span data-l="ja">科学目標</span></h2>
-          <ol class="objectives" id="objectives"></ol>
-        </section>
-
-        <section class="panel" aria-labelledby="condTitle">
-          <p class="label" id="condSource"></p>
-          <h2 id="condTitle"><span data-l="en">Conditions at Gale Crater</span><span data-l="ja">ゲール・クレーターの状況</span></h2>
-          <dl class="cond" id="conditions"></dl>
-          <p class="note">
-            <span data-l="en">For information. Routes are planned from terrain, not weather.</span>
-            <span data-l="ja">参考情報です。ルートは天気ではなく地形から計画しています。</span>
-          </p>
-        </section>
-        </div>
-
-        <div class="actions">
-        <a class="primary" href="/sim.html">
-          <span><span data-l="en">Plan EVA route</span><span data-l="ja">EVAルートを計画する</span></span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-        </a>
-        <nav class="more" aria-label="More">
-          <a href="/game.html"><span data-l="en">Walk preview</span><span data-l="ja">歩行プレビュー</span></a>
-          <a href="/how.html"><span data-l="en">How it works</span><span data-l="ja">仕組み</span></a>
-          <a href="/credits.html"><span data-l="en">Data &amp; credits</span><span data-l="ja">データとクレジット</span></a>
-        </nav>
-        </div>
-      </aside>
+      <nav aria-label="Menu">
+        <ul class="items" id="items">
+          <li>
+            <a href="/sim.html" data-shot="planner">
+              <span class="n">01</span>
+              <span class="t"><span data-l="en">Plan EVA route</span><span data-l="ja">EVAルートを計画</span></span>
+            </a>
+          </li>
+          <li>
+            <a href="/game.html" data-shot="game">
+              <span class="n">02</span>
+              <span class="t"><span data-l="en">Walk preview</span><span data-l="ja">歩行プレビュー</span></span>
+            </a>
+          </li>
+          <li>
+            <a href="/how.html" data-shot="how">
+              <span class="n">03</span>
+              <span class="t"><span data-l="en">How it works</span><span data-l="ja">仕組み</span></span>
+            </a>
+          </li>
+          <li>
+            <a href="/credits.html" data-shot="credits">
+              <span class="n">04</span>
+              <span class="t"><span data-l="en">Data &amp; credits</span><span data-l="ja">データとクレジット</span></span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+      <div class="desc" id="desc" aria-live="polite"></div>
     </main>
 
-    <footer class="ftr">
-      <span>NASA Space Apps Challenge 2026 · Interplanetary Survival Guide: Martian Map</span>
-      <span>MRO HiRISE · MRO CRISM · MGS MOLA · MSL Curiosity (REMS)</span>
-    </footer>
+    <p class="keys">
+      <span><kbd>↑</kbd><kbd>↓</kbd> <span data-l="en">select</span><span data-l="ja">選択</span></span>
+      <span><kbd>Enter</kbd> <span data-l="en">open</span><span data-l="ja">決定</span></span>
+    </p>
+    <div class="corner br">
+      <span class="view" id="view"></span>
+      <span id="readout"><span class="dim"><span data-l="en">LOADING TERRAIN</span><span data-l="ja">地形を読み込み中</span></span></span>
+    </div>
 
     <script type="module" src="/src/site/home.ts"></script>
   </body>
