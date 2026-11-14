@@ -1,77 +1,57 @@
 /**
- * Home screen: title and menu over the real Gale Crater terrain. Each menu item flies the
- * camera to its own view; the planner's view shows the planned routes and the science stops.
- * Keys: up/down (or W/S) select, Enter opens, L switches language.
+ * Home: "Where do you want to walk today?" One search box for places in Gale Crater, the three
+ * science targets as chips, and the polygon terrain behind. Pointing at a place flies the
+ * camera there; picking it opens the planner with that destination.
  */
-import "@fontsource/barlow-condensed/700.css";
-import "@fontsource/barlow-condensed/800.css";
-import { loadJson, type Positions } from "../data/loader";
-import { HomeScene, type ShotId } from "./homeScene";
-import { getLang, initLang, setLang, tr } from "./lang";
+import { loadJson, type Place, type Positions } from "../data/loader";
+import { placeName } from "../sim/text";
+import { HomeScene } from "./homeScene";
+import { initLang, tr } from "./lang";
+import { attachPlaceSearch, searchable } from "./placeSearch";
 
 initLang();
 
 const $ = (id: string) => document.getElementById(id)!;
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
-// ---------------------------------------------------------------- film grain tile
-(() => {
-  const cv = document.createElement("canvas");
-  cv.width = cv.height = 128;
-  const c = cv.getContext("2d")!;
-  const img = c.createImageData(128, 128);
-  for (let i = 0; i < img.data.length; i += 4) {
-    const v = Math.random() * 255;
-    img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
-    img.data[i + 3] = 255;
-  }
-  c.putImageData(img, 0, 0);
-  document.body.style.setProperty("--noise", `url(${cv.toDataURL()})`);
-})();
+let scene: HomeScene | null = null;
+let places: Place[] = [];
+let base: Place | undefined;
 
-// ---------------------------------------------------------------- menu
-type Pair = [string, string];
-const ITEMS: Partial<Record<ShotId, Pair>> = {
-  planner: ["Pick a science target. Compare four routes that get you home.", "科学目標を選び、必ず帰れる4つのルートを比べる。"],
-  game: ["Walk the route at eye level before you go.", "出発前に、目の高さでルートを歩いてみる。"],
-  how: ["The data, the map layers and our assumptions.", "データ、地図のレイヤー、そして私たちの仮定。"],
-  credits: ["The NASA missions behind every pixel.", "すべてのピクセルの元になったNASAのミッション。"],
+const open = (p: Place) => location.assign(`/sim.html?dest=${encodeURIComponent(p.id)}`);
+const look = (p: Place | null) => {
+  if (!scene) return;
+  if (p) scene.focusOn(p.easting, p.northing);
+  else scene.setShot("planner");
 };
 
-const links = [...document.querySelectorAll<HTMLAnchorElement>("#items a")];
-let selected = 0;
-let scene: HomeScene | null = null;
-
-function select(i: number, focus = false): void {
-  selected = (i + links.length) % links.length;
-  links.forEach((a, k) => a.classList.toggle("on", k === selected));
-  const a = links[selected];
-  if (focus) a.focus({ preventScroll: true });
-  const id = a.dataset.shot as ShotId;
-  $("desc").textContent = tr(...ITEMS[id]!);
-  scene?.setShot(id);
+function renderChips(): void {
+  const stops = places.filter((p) => p.kind === "stop");
+  $("chips").innerHTML = stops
+    .map((p) => {
+      const km = base ? (Math.hypot(p.easting - base.easting, p.northing - base.northing) / 1000).toFixed(1) : "";
+      return `<a href="/sim.html?dest=${p.id}" data-id="${p.id}"><span class="sq" aria-hidden="true"></span>${esc(placeName(p.id, p.name))}<span class="km">${km} km</span></a>`;
+    })
+    .join("");
 }
 
-links.forEach((a, k) => {
-  a.addEventListener("mouseenter", () => select(k));
-  a.addEventListener("focus", () => select(k));
+function renderText(): void {
+  ($("q") as HTMLInputElement).placeholder = tr("Search Gale Crater", "ゲール・クレーターで検索");
+  renderChips();
+}
+
+const chips = $("chips");
+chips.addEventListener("mouseover", (e) => {
+  const a = (e.target as HTMLElement).closest<HTMLElement>("a[data-id]");
+  if (a) look(places.find((p) => p.id === a.dataset.id) ?? null);
 });
-addEventListener("keydown", (e) => {
-  if (e.metaKey || e.ctrlKey || e.altKey) return;
-  if (e.key === "ArrowDown" || e.key === "s" || e.key === "S") {
-    e.preventDefault();
-    select(selected + 1, true);
-  } else if (e.key === "ArrowUp" || e.key === "w" || e.key === "W") {
-    e.preventDefault();
-    select(selected - 1, true);
-  } else if (e.key === "Enter" && document.activeElement === document.body) {
-    links[selected].click();
-  } else if (e.key === "l" || e.key === "L") {
-    setLang(getLang() === "en" ? "ja" : "en");
-  }
+chips.addEventListener("focusin", (e) => {
+  const a = (e.target as HTMLElement).closest<HTMLElement>("a[data-id]");
+  if (a) look(places.find((p) => p.id === a.dataset.id) ?? null);
 });
-document.addEventListener("langchange", () => select(selected));
-select(0);
+chips.addEventListener("mouseleave", () => look(null));
+document.addEventListener("langchange", renderText);
 
 // ---------------------------------------------------------------- background
 addEventListener("pointermove", (e) => scene?.setPointer((e.clientX / innerWidth) * 2 - 1, (e.clientY / innerHeight) * 2 - 1));
@@ -80,28 +60,31 @@ const pad = (n: number) => String(Math.floor(n)).padStart(2, "0");
 function renderReadout(): void {
   if (!scene) return;
   const r = scene.readout();
-  const lat = `${Math.abs(r.lat).toFixed(3)}°${r.lat < 0 ? "S" : "N"}`;
-  const elev = Number.isNaN(r.elevation) ? "" : ` · ${tr("ELEV", "標高")} ${Math.round(r.elevation).toLocaleString("en-US")} m`;
-  $("readout").innerHTML =
-    `<span>${lat} ${r.lon.toFixed(3)}°E${elev}</span><br>` +
-    `<span class="dim">${tr("LOCAL SOLAR TIME", "現地太陽時")} ${pad(r.ltst)}:${pad((r.ltst % 1) * 60)} · Ls ${Math.round(r.ls)}°</span>`;
+  const lat = `${Math.abs(r.lat).toFixed(4)}°${r.lat < 0 ? "S" : "N"}`;
+  const elev = Number.isNaN(r.elevation) ? "" : `  ·  ${Math.round(r.elevation).toLocaleString("en-US")} m`;
+  $("readout").textContent = `${lat} ${r.lon.toFixed(4)}°E${elev}  ·  ${tr("local time", "現地時刻")} ${pad(r.ltst)}:${pad((r.ltst % 1) * 60)}`;
 }
 
-async function startScene(): Promise<void> {
+async function start(): Promise<void> {
+  const [pos, routes] = await Promise.all([
+    loadJson<Positions>("positions.json"),
+    loadJson<{ routes: { profile: string; points: [number, number][] }[] }>("home/routes.json").catch(() => null),
+  ]);
+  places = pos.places;
+  base = places.find((p) => p.kind === "base");
+  renderText();
+  attachPlaceSearch($("q") as HTMLInputElement, $("suggest"), searchable(places), open, look);
+
   try {
     const host = $("bg");
     scene = await HomeScene.create(host, reduced);
-    const [routes, positions] = await Promise.all([
-      fetch("/data/home/routes.json").then((r) => (r.ok ? r.json() : null)),
-      loadJson<Positions>("positions.json").catch(() => null),
-    ]);
     if (routes) scene.addRoutes(routes.routes);
-    for (const p of positions?.places ?? []) {
+    for (const p of places) {
       if (p.kind === "base") scene.addMarker(p.easting, p.northing, "#7cc8ff");
       else if (p.kind === "stop") scene.addMarker(p.easting, p.northing, "#ffd166");
     }
-    // the camera starts on the wide view and then flies to the selected item
-    setTimeout(() => select(selected), reduced ? 0 : 900);
+    // a slow establishing shot, then the whole planned walk
+    setTimeout(() => look(null), reduced ? 0 : 1200);
     addEventListener("resize", () => scene?.resize());
     let last = 0;
     const loop = (now: number) => {
@@ -115,9 +98,9 @@ async function startScene(): Promise<void> {
     requestAnimationFrame(loop);
     setTimeout(() => host.classList.add("ready"), 120);
   } catch (err) {
-    // no WebGL: the still image stays and the menu works as normal
+    // no WebGL: the still image stays and the search works as normal
     console.warn("3D background unavailable", err);
     $("readout").textContent = "";
   }
 }
-void startScene();
+void start();

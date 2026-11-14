@@ -52,7 +52,8 @@ export class HomeScene {
   private world: World;
   private reduced: boolean;
   private utc: number;
-  private shot: ShotId = "title";
+  private shot: ShotId | "place" = "title";
+  private cur: Shot = SHOTS.title;
   private from = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
   private to = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
   private moveStart = -1;
@@ -85,8 +86,6 @@ export class HomeScene {
 
     this.dust = this.makeDust();
     world.scene.add(this.dust, this.routes, this.markers);
-    this.routes.visible = false;
-    this.markers.visible = false;
 
     this.place(SHOTS.title, this.to);
     this.from.pos.copy(this.to.pos);
@@ -106,20 +105,29 @@ export class HomeScene {
     this.point(s.look[0], s.look[1], s.look[2], out.look);
   }
 
-  /** Fly the camera to a menu item's view. */
+  /** Fly the camera to one of the fixed views. */
   setShot(id: ShotId): void {
     if (id === this.shot && this.moveStart < 0) return;
+    this.shot = id;
+    this.go(SHOTS[id]);
+  }
+
+  /** Fly the camera to a close view of one place, from the north-west and above. */
+  focusOn(e: number, n: number): void {
+    this.shot = "place";
+    this.go({ pos: [e - 330, n + 430, 230], look: [e, n, 10], drift: 25 });
+  }
+
+  private go(s: Shot): void {
     this.from.pos.copy(this.camera.position);
     this.from.look.copy(this.currentLook);
-    this.shot = id;
-    this.place(SHOTS[id], this.to);
+    this.cur = s;
+    this.place(s, this.to);
     this.moveStart = this.reduced ? -1 : performance.now();
     if (this.reduced) {
       this.from.pos.copy(this.to.pos);
       this.from.look.copy(this.to.look);
     }
-    this.routes.visible = id === "planner";
-    this.markers.visible = id === "planner";
   }
 
   /** Pointer position, -1..1 on both axes. */
@@ -224,7 +232,7 @@ export class HomeScene {
     // idle drift sideways, and a little parallax towards the pointer
     const fwd = new THREE.Vector3().subVectors(this.currentLook, pos).normalize();
     const right = new THREE.Vector3().crossVectors(fwd, new THREE.Vector3(0, 1, 0)).normalize();
-    const s = SHOTS[this.shot];
+    const s = this.cur;
     const drift = this.reduced ? 0 : Math.sin(this.elapsed * 0.06) * s.drift;
     this.smooth.lerp(this.pointer, this.reduced ? 1 : Math.min(1, dt * 2.5));
     const dist = pos.distanceTo(this.currentLook);

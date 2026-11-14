@@ -23,6 +23,18 @@
   --font: "Manrope Variable", "Manrope", system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", "Noto Sans JP", sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  /* map tool surfaces: neutral dark greys like Google Maps / Earth dark mode */
+  --g-bg: #17181a;
+  --g-surface: #202124;
+  --g-surface-2: #2a2b2f;
+  --g-hover: #35363a;
+  --g-line: #3c4043;
+  --g-text: #e8eaed;
+  --g-text-2: #9aa0a6;
+  --g-shadow: 0 1px 3px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.3);
+  --g-blue: #8ab4f8;
+  --stop: #ffd166;
+  --base: #7cc8ff;
   /* older names still used by the simulator and the reading pages until they are redesigned */
   --bg-2: var(--surface-1);
   --panel: var(--surface-2);
