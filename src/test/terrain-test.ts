@@ -81,7 +81,7 @@ function buildTerrain(
   grid: HeightGrid,
   step: number,
   color: ColorFn,
-  skip?: (e: number, n: number) => boolean,
+  skip?: (e: number, n: number, half: number) => boolean,
   lift = 0,
 ): THREE.Mesh {
   const m = grid.meta;
@@ -112,7 +112,7 @@ function buildTerrain(
       if (!ok) continue;
       const eC = m.west + (c0 + step / 2) * m.cell;
       const nC = m.north - (r0 + step / 2) * m.cell;
-      if (skip?.(eC, nC)) continue;
+      if (skip?.(eC, nC, (step * m.cell) / 2)) continue;
       for (let i = 0; i < 4; i++) {
         p[i].copy(worldPoint(m.west + corners[i][0] * m.cell, m.north - corners[i][1] * m.cell, ev[i], lift));
       }
@@ -170,7 +170,7 @@ function overlayColor(overlay: Raster, base: ColorFn): ColorFn {
 
 const elevationTint: ColorFn = (_e, _n, elev, out) => {
   const t = THREE.MathUtils.clamp((elev + 4600) / 6000, 0, 1);
-  out.setRGB(0.5 + 0.28 * t, 0.33 + 0.2 * t, 0.22 + 0.16 * t);
+  out.setRGB(0.36 + 0.2 * t, 0.23 + 0.14 * t, 0.15 + 0.1 * t);
 };
 
 function label(text: string, color = "#ffffff"): THREE.Sprite {
@@ -210,6 +210,7 @@ const KIND_COLOR: Record<string, string> = {
   base: "#7fe3ff",
   stop: "#ffe066",
   landmark: "#ffffff",
+  camp: "#b8f5a0",
   backdrop: "#ffb38a",
 };
 
@@ -294,11 +295,17 @@ async function main() {
     dispose(backdropGroup);
     const playB = meta.frame.play;
     const fetchB = meta.frame.fetch;
-    const midB: Bounds = { west: mid.meta.west, east: mid.east, north: mid.meta.north, south: mid.south };
     backdropGroup.add(
       buildTerrain(surround, isPhone ? 4 : 2, rasterColor(surroundImg, elevationTint), (e, n) => inside(playB, e, n, 20), -0.5),
       buildTerrain(mid, isPhone ? 4 : 2, elevationTint, (e, n) => inside(fetchB, e, n, 150), -3),
-      buildTerrain(far, isPhone ? 4 : 2, elevationTint, (e, n) => inside(midB, e, n, 1500) && !Number.isNaN(mid.sample(e, n)), -30),
+      // leave out a MOLA cell only where the finer grid really covers all of it (plus a margin)
+      buildTerrain(far, isPhone ? 4 : 2, elevationTint, (e, n, half) => {
+        const r = half + 400;
+        for (const [de, dn] of [[0, 0], [-r, -r], [r, -r], [-r, r], [r, r], [-r, 0], [r, 0], [0, -r], [0, r]]) {
+          if (Number.isNaN(mid.sample(e + de, n + dn))) return false;
+        }
+        return true;
+      }, -30),
     );
   }
 

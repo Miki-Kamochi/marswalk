@@ -56,7 +56,7 @@ export interface Meta {
 export interface Place {
   id: string;
   name: string;
-  kind: "base" | "stop" | "landmark" | "backdrop";
+  kind: "base" | "stop" | "camp" | "landmark" | "backdrop";
   easting: number;
   northing: number;
   elevation: number;

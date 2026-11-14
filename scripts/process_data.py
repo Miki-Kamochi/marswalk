@@ -275,6 +275,8 @@ def crism_band(name, cell=6):
                    shape=(G["bands"], G["lines"], G["samples"]))
     a = np.array(mm[CRISM_BANDS.index(name)], dtype=np.float64)
     a[a > 60000] = np.nan
+    # drop the outer 3 pixels of the observation: the swath edge is noisy
+    a[~ndi.binary_erosion(np.isfinite(a), iterations=3)] = np.nan
     es = np.arange(PW + cell / 2, PE, cell)
     ns = np.arange(PN - cell / 2, PS, -cell)
     cx = es / G["scale"] + G["sample_offset"] - 0.5

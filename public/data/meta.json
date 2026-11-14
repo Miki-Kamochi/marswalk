@@ -74,12 +74,12 @@
    "parameter": "BD860_2",
    "description": "0.86 um band depth - crystalline ferric oxide (hematite)",
    "source": "MRO CRISM MTRDR FRT0000B6F1 refined summary parameters, 18 m/px (PDS Geosciences Node)",
-   "rawEncoding": "0 = no CRISM coverage; 1..255 = linear -0.0044 .. 0.0052",
+   "rawEncoding": "0 = no CRISM coverage; 1..255 = linear -0.0044 .. 0.0053",
    "valueRange": [
-    -0.0043530477523124325,
-    0.00523045856629744
+    -0.004370167249812532,
+    0.0052734386119459836
    ],
-   "coverage": 0.7191066666666667
+   "coverage": 0.7041066666666667
   },
   "mafic": {
    "file": "layers/mafic.png",
@@ -93,12 +93,12 @@
    "parameter": "OLINDEX3",
    "description": "olivine index - dark basaltic sand (Bagnold Dunes)",
    "source": "MRO CRISM MTRDR FRT0000B6F1 refined summary parameters, 18 m/px (PDS Geosciences Node)",
-   "rawEncoding": "0 = no CRISM coverage; 1..255 = linear 0.0812 .. 0.1164",
+   "rawEncoding": "0 = no CRISM coverage; 1..255 = linear 0.0814 .. 0.1165",
    "valueRange": [
-    0.08123092725854847,
-    0.11635881662368774
+    0.0814455575245752,
+    0.11646038409725785
    ],
-   "coverage": 0.7191066666666667
+   "coverage": 0.7041066666666667
   },
   "hydration": {
    "file": "layers/hydration.png",
@@ -114,10 +114,10 @@
    "source": "MRO CRISM MTRDR FRT0000B6F1 refined summary parameters, 18 m/px (PDS Geosciences Node)",
    "rawEncoding": "0 = no CRISM coverage; 1..255 = linear -0.0016 .. 0.0080",
    "valueRange": [
-    -0.0016364017646231391,
-    0.008036669085879513
+    -0.001581181099617989,
+    0.008045927621424198
    ],
-   "coverage": 0.7191066666666667
+   "coverage": 0.7041066666666667
   },
   "sand": {
    "file": "layers/sand.png",
@@ -159,6 +159,54 @@
    "nodata": 0,
    "source": "MSL Gale Merged DEM 1 m v3 (USGS; MRO HiRISE stereo)",
    "encoding": "uint16 little-endian, row 0 = north; elevation = zMin + (v - 1) * zScale"
+  },
+  "mid": {
+   "file": "terrain/mid_60m.u16",
+   "width": 549,
+   "height": 957,
+   "cell": 60.0,
+   "west": 8128023.492786024,
+   "north": -244811.075189438,
+   "zMin": -4624.715766059027,
+   "zScale": 0.06558429873773096,
+   "nodata": 0,
+   "source": "MSL Gale Merged DEM 1 m v3 (USGS; MRO HiRISE/CTX + MEX HRSC), decimated",
+   "encoding": "uint16 little-endian, row 0 = north; elevation = zMin + (v - 1) * zScale"
+  },
+  "far": {
+   "file": "terrain/far_463m.u16",
+   "width": 561,
+   "height": 561,
+   "cell": 463.0935415503709,
+   "west": 8038146.147460564,
+   "north": -190099.8988064271,
+   "zMin": -4607.0,
+   "zScale": 0.09085360271004364,
+   "nodata": 0,
+   "source": "MGS MOLA MEGDR 463 m global DEM (USGS mosaic)",
+   "encoding": "uint16 little-endian, row 0 = north; elevation = zMin + (v - 1) * zScale"
+  }
+ },
+ "frame": {
+  "projection": "Mars equirectangular, sphere R=3396190 m, lat_0=0, lon_0=0 (IAU 2000)",
+  "radius": 3396190.0,
+  "play": {
+   "west": 8140700.0,
+   "south": -280900.0,
+   "east": 8143700.0,
+   "north": -277300.0
+  },
+  "fetch": {
+   "west": 8140200.0,
+   "south": -281300.0,
+   "east": 8144200.0,
+   "north": -276800.0
+  },
+  "origin": {
+   "easting": 8142200.0,
+   "northing": -279100.0,
+   "elevation": -4317.8,
+   "note": "suggested local origin: x = E - easting, z = -(N - northing), y = elev - elevation"
   }
  }
 }

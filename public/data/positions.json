@@ -1,0 +1,1095 @@
+{
+ "frame": "Mars equirectangular metres (see meta.json)",
+ "eyeHeightM": 1.7,
+ "places": [
+  {
+   "id": "base",
+   "name": "Base Camp",
+   "kind": "base",
+   "easting": 8141595.9,
+   "northing": -277602.6,
+   "elevation": -4426.6,
+   "lon": 137.35365,
+   "lat": -4.68332,
+   "chosenFrom": "flattest sand-free 30 m pad within 120 m of Curiosity's sol 1405 position",
+   "note": "Landing / habitat site on the plain just north of the Murray Buttes.",
+   "checks": {
+    "distanceFromBaseM": 0,
+    "bearingFromBaseDeg": 0,
+    "slopeDegMean30m": 3.3,
+    "sandFraction20m": 0.0,
+    "crismHematiteIndex": null
+   }
+  },
+  {
+   "id": "stop_murray_buttes",
+   "name": "Murray Buttes",
+   "kind": "stop",
+   "easting": 8141565.7,
+   "northing": -278317.7,
+   "elevation": -4380.1,
+   "lon": 137.35314,
+   "lat": -4.69539,
+   "chosenFrom": "Curiosity waypoint, sol 1454",
+   "note": "Curiosity drilled the 'Quela' sample here at the foot of the last butte (sols 1454-1466). Layered lake-bed mudstone (Murray formation) under wind-blown sandstone caps.",
+   "curiositySol": 1454,
+   "checks": {
+    "distanceFromBaseM": 716,
+    "bearingFromBaseDeg": 182,
+    "slopeDegMean30m": 7.9,
+    "sandFraction20m": 0.0,
+    "crismHematiteIndex": 0.0,
+    "targetHeightM": 1.7,
+    "visibleFromBase": false,
+    "sightLineClearanceM": -4.2,
+    "blockedAtM": 683
+   }
+  },
+  {
+   "id": "stop_bagnold_dunes",
+   "name": "Bagnold Dunes edge",
+   "kind": "stop",
+   "easting": 8141981.5,
+   "northing": -279384.5,
+   "elevation": -4300.1,
+   "lon": 137.36015,
+   "lat": -4.71339,
+   "chosenFrom": "Curiosity waypoint, sol 1645 (firm ground with the most dark sand within 40 m)",
+   "note": "Curiosity sampled the linear dunes here in 2017 ('Ogunquit Beach', sols 1602-1660). Active basalt sand: every dune looks alike and the sand is a hazard.",
+   "curiositySol": 1645,
+   "sandWithin40m": 0.84,
+   "checks": {
+    "distanceFromBaseM": 1823,
+    "bearingFromBaseDeg": 168,
+    "slopeDegMean30m": 3.8,
+    "sandFraction20m": 0.68,
+    "crismHematiteIndex": 0.06,
+    "targetHeightM": 1.7,
+    "visibleFromBase": false,
+    "sightLineClearanceM": -9.7,
+    "blockedAtM": 313
+   }
+  },
+  {
+   "id": "stop_vera_rubin_ridge",
+   "name": "Vera Rubin Ridge (hematite)",
+   "kind": "stop",
+   "easting": 8142816.3,
+   "northing": -280120.4,
+   "elevation": -4177.3,
+   "lon": 137.37424,
+   "lat": -4.7258,
+   "chosenFrom": "Curiosity waypoint on the ridge (sol 1846) nearest to base among those with a strong CRISM BD860_2 hematite signal (>= 75% of the strongest on Curiosity's ridge path)",
+   "note": "Main goal. MRO CRISM saw hematite here from orbit (Fraeman et al. 2013); Curiosity confirmed it on the ground in 2017-2019 (drill samples Stoer, Highfield, Rock Hall).",
+   "curiositySol": 1846,
+   "checks": {
+    "distanceFromBaseM": 2798,
+    "bearingFromBaseDeg": 154,
+    "slopeDegMean30m": 9.4,
+    "sandFraction20m": 0.0,
+    "crismHematiteIndex": 0.63,
+    "targetHeightM": 1.7,
+    "visibleFromBase": true,
+    "sightLineClearanceM": 1.9
+   }
+  },
+  {
+   "id": "forward_camp",
+   "name": "Forward camp (option)",
+   "kind": "camp",
+   "easting": 8142224.4,
+   "northing": -279718.4,
+   "elevation": -4270.4,
+   "lon": 137.36425,
+   "lat": -4.71902,
+   "chosenFrom": "Curiosity waypoint, sol 1700",
+   "note": "Optional rover park between the dunes and the ridge, to shorten the walk to the hematite stop.",
+   "curiositySol": 1700,
+   "checks": {
+    "distanceFromBaseM": 2207,
+    "bearingFromBaseDeg": 163,
+    "slopeDegMean30m": 7.6,
+    "sandFraction20m": 0.0,
+    "crismHematiteIndex": 0.02,
+    "targetHeightM": 1.7,
+    "visibleFromBase": false,
+    "sightLineClearanceM": -8.6,
+    "blockedAtM": 649
+   }
+  },
+  {
+   "id": "butte_1",
+   "name": "Murray Butte 1",
+   "kind": "landmark",
+   "easting": 8141509.0,
+   "northing": -277779.0,
+   "elevation": -4404.2,
+   "lon": 137.35218,
+   "lat": -4.6863,
+   "chosenFrom": "summit of a mesa found in the HiRISE elevation model (height above local floor > 7 m)",
+   "heightAboveSurroundings": 11.2,
+   "footprintM2": 2688,
+   "checks": {
+    "distanceFromBaseM": 197,
+    "bearingFromBaseDeg": 206,
+    "slopeDegMean30m": 17.6,
+    "sandFraction20m": 0.0,
+    "crismHematiteIndex": null,
+    "targetHeightM": 1.0,
+    "visibleFromBase": true,
+    "sightLineClearanceM": 2.0
+   }
+  },
+  {
+   "id": "butte_2",
+   "name": "Murray Butte 2",
+   "kind": "landmark",
+   "easting": 8142129.0,
+   "northing": -277907.0,
+   "elevation": -4381.0,
+   "lon": 137.36264,
+   "lat": -4.68846,
+   "chosenFrom": "summit of a mesa found in the HiRISE elevation model (height above local floor > 7 m)",
+   "heightAboveSurroundings": 11.8,
+   "footprintM2": 708,
+   "checks": {
+    "distanceFromBaseM": 614,
+    "bearingFromBaseDeg": 120,
+    "slopeDegMean30m": 19.9,
+    "sandFraction20m": 0.15,
+    "crismHematiteIndex": null,
+    "targetHeightM": 1.0,
+    "visibleFromBase": true,
+    "sightLineClearanceM": 1.9
+   }
+  },
+  {
+   "id": "butte_3",
+   "name": "Murray Butte 3",
+   "kind": "landmark",
+   "easting": 8141703.0,
+   "northing": -277929.0,
+   "elevation": -4390.6,
+   "lon": 137.35545,
+   "lat": -4.68883,
+   "chosenFrom": "summit of a mesa found in the HiRISE elevation model (height above local floor > 7 m)",
+   "heightAboveSurroundings": 11.5,
+   "footprintM2": 720,
+   "checks": {
+    "distanceFromBaseM": 344,
+    "bearingFromBaseDeg": 162,
+    "slopeDegMean30m": 18.0,
+    "sandFraction20m": 0.0,
+    "crismHematiteIndex": null,
+    "targetHeightM": 1.0,
+    "visibleFromBase": true,
+    "sightLineClearanceM": 2.0
+   }
+  },
+  {
+   "id": "butte_4",
+   "name": "Murray Butte 4",
+   "kind": "landmark",
+   "easting": 8141469.0,
+   "northing": -278167.0,
+   "elevation": -4380.4,
+   "lon": 137.35151,
+   "lat": -4.69285,
+   "chosenFrom": "summit of a mesa found in the HiRISE elevation model (height above local floor > 7 m)",
+   "heightAboveSurroundings": 11.6,
+   "footprintM2": 3052,
+   "checks": {
+    "distanceFromBaseM": 578,
+    "bearingFromBaseDeg": 193,
+    "slopeDegMean30m": 16.7,
+    "sandFraction20m": 0.0,
+    "crismHematiteIndex": null,
+    "targetHeightM": 1.0,
+    "visibleFromBase": false,
+    "sightLineClearanceM": -2.1,
+    "blockedAtM": 231
+   }
+  },
+  {
+   "id": "vrr_crest",
+   "name": "Vera Rubin Ridge crest",
+   "kind": "landmark",
+   "easting": 8143047.0,
+   "northing": -280351.0,
+   "elevation": -4139.9,
+   "lon": 137.37813,
+   "lat": -4.72969,
+   "chosenFrom": "highest ground within 250 m of the hematite stop (HiRISE elevation model)",
+   "checks": {
+    "distanceFromBaseM": 3108,
+    "bearingFromBaseDeg": 152,
+    "slopeDegMean30m": 6.7,
+    "sandFraction20m": 0.0,
+    "crismHematiteIndex": 0.06,
+    "targetHeightM": 1.0,
+    "visibleFromBase": true,
+    "sightLineClearanceM": 0.3
+   }
+  },
+  {
+   "id": "bagnold_dunes",
+   "name": "Bagnold Dunes (hazard)",
+   "kind": "landmark",
+   "easting": 8142605.0,
+   "northing": -278693.0,
+   "elevation": -4332.0,
+   "lon": 137.37067,
+   "lat": -4.70172,
+   "chosenFrom": "point deepest inside the largest dark-sand patch of the orthophoto sand mask",
+   "areaM2": 1315072,
+   "metresInsideSand": 206,
+   "checks": {
+    "distanceFromBaseM": 1486,
+    "bearingFromBaseDeg": 137,
+    "slopeDegMean30m": 5.9,
+    "sandFraction20m": 1.0,
+    "crismHematiteIndex": 0.15,
+    "targetHeightM": 1.0,
+    "visibleFromBase": false,
+    "sightLineClearanceM": -5.3,
+    "blockedAtM": 783
+   }
+  },
+  {
+   "id": "crater_south",
+   "name": "Sand-floored crater",
+   "kind": "landmark",
+   "easting": 8141398.0,
+   "northing": -278440.0,
+   "elevation": -4392.3,
+   "lon": 137.35031,
+   "lat": -4.69745,
+   "chosenFrom": "round dark-floored feature in the HiRISE orthophoto, confirmed as a bowl in the elevation model",
+   "depthM": 7.7,
+   "diameterM": 140,
+   "checks": {
+    "distanceFromBaseM": 860,
+    "bearingFromBaseDeg": 193,
+    "slopeDegMean30m": 8.4,
+    "sandFraction20m": 0.0,
+    "crismHematiteIndex": 0.13,
+    "targetHeightM": 1.0,
+    "visibleFromBase": false,
+    "sightLineClearanceM": -21.6,
+    "blockedAtM": 581
+   }
+  },
+  {
+   "id": "mount_sharp_summit",
+   "name": "Mount Sharp (Aeolis Mons) summit",
+   "kind": "backdrop",
+   "easting": 8171517.1,
+   "northing": -318839.9,
+   "elevation": 771.0,
+   "lon": 137.85844,
+   "lat": -5.37902,
+   "chosenFrom": "highest MOLA point within 30 km of the centre of the mound",
+   "checks": {
+    "distanceFromBaseM": 50949,
+    "bearingFromBaseDeg": 144,
+    "targetHeightM": 0.0,
+    "visibleFromBase": false,
+    "sightLineClearanceM": -941.1,
+    "blockedAtM": 19225
+   }
+  },
+  {
+   "id": "crater_rim_north",
+   "name": "Gale crater rim (north)",
+   "kind": "backdrop",
+   "easting": 8116872.0,
+   "northing": -263268.7,
+   "elevation": -2118.0,
+   "lon": 136.93654,
+   "lat": -4.4415,
+   "chosenFrom": "MOLA point on the northern rim with the highest elevation angle seen from the base",
+   "elevationAngleDeg": 4.38,
+   "checks": {
+    "distanceFromBaseM": 28579,
+    "bearingFromBaseDeg": 300,
+    "targetHeightM": 0.0,
+    "visibleFromBase": true,
+    "sightLineClearanceM": 1.8
+   }
+  },
+  {
+   "id": "mount_sharp_skyline",
+   "name": "Mount Sharp skyline (as seen from base)",
+   "kind": "backdrop",
+   "easting": 8160865.9,
+   "northing": -286423.4,
+   "elevation": -204.0,
+   "lon": 137.67874,
+   "lat": -4.83214,
+   "chosenFrom": "MOLA point on the mound with the highest elevation angle seen from the base",
+   "elevationAngleDeg": 11.09,
+   "checks": {
+    "distanceFromBaseM": 21193,
+    "bearingFromBaseDeg": 115,
+    "targetHeightM": 0.0,
+    "visibleFromBase": true,
+    "sightLineClearanceM": 0.7
+   }
+  }
+ ],
+ "route": [
+  {
+   "id": "eva1_from_base",
+   "description": "Base Camp to the hematite stop along Curiosity's proven path",
+   "points": [
+    [
+     8141595.9,
+     -277602.6
+    ],
+    [
+     8141715.9,
+     -277712.6
+    ],
+    [
+     8141680.2,
+     -277759.0
+    ],
+    [
+     8141660.1,
+     -277799.3
+    ],
+    [
+     8141639.9,
+     -277830.2
+    ],
+    [
+     8141643.5,
+     -277842.4
+    ],
+    [
+     8141618.4,
+     -277875.8
+    ],
+    [
+     8141592.0,
+     -277919.6
+    ],
+    [
+     8141583.1,
+     -277955.5
+    ],
+    [
+     8141579.6,
+     -278007.8
+    ],
+    [
+     8141547.7,
+     -278061.9
+    ],
+    [
+     8141543.4,
+     -278101.8
+    ],
+    [
+     8141563.6,
+     -278128.8
+    ],
+    [
+     8141557.5,
+     -278179.4
+    ],
+    [
+     8141565.1,
+     -278245.7
+    ],
+    [
+     8141582.4,
+     -278281.3
+    ],
+    [
+     8141565.7,
+     -278317.7
+    ],
+    [
+     8141557.9,
+     -278306.7
+    ],
+    [
+     8141600.1,
+     -278369.9
+    ],
+    [
+     8141624.4,
+     -278392.3
+    ],
+    [
+     8141650.2,
+     -278417.5
+    ],
+    [
+     8141658.0,
+     -278431.8
+    ],
+    [
+     8141652.2,
+     -278446.9
+    ],
+    [
+     8141652.8,
+     -278459.4
+    ],
+    [
+     8141654.1,
+     -278494.4
+    ],
+    [
+     8141669.6,
+     -278530.1
+    ],
+    [
+     8141686.2,
+     -278562.4
+    ],
+    [
+     8141670.5,
+     -278570.1
+    ],
+    [
+     8141668.5,
+     -278577.7
+    ],
+    [
+     8141681.4,
+     -278599.9
+    ],
+    [
+     8141700.6,
+     -278640.3
+    ],
+    [
+     8141723.4,
+     -278649.5
+    ],
+    [
+     8141738.1,
+     -278683.7
+    ],
+    [
+     8141736.8,
+     -278734.6
+    ],
+    [
+     8141725.0,
+     -278758.0
+    ],
+    [
+     8141705.5,
+     -278795.6
+    ],
+    [
+     8141708.7,
+     -278833.8
+    ],
+    [
+     8141720.8,
+     -278873.8
+    ],
+    [
+     8141745.8,
+     -278905.9
+    ],
+    [
+     8141744.9,
+     -278928.5
+    ],
+    [
+     8141763.4,
+     -278955.0
+    ],
+    [
+     8141774.0,
+     -278957.2
+    ],
+    [
+     8141776.9,
+     -278965.8
+    ],
+    [
+     8141778.4,
+     -278958.6
+    ],
+    [
+     8141791.6,
+     -278969.0
+    ],
+    [
+     8141810.9,
+     -278986.5
+    ],
+    [
+     8141830.7,
+     -279008.3
+    ],
+    [
+     8141854.7,
+     -279045.8
+    ],
+    [
+     8141878.7,
+     -279053.1
+    ],
+    [
+     8141893.2,
+     -279093.8
+    ],
+    [
+     8141885.0,
+     -279107.5
+    ],
+    [
+     8141891.3,
+     -279137.7
+    ],
+    [
+     8141890.7,
+     -279151.1
+    ],
+    [
+     8141895.9,
+     -279177.9
+    ],
+    [
+     8141890.9,
+     -279206.4
+    ],
+    [
+     8141868.0,
+     -279226.3
+    ],
+    [
+     8141847.7,
+     -279230.6
+    ],
+    [
+     8141822.6,
+     -279243.6
+    ],
+    [
+     8141805.7,
+     -279254.1
+    ],
+    [
+     8141847.5,
+     -279226.8
+    ],
+    [
+     8141843.3,
+     -279205.4
+    ],
+    [
+     8141837.1,
+     -279203.4
+    ],
+    [
+     8141846.1,
+     -279223.3
+    ],
+    [
+     8141862.4,
+     -279240.2
+    ],
+    [
+     8141885.0,
+     -279260.7
+    ],
+    [
+     8141885.7,
+     -279268.6
+    ],
+    [
+     8141905.9,
+     -279282.2
+    ],
+    [
+     8141933.6,
+     -279310.9
+    ],
+    [
+     8141924.9,
+     -279336.3
+    ],
+    [
+     8141907.5,
+     -279356.7
+    ],
+    [
+     8141926.2,
+     -279376.3
+    ],
+    [
+     8141927.8,
+     -279404.1
+    ],
+    [
+     8141963.1,
+     -279393.9
+    ],
+    [
+     8141981.5,
+     -279384.5
+    ],
+    [
+     8142011.0,
+     -279379.1
+    ],
+    [
+     8142018.3,
+     -279378.9
+    ],
+    [
+     8141993.6,
+     -279388.6
+    ],
+    [
+     8141984.6,
+     -279411.0
+    ],
+    [
+     8141984.7,
+     -279421.6
+    ],
+    [
+     8142000.4,
+     -279445.3
+    ],
+    [
+     8142001.1,
+     -279471.8
+    ],
+    [
+     8141998.5,
+     -279480.2
+    ],
+    [
+     8142002.6,
+     -279496.7
+    ],
+    [
+     8142015.8,
+     -279527.2
+    ],
+    [
+     8142031.4,
+     -279542.8
+    ],
+    [
+     8142049.4,
+     -279566.3
+    ],
+    [
+     8142063.5,
+     -279590.8
+    ],
+    [
+     8142075.0,
+     -279612.2
+    ],
+    [
+     8142091.4,
+     -279638.6
+    ],
+    [
+     8142105.7,
+     -279650.1
+    ],
+    [
+     8142106.5,
+     -279658.4
+    ],
+    [
+     8142105.9,
+     -279669.5
+    ],
+    [
+     8142103.7,
+     -279675.3
+    ],
+    [
+     8142114.2,
+     -279675.8
+    ],
+    [
+     8142159.2,
+     -279682.2
+    ],
+    [
+     8142195.7,
+     -279709.7
+    ],
+    [
+     8142224.4,
+     -279718.4
+    ],
+    [
+     8142229.8,
+     -279726.8
+    ],
+    [
+     8142229.4,
+     -279740.6
+    ],
+    [
+     8142235.0,
+     -279749.1
+    ],
+    [
+     8142236.2,
+     -279756.1
+    ],
+    [
+     8142234.9,
+     -279782.1
+    ],
+    [
+     8142259.2,
+     -279790.5
+    ],
+    [
+     8142246.1,
+     -279796.8
+    ],
+    [
+     8142247.4,
+     -279818.4
+    ],
+    [
+     8142254.9,
+     -279824.0
+    ],
+    [
+     8142280.8,
+     -279829.2
+    ],
+    [
+     8142299.2,
+     -279839.9
+    ],
+    [
+     8142324.7,
+     -279849.9
+    ],
+    [
+     8142343.7,
+     -279846.8
+    ],
+    [
+     8142369.9,
+     -279829.4
+    ],
+    [
+     8142382.7,
+     -279832.4
+    ],
+    [
+     8142397.1,
+     -279824.7
+    ],
+    [
+     8142417.4,
+     -279823.4
+    ],
+    [
+     8142447.0,
+     -279815.8
+    ],
+    [
+     8142458.2,
+     -279812.1
+    ],
+    [
+     8142479.8,
+     -279816.2
+    ],
+    [
+     8142489.0,
+     -279820.4
+    ],
+    [
+     8142496.7,
+     -279821.2
+    ],
+    [
+     8142506.9,
+     -279819.9
+    ],
+    [
+     8142531.9,
+     -279826.2
+    ],
+    [
+     8142558.2,
+     -279845.8
+    ],
+    [
+     8142569.2,
+     -279875.6
+    ],
+    [
+     8142578.6,
+     -279883.4
+    ],
+    [
+     8142608.8,
+     -279881.4
+    ],
+    [
+     8142618.7,
+     -279868.9
+    ],
+    [
+     8142628.0,
+     -279859.0
+    ],
+    [
+     8142647.2,
+     -279866.1
+    ],
+    [
+     8142661.2,
+     -279878.8
+    ],
+    [
+     8142681.9,
+     -279882.8
+    ],
+    [
+     8142701.9,
+     -279892.0
+    ],
+    [
+     8142726.0,
+     -279901.9
+    ],
+    [
+     8142735.9,
+     -279915.9
+    ],
+    [
+     8142729.8,
+     -279933.5
+    ],
+    [
+     8142723.7,
+     -279959.0
+    ],
+    [
+     8142715.1,
+     -279967.9
+    ],
+    [
+     8142728.0,
+     -279986.2
+    ],
+    [
+     8142728.3,
+     -279994.6
+    ],
+    [
+     8142734.9,
+     -280006.1
+    ],
+    [
+     8142816.3,
+     -280120.4
+    ]
+   ],
+   "lengthM": 3879,
+   "straightLineM": 2798,
+   "totalClimbM": 262
+  },
+  {
+   "id": "eva1_from_forward_camp",
+   "description": "Forward camp to the hematite stop (short option)",
+   "points": [
+    [
+     8142224.4,
+     -279718.4
+    ],
+    [
+     8142229.8,
+     -279726.8
+    ],
+    [
+     8142229.4,
+     -279740.6
+    ],
+    [
+     8142235.0,
+     -279749.1
+    ],
+    [
+     8142236.2,
+     -279756.1
+    ],
+    [
+     8142234.9,
+     -279782.1
+    ],
+    [
+     8142259.2,
+     -279790.5
+    ],
+    [
+     8142246.1,
+     -279796.8
+    ],
+    [
+     8142247.4,
+     -279818.4
+    ],
+    [
+     8142254.9,
+     -279824.0
+    ],
+    [
+     8142280.8,
+     -279829.2
+    ],
+    [
+     8142299.2,
+     -279839.9
+    ],
+    [
+     8142324.7,
+     -279849.9
+    ],
+    [
+     8142343.7,
+     -279846.8
+    ],
+    [
+     8142369.9,
+     -279829.4
+    ],
+    [
+     8142382.7,
+     -279832.4
+    ],
+    [
+     8142397.1,
+     -279824.7
+    ],
+    [
+     8142417.4,
+     -279823.4
+    ],
+    [
+     8142447.0,
+     -279815.8
+    ],
+    [
+     8142458.2,
+     -279812.1
+    ],
+    [
+     8142479.8,
+     -279816.2
+    ],
+    [
+     8142489.0,
+     -279820.4
+    ],
+    [
+     8142496.7,
+     -279821.2
+    ],
+    [
+     8142506.9,
+     -279819.9
+    ],
+    [
+     8142531.9,
+     -279826.2
+    ],
+    [
+     8142558.2,
+     -279845.8
+    ],
+    [
+     8142569.2,
+     -279875.6
+    ],
+    [
+     8142578.6,
+     -279883.4
+    ],
+    [
+     8142608.8,
+     -279881.4
+    ],
+    [
+     8142618.7,
+     -279868.9
+    ],
+    [
+     8142628.0,
+     -279859.0
+    ],
+    [
+     8142647.2,
+     -279866.1
+    ],
+    [
+     8142661.2,
+     -279878.8
+    ],
+    [
+     8142681.9,
+     -279882.8
+    ],
+    [
+     8142701.9,
+     -279892.0
+    ],
+    [
+     8142726.0,
+     -279901.9
+    ],
+    [
+     8142735.9,
+     -279915.9
+    ],
+    [
+     8142729.8,
+     -279933.5
+    ],
+    [
+     8142723.7,
+     -279959.0
+    ],
+    [
+     8142715.1,
+     -279967.9
+    ],
+    [
+     8142728.0,
+     -279986.2
+    ],
+    [
+     8142728.3,
+     -279994.6
+    ],
+    [
+     8142734.9,
+     -280006.1
+    ],
+    [
+     8142816.3,
+     -280120.4
+    ]
+   ],
+   "lengthM": 936,
+   "straightLineM": 716
+  }
+ ]
+}
