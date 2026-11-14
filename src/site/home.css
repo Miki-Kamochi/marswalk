@@ -248,17 +248,21 @@ body.home::after {
 }
 
 /* ---------------------------------------------------------------- cards below the search */
-/* recent plans / science targets: a dropdown in the top bar, closed at first */
+/* recent plans / science targets: a dropdown at the bottom right, on the search bar's line,
+   opening upward, closed at first */
 .dd {
-  position: relative;
+  position: absolute;
+  z-index: 4;
+  right: var(--edge);
+  bottom: calc(var(--edge) + 24px + 5px);
 }
 .dd-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 34px;
-  padding: 0 12px 0 11px;
-  font-size: 13.5px;
+  height: 46px;
+  padding: 0 16px 0 15px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--ui-text);
   background: var(--glass);
@@ -300,13 +304,13 @@ body.home::after {
   color: var(--ui-text-2);
   transition: transform 0.2s var(--ease);
 }
-.dd-btn[aria-expanded="false"] .chev {
+.dd-btn[aria-expanded="true"] .chev {
   transform: rotate(180deg);
 }
 .below {
   position: absolute;
   right: 0;
-  top: calc(100% + var(--gap));
+  bottom: calc(100% + var(--gap));
   width: 320px;
   max-height: min(62vh, 520px);
   overflow-y: auto;
@@ -318,7 +322,7 @@ body.home::after {
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
-  transform-origin: 100% 0;
+  transform-origin: 100% 100%;
   animation: dd-open 0.22s var(--ease) both;
 }
 .below::-webkit-scrollbar {
@@ -330,7 +334,7 @@ body.home::after {
 @keyframes dd-open {
   from {
     opacity: 0;
-    transform: translateY(-6px) scale(0.97);
+    transform: translateY(6px) scale(0.97);
   }
 }
 .below .cards {
@@ -533,3 +537,10 @@ body.no-globe #globe::before {
   }
 }
 
+
+/* narrow screens: the search bar takes the width, so the button sits just above its right end */
+@media (max-width: 1000px) {
+  .dd {
+    bottom: calc(var(--edge) + 24px + 56px + var(--gap));
+  }
+}
