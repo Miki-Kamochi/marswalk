@@ -66,7 +66,8 @@ export class HomeScene {
 
   static async create(host: HTMLElement, reduced: boolean): Promise<HomeScene> {
     const low = matchMedia("(pointer: coarse)").matches || innerWidth < 900;
-    const world = await World.load(() => {}, low);
+    // 16 m triangles: the same faceted, low-poly look as the walk preview
+    const world = await World.load(() => {}, low, 8);
     return new HomeScene(host, world, reduced, low);
   }
 

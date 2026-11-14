@@ -31,39 +31,11 @@ const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // ---------------------------------------------------------------- menu
 type Pair = [string, string];
-const ITEMS: Partial<Record<ShotId, { tag: Pair; text: Pair; view: Pair }>> = {
-  planner: {
-    tag: ["CORE TOOL", "メインの機能"],
-    text: [
-      "Choose a science target in Gale Crater and compare four routes. Each one stays on safe ground, keeps your position known, and leaves enough oxygen to walk home.",
-      "ゲール・クレーターの科学目標を選び、4つのルートを比べます。どれも安全な地面を通り、位置を見失わず、歩いて帰れる酸素を残します。",
-    ],
-    view: ["VIEW: EVA-1, BASE CAMP → VERA RUBIN RIDGE · RECOMMENDED ROUTE IN ORANGE", "表示：EVA-1、ベースキャンプ → ヴェラ・ルービン・リッジ · オレンジがおすすめのルート"],
-  },
-  game: {
-    tag: ["PROTOTYPE · ENGLISH ONLY", "試作版 · 英語のみ"],
-    text: [
-      "See the ground at eye level before you go: walk the route to Vera Rubin Ridge in first person.",
-      "出発前に、目の高さで地面を確かめます。ヴェラ・ルービン・リッジまでのルートを一人称で歩きます。",
-    ],
-    view: ["VIEW: EYE HEIGHT AT BASE CAMP", "表示：ベースキャンプに立った目線"],
-  },
-  how: {
-    tag: ["METHOD", "方法"],
-    text: [
-      "Why a crew can get lost on Mars, the three map layers, the route rules, and every assumption we made.",
-      "火星でなぜ迷うのか、3つの地図レイヤー、ルートの条件、そして私たちが置いたすべての仮定。",
-    ],
-    view: ["VIEW: THE MAP AREA FROM 2.1 KM UP · HIRISE IMAGERY", "表示：上空2.1 kmから見た地図の範囲 · HiRISE画像"],
-  },
-  credits: {
-    tag: ["DATA SOURCES", "データの出典"],
-    text: [
-      "The NASA missions behind every pixel: MRO HiRISE and CRISM, MGS MOLA and MSL Curiosity.",
-      "すべてのピクセルの元になったNASAのミッション：MROのHiRISEとCRISM、MGSのMOLA、MSLキュリオシティ。",
-    ],
-    view: ["VIEW: FROM VERA RUBIN RIDGE TOWARDS MOUNT SHARP", "表示：ヴェラ・ルービン・リッジからシャープ山を望む"],
-  },
+const ITEMS: Partial<Record<ShotId, Pair>> = {
+  planner: ["Pick a science target. Compare four routes that get you home.", "科学目標を選び、必ず帰れる4つのルートを比べる。"],
+  game: ["Walk the route at eye level before you go.", "出発前に、目の高さでルートを歩いてみる。"],
+  how: ["The data, the map layers and our assumptions.", "データ、地図のレイヤー、そして私たちの仮定。"],
+  credits: ["The NASA missions behind every pixel.", "すべてのピクセルの元になったNASAのミッション。"],
 };
 
 const links = [...document.querySelectorAll<HTMLAnchorElement>("#items a")];
@@ -76,9 +48,7 @@ function select(i: number, focus = false): void {
   const a = links[selected];
   if (focus) a.focus({ preventScroll: true });
   const id = a.dataset.shot as ShotId;
-  const it = ITEMS[id]!;
-  $("desc").innerHTML = `<span class="tag">${tr(...it.tag)}</span><p>${tr(...it.text)}</p>`;
-  $("view").textContent = tr(...it.view);
+  $("desc").textContent = tr(...ITEMS[id]!);
   scene?.setShot(id);
 }
 

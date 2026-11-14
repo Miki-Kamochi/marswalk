@@ -83,10 +83,6 @@ body.home {
   max-width: 46ch;
   text-align: right;
 }
-.corner .view {
-  margin-bottom: 4px;
-  color: rgba(244, 237, 230, 0.6);
-}
 .corner .seg {
   border-color: rgba(244, 237, 230, 0.25);
   border-radius: 4px;
@@ -197,25 +193,13 @@ body.home {
   height: 70%;
 }
 .desc {
-  min-height: 6.4em;
+  min-height: 3.4em;
   margin-top: clamp(16px, 3vh, 26px);
   padding: 14px 0 0 22px;
   border-top: 1px solid rgba(244, 237, 230, 0.16);
   font-size: 14.5px;
   line-height: 1.6;
   color: rgba(244, 237, 230, 0.82);
-}
-.desc .tag {
-  display: block;
-  margin-bottom: 6px;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  color: var(--accent-glow);
-}
-.desc p {
-  margin: 0;
-  max-width: 40em;
 }
 .keys {
   position: absolute;

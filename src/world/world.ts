@@ -53,7 +53,8 @@ export class World {
     this.scene.add(this.sunDisc);
   }
 
-  static async load(onProgress: (msg: string) => void, lowDetail: boolean): Promise<World> {
+  /** facet: grid step of the play-area mesh (2 m samples), to force bigger, more visible triangles. */
+  static async load(onProgress: (msg: string) => void, lowDetail: boolean, facet?: number): Promise<World> {
     onProgress("Loading map of Gale Crater…");
     const meta = await loadMeta();
     const frame = new Frame(meta.frame.origin);
@@ -72,7 +73,7 @@ export class World {
     ]);
     onProgress("Building terrain…");
     await new Promise((r) => setTimeout(r, 0));
-    const step = lowDetail ? 6 : 3; // 12 m or 6 m triangles
+    const step = facet ?? (lowDetail ? 6 : 3); // 12 m or 6 m triangles unless asked otherwise
     const w = new World(meta, frame, play, surround, mid, far, positions, traverse, step);
     const playB = meta.frame.play;
     const fetchB = meta.frame.fetch;
