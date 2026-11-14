@@ -374,7 +374,7 @@ uniqueness = 1 − (highest correlation with another spot, 5 to 24 m away)</span
           <ul>
             <li>The search is A* on the 6 m grid. A step may go to any of the 16 nearest cells.</li>
             <li>The search remembers, for every cell, how far it has walked since the last possible photo fix. That is how rule 2 is built into the route instead of being checked afterwards. Planning with the uncertainty as part of the state is an idea from robotics.</li>
-            <li>For rule 3, one extra search from the start gives the energy needed to walk home from every cell. The dark area on the map (the walk-back limit) is everything you could not visit and leave with the reserve.</li>
+            <li>For rule 3, one extra search from the start gives the energy needed to walk home from every cell, with stops for photo fixes as often as on good ground. The dark area on the map (the walk-back limit) is everything you could not visit and leave with the reserve.</li>
           </ul>
           <span class="formula">speed (m/s)  = 0.6 × 6 × e^(−3.5 × |slope + 0.05|) ÷ 3.6          (Tobler, off-path)
 power (W)    = 1.5 × body + 0.38 × [ 2 × (body + suit) × (suit ÷ body)²
@@ -421,7 +421,7 @@ oxygen (g)   = energy ÷ 14 300 J</span>
           <ul>
             <li>6 mのマス目の上でA*（エースター）探索をします。1歩で、近くの16マスのどれかに進めます。</li>
             <li>探索は、マスごとに「最後に撮影できた場所から何 m歩いたか」を覚えています。条件2を、あとから確かめるのではなく、ルートの作り方そのものに組み込むためです。不確かさを状態に含めて計画する考え方は、ロボット工学にあります。</li>
-            <li>条件3のために、出発点からもう一度探索して、各マスから歩いて帰るのに必要なエネルギーを出します。地図の暗い部分（ウォークバック限界）は、行って帰ると余裕が残らない場所です。</li>
+            <li>条件3のために、出発点からもう一度探索して、各マスから歩いて帰るのに必要なエネルギーを出します。帰り道でも、撮影しやすい地面と同じ頻度で撮影のために立ち止まると見込んでいます。地図の暗い部分（ウォークバック限界）は、行って帰ると余裕が残らない場所です。</li>
           </ul>
           <span class="formula">速さ (m/s)   = 0.6 × 6 × e^(−3.5 × |傾斜 + 0.05|) ÷ 3.6          （Tobler、道のない地面）
 運動の強さ (W) = 1.5 × 体重 + 0.38 × [ 2 × (体重 + 宇宙服) × (宇宙服 ÷ 体重)²

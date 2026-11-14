@@ -194,6 +194,16 @@ export class Planner {
     return (this.cfg.errorLimit - this.cfg.fixError) / this.cfg.drift;
   }
 
+  /**
+   * Energy per metre spent standing still for photo fixes, if they are needed as often as on
+   * ground where they always work. Added to the walk-home map, so that the way home is not
+   * assumed to be free of stops.
+   */
+  get fixOverhead(): number {
+    const c = this.cfg;
+    return (c.photoSeconds * c.restWatts * c.drift) / Math.max(c.photoTrigger - c.fixError, 0.5);
+  }
+
   /** Cell reached from a by move k, or -1 if that move is not allowed. */
   private neighbour(a: number, k: number): number {
     const w = this.grid.width;
@@ -233,6 +243,7 @@ export class Planner {
     const d = new Float32Array(n).fill(Infinity);
     const done = new Uint8Array(n);
     const heap = this.heap;
+    const stops = this.fixOverhead;
     heap.clear();
     d[src] = 0;
     heap.push(0, src);
@@ -245,7 +256,7 @@ export class Planner {
         if (b < 0 || done[b]) continue;
         if (towards) this.edge(b, a, this.len[k]);
         else this.edge(a, b, this.len[k]);
-        const nd = d[a] + this.eEnergy;
+        const nd = d[a] + this.eEnergy + stops * this.len[k];
         if (nd < d[b]) {
           d[b] = nd;
           heap.push(nd, b);
@@ -456,7 +467,7 @@ export class Planner {
         const b = this.neighbour(a, k);
         if (b < 0) continue;
         this.edge(a, b, this.len[k]);
-        const c = this.eEnergy + this.toHome[b];
+        const c = this.eEnergy + this.fixOverhead * this.len[k] + this.toHome[b];
         if (c < bestCost) {
           bestCost = c;
           best = b;

@@ -457,7 +457,7 @@ async function main() {
     cfg.photoTrigger = Math.min(DEFAULTS.photoTrigger, cfg.errorLimit / 2);
     renderSliders();
   });
-  err.addEventListener("change", () => void replan());
+  err.addEventListener("change", () => void setHome(state.home));
   for (const b of $("viewSeg").querySelectorAll<HTMLElement>("button")) b.addEventListener("click", () => setView(b.dataset.view as ViewMode));
   document.addEventListener("langchange", () => {
     map2d.relabel();

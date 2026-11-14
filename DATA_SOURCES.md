@@ -31,6 +31,10 @@ centre longitude 0 (the frame of the USGS Gale mosaics and of Curiosity's waypoi
   the Murray Buttes in the north are outside it.
 - **Derived layers** (not separate datasets): slope comes from dataset 1; the dark-sand mask comes
   from dataset 2 (dark, smooth patches larger than 2500 m²).
+- **Route planner grid** (`public/data/nav/nav_6m.bin`, made by `scripts/nav_layers.py`): tilt,
+  roughness and step come from dataset 1 at its full 1 m resolution (a plane fitted to every 6 m
+  cell); the localizability score comes from dataset 2 at 1 m (each 32 m patch matched against its
+  own surroundings); sand and hematite are datasets 2 and 5 resampled to the same 6 m cells.
 
 ## Notes for the submission
 

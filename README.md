@@ -2,13 +2,54 @@
 
 NASA Space Apps Challenge 2026, "Interplanetary Survival Guide: Martian Map".
 
-A browser game about finding your way home on Mars, where there is no GPS and no compass, built
-on real NASA data of Gale Crater. The project vision is in [CLAUDE.md](CLAUDE.md).
+A layered map of Gale Crater that plans walks for astronauts on Mars, where there is no GPS and no
+compass: where the ground is safe, where you can check your position, and which route gets you
+home. Built on real NASA data. Runs in a browser with no backend.
 
-**Status: playable MVP.** One mission: collect the hematite sample, survive the storm, get home.
-Data check pages are at `/dev.html`.
+| Page | What it is |
+|---|---|
+| `/` | Title screen and menu |
+| `/sim.html` | **Route simulator**: pick a destination on the 2D map or in 3D, compare four routes |
+| `/how.html` | How it works: the problem, the layers, the route rules, every assumption |
+| `/game.html` | The earlier first-person game prototype (see below) |
+| `/credits.html` | Data, methods and software |
+| `/dev.html` | Data check pages |
+
+The new pages are in English and Japanese. The original project vision is in [CLAUDE.md](CLAUDE.md);
+the simulator is where the idea went after that.
+
+## How the route simulator works
+
+**Three map layers, three kinds of NASA data**
+
+- **Destination** (spectral): hematite from the CRISM band depth at 0.86 µm.
+- **Safety** (topographic, plus optical for sand): the structure of JPL's GESTALT rover hazard
+  check. A plane is fitted to every 6 m cell of the HiRISE elevation data; tilt, roughness and step
+  are scored and the worst one counts. Dark sand lowers the score and the slope limits.
+- **Localizability** (optical): predicts where matching a ground photo to the orbital image would
+  work, the principle of Perseverance's Mars Global Localization. Each 32 m patch of the HiRISE
+  image is slid over its own surroundings: `score = texture × uniqueness`.
+
+**Three rules for every route**
+
+1. Never enter a no-go cell.
+2. The position error from step counting (3 % of the distance) never exceeds the limit. A photo
+   fix resets it, so a route may only cross a limited stretch of ground where no fix works.
+3. From every point there is enough oxygen to walk home with 20 % of a tank in reserve (the Apollo
+   walk-back rule).
+
+**Four routes**: shortest, least oxygen (Tobler speed, Pandolf energy scaled to Mars gravity),
+easiest to locate, and balanced.
+
+The planner is in `src/plan/`: A* over (cell, metres since the last possible photo fix) on the
+6 m grid, with moves to the 16 nearest cells, and a Dijkstra "energy to walk home" map for rule 3.
+`npm test` runs it on synthetic grids and on the real Gale data. Every threshold is an assumption
+of ours, kept in `src/plan/config.ts` and shown in the app; none is a NASA value.
 
 ## How the game works
+
+The game is the earlier prototype. It uses an older idea (matching the skyline) and a dust storm
+that is far thicker than anything recorded at Gale, so treat it as a story, not as the method.
 
 You have an orbital map of Gale Crater but no "you are here": Mars has no GPS and no global
 magnetic field. **Wayfinder**, the suit's navigator, puts a dot on the map and always shows how
@@ -104,6 +145,8 @@ npm run data:process      # writes public/data/ and re-checks all positions
 - `scripts/download_data.py`: fetches the raw data. The two big USGS mosaics are never downloaded
   whole; only our window is read over HTTP.
 - `scripts/process_data.py`: raw data to web-ready terrain, imagery and layers.
+- `scripts/nav_layers.py`: the route planner's 6 m grid (`public/data/nav/`): tilt, roughness, step,
+  sand, hematite and the localizability score. Run it after `process_data.py`; takes about 2 minutes.
 - `scripts/positions.py`: picks the base, stops and landmarks from the data and verifies each one
   (elevation, slope, sand, hematite signal, line of sight from the base).
 - `scripts/preview.py`, `scripts/zoom.py`: small check images in `data/interim/`.
@@ -113,8 +156,12 @@ Datasets and credits are listed in [DATA_SOURCES.md](DATA_SOURCES.md).
 ## Layout
 
 ```
-index.html, *-test.html   pages (Vite multi-page)
+index.html, sim.html, how.html, game.html, credits.html, *-test.html   pages (Vite multi-page)
 src/data/                 frame.ts (coordinates), loader.ts (typed loaders for public/data)
+src/plan/                 route planner: config, grid, energy model, search (no browser code)
+src/sim/                  route simulator: 2D map, 3D view, panel, text in two languages
+src/site/                 shared styles, language switch, home and "how it works" scripts
+src/game/, src/nav/       the game prototype and its navigator
 src/test/                 the Phase 1 check pages
 public/data/              processed NASA data (see meta.json for a description of every file)
 public/models/            3D models (Phase 2)
