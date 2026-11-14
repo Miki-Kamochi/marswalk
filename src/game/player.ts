@@ -3,7 +3,7 @@ import type { Controls } from "./controls";
 import type { World } from "./world";
 
 export const EYE_HEIGHT = 1.7;
-/** Movement is time-compressed with the mission clock (see TIME_SCALE in main.ts). */
+/** Screen movement at the default 4x multiplier. Other multipliers scale Player.update's dt. */
 export const WALK_SPEED = 4.6;
 /** Real suited walking pace this represents, m/s. */
 export const REAL_PACE = 1.15;

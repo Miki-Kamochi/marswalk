@@ -156,9 +156,10 @@ export class World {
     this.sunLight.intensity = 2.6 * day * (1 - 0.45 * dust);
     this.skyLight.intensity = (0.65 + 0.65 * day) * (1 - 0.15 * dust);
     this.sunDisc.position.copy(camera.position).addScaledVector(dir, 5000);
-    (this.sunDisc.material as THREE.SpriteMaterial).opacity = day * Math.max(0, 1 - dust * 1.6);
-    // Near terrain stays legible. Haze mostly obscures the distant skyline (3–5 km).
-    this.fog.density = 0.00008 + 0.0005 * dust;
+    // The sun remains a reliable direction cue even at the storm peak.
+    (this.sunDisc.material as THREE.SpriteMaterial).opacity = 1;
+    // Clear periods preserve the skyline; storm peaks erase terrain beyond several hundred metres.
+    this.fog.density = 0.00005 + 0.0022 * Math.pow(dust, 3);
     const sky = HAZE.clone().multiplyScalar(0.35 + 0.65 * day).lerp(new THREE.Color(0x8a5a36), dust * 0.75);
     (this.scene.background as THREE.Color).copy(sky);
     this.fog.color.copy(sky);

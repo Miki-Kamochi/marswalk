@@ -32,22 +32,28 @@ export function makeRover(): THREE.Group {
   return g;
 }
 
-/** A sample site: a small flag and a ring on the ground. */
-export function makeSampleSite(): THREE.Group {
+/** A sample site: only a ground ring and a collectable rock. */
+export function makeSampleSite(index = 0): THREE.Group {
   const g = new THREE.Group();
-  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 2.2, 5), flat(0xdddddd));
-  pole.position.y = 1.1;
-  const flag = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.42, 0.03), new THREE.MeshBasicMaterial({ color: 0xffe066 }));
-  flag.position.set(0.36, 1.95, 0);
   const ring = new THREE.Mesh(
-    new THREE.RingGeometry(2.6, 3.0, 20),
-    new THREE.MeshBasicMaterial({ color: 0xffe066, side: THREE.DoubleSide, transparent: true, opacity: 0.8 }),
+    new THREE.RingGeometry(5.2, 5.8, 32),
+    new THREE.MeshBasicMaterial({ color: 0xffd66b, side: THREE.DoubleSide, transparent: true, opacity: 0.7, depthWrite: false }),
   );
   ring.rotation.x = -Math.PI / 2;
-  ring.position.y = 0.25;
-  const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.45, 0), flat(0x6a5560));
-  rock.position.set(-0.6, 0.3, 0.5);
+  ring.position.y = 0.12;
+  ring.name = "collection-ring";
+  const colors = [0x795a47, 0x4e4039, 0x765265];
+  const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.62, 1), flat(colors[index % colors.length]));
+  rock.scale.set(1.15, 0.72, 0.95);
+  rock.position.set(-0.35, 0.42, 0.25);
   rock.name = "sample";
-  g.add(pole, flag, ring, rock);
+  g.add(ring, rock);
   return g;
+}
+
+export function setSampleCollected(site: THREE.Group, collected: boolean) {
+  site.getObjectByName("sample")!.visible = !collected;
+  const material = (site.getObjectByName("collection-ring") as THREE.Mesh).material as THREE.MeshBasicMaterial;
+  material.color.setHex(collected ? 0x73d99a : 0xffd66b);
+  material.opacity = collected ? 0.22 : 0.7;
 }

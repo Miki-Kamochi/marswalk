@@ -31,8 +31,8 @@ try {
   const summary=await evaluate(`(() => {
     const g=window.__mw,check=(condition,name)=>{if(!condition)throw Error(name)};
     g.begin();g.tick(0);
-    check(g.state.phase==='return','return-only start');
-    check(Math.hypot(g.player.e-g.site.e,g.player.n-g.site.n)<.01,'spawn at collected sample');
+    check(g.state.phase==='collect','collection mission start');
+    check(Math.hypot(g.player.e-g.start.e,g.player.n-g.start.n)<.01,'spawn at lower-right start');
     check(!!g.world.scene.getObjectByName('Mars_view_STL_backdrop'),'STL loaded');
     const initial=g.nav.region.current.radius;
     dispatchEvent(new KeyboardEvent('keydown',{code:'KeyW'}));
@@ -49,7 +49,7 @@ try {
     const saved=JSON.stringify(pin);
     dispatchEvent(new KeyboardEvent('keydown',{code:'KeyM'}));
     check(g.hud.mapOpen&&!document.getElementById('mapOverlay').hidden,'M opens map');
-    const oxygen=g.state.oxygen;g.tick(1);check(g.state.oxygen===oxygen,'map pauses oxygen');
+    const time=g.state.missionS;g.tick(1);check(g.state.missionS===time,'map pauses mission clock');
     dispatchEvent(new KeyboardEvent('keyup',{code:'KeyM'}));
     return {initial,beforeScan,pin,match:g.nav.lastMatch,saved,walked:g.player.walked,triangles:g.renderer.info.render.triangles};
   })()`);
@@ -68,8 +68,11 @@ try {
     g.scan();dispatchEvent(new KeyboardEvent('keydown',{code:'KeyW'}));g.tick(.1);
     dispatchEvent(new KeyboardEvent('keyup',{code:'KeyW'}));g.tick(0);
     check(g.state.scanT===-1&&g.nav.region.pins.length===1,'motion cancels scan');
-    for(let i=0;i<350;i++)g.tick(.1);
-    check(g.world.fog.density<.0004,'gust stays gentle');
+    g.setSpeed(8);const beforeTime=g.state.missionS;g.tick(1);
+    check(Math.abs(g.state.missionS-beforeTime-8)<.01,'8x scales mission time');
+    g.setSpeed(1);const beforeWalk=g.player.walked;
+    dispatchEvent(new KeyboardEvent('keydown',{code:'KeyW'}));g.tick(1);dispatchEvent(new KeyboardEvent('keyup',{code:'KeyW'}));g.tick(0);
+    check(g.player.walked-beforeWalk<2,'1x scales walking');
   })()`);
   shot=await send('Page.captureScreenshot',{format:'png'});
   await writeFile(join(profile,'game.png'),Buffer.from(shot.data,'base64'));
@@ -77,8 +80,13 @@ try {
   await evaluate(`dispatchEvent(new Event('resize'));__mw.tick(0);`);
   shot=await send('Page.captureScreenshot',{format:'png'});
   await writeFile(join(profile,'mobile.png'),Buffer.from(shot.data,'base64'));
-  await evaluate(`(() => {const g=__mw;g.player.e=g.home.e;g.player.n=g.home.n;g.tick(.1);if(g.state.phase!=='done')throw Error('base return completion');document.getElementById('againBtn').click();g.tick(0);if(g.state.phase!=='return'||g.nav.region.pins.length!==0)throw Error('restart');for(let i=0;i<500;i++)g.tick(1);if(g.state.phase!=='done'||!document.getElementById('endTitle').textContent.includes('酸素'))throw Error('oxygen failure');})()`);
+  await evaluate(`(() => {const g=__mw,check=(c,n)=>{if(!c)throw Error(n)};
+    for(const target of g.targets){g.player.e=target.e;g.player.n=target.n;g.tick(.1)}
+    check(g.state.phase==='done'&&g.state.collected===1,'farthest-site collection completion');
+    document.getElementById('againBtn').click();g.tick(0);check(g.state.phase==='collect'&&g.state.collected===0&&g.nav.region.pins.length===0,'restart');
+    g.setSpeed(16);for(let i=0;i<207;i++)g.tick(1);
+    check(g.state.phase==='done'&&document.getElementById('endTitle').textContent.includes('強制帰還'),'time-limit forced return');})()`);
   assert.deepEqual(errors,[],'Uncaught browser exceptions');
-  console.log(`PASS: start, movement, right-click scan, containment, map toggle/pause, fixed history, scan cancellation, gust, completion, restart, oxygen failure. Screenshots: ${profile}`);
+  console.log(`PASS: collection start, speed controls, scan, map pause, fixed history, farthest-site completion, restart and forced return. Screenshots: ${profile}`);
 } catch(error) { console.error(browserLog.slice(-3000));throw error; }
 finally {socket?.close();browser.kill();}

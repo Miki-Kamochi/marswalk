@@ -10,7 +10,9 @@ export class PositionRegion {
   private bias: number;
   constructor(start: Point, seed: number) {
     this.rng = new Rng(seed);
-    this.bias = (this.rng.next() - 0.5) * 0.07;
+    // Suit odometry consistently accumulates a conspicuous clockwise/right-hand bias.
+    // About twice the previous maximum drift, with a little run-to-run variation.
+    this.bias = 0.07 + (this.rng.next() - 0.5) * 0.04;
     this.current = this.offset(start, 75);
   }
   private offset(point: Point, radius: number): Region {

@@ -1,14 +1,21 @@
 [hidden] { display: none !important; }
 .panel { background: rgba(15,22,25,.82); border: 1px solid #a9c7ce40; border-radius: 5px; padding: 13px; font-size: 12px; line-height: 1.6; }
 .tag { color: #93cbd8; font-size: 10px; letter-spacing: .18em; margin-bottom: 6px; }
-#mission { position:absolute;top:20px;left:20px;width:240px; }
+#mission { position:absolute;top:20px;left:20px;width:270px; }
 #mission strong { font-size:16px; }
 #clock { color:#b4bfbe; }
 #o2 { position:relative;height:18px;background:#ffffff18;margin-top:9px;overflow:hidden;border-radius:2px; }
 #o2fill { height:100%;background:#8bbec0; }
 #o2text { position:absolute;inset:0;text-align:center;color:#122024;font-weight:700;line-height:18px; }
+#targetList { display:grid;margin-top:7px;gap:2px;color:#ffdb91;font-size:11px; }
+#targetList span.done { color:#84d69a;text-decoration:line-through;opacity:.8; }
 #heading { position:absolute;top:20px;left:50%;transform:translateX(-50%); }
 #weather { position:absolute;top:20px;right:20px;color:#d7b392; }
+#speedControl { position:absolute;top:73px;right:20px;display:flex;align-items:center;gap:8px;padding:7px 9px;pointer-events:auto; }
+#speedControl>div { display:flex;gap:3px; }
+#speedControl button { min-width:34px;padding:5px 7px;border:1px solid #b5dde344;background:#15262b;color:#b5dde3;border-radius:3px;font-size:11px; }
+#speedControl button.active { background:#b5dde3;color:#122024; }
+#speedReadout { color:#fff0c8;min-width:23px;text-align:right; }
 #alert { position:absolute;top:24%;left:50%;transform:translateX(-50%);max-width:560px;width:80%;text-align:center;text-shadow:0 2px 4px #000;font-size:15px; }
 #instruments { position:absolute;bottom:20px;left:20px;width:320px; }
 #radius { font-size:17px;color:#a1eaff; }
@@ -34,8 +41,9 @@
 .card { max-height:95vh;overflow:auto;touch-action:pan-y; }
 .card h1 { margin:10px 0 20px;font-size:48px; }
 @media(max-width:760px) {
-  #mission{top:10px;left:10px;width:190px;padding:9px;font-size:10px} #mission strong{font-size:13px}
+  #mission{top:10px;left:10px;width:205px;padding:9px;font-size:10px} #mission strong{font-size:13px}
   #weather{top:10px;right:10px;font-size:10px;max-width:140px} #heading{top:100px;left:10px;transform:none;padding:6px;font-size:10px}
+  #speedControl{top:64px;right:10px;padding:5px;gap:4px} #speedControl span,#speedReadout{display:none} #speedControl button{min-width:29px;padding:4px;font-size:10px}
   #instruments{left:10px;bottom:10px;width:calc(100vw - 185px);padding:8px} #radius{font-size:13px} #scanStatus{font-size:11px} #instruments .help{display:none}
   #mapBox{right:10px;bottom:10px;width:155px;padding:5px} #minimap{width:143px;height:170px} .mapLegend{font-size:8px}
   #scanCapture{left:10px;bottom:165px;width:calc(100vw - 185px)}
