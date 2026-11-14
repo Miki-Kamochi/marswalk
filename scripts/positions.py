@@ -227,6 +227,44 @@ for i, (p, e, n, area) in enumerate(knobs, 1):
         "summit of a distinct knob or mesa found in the HiRISE elevation model (height above local floor > 9 m)",
         heightAboveSurroundings=round(p, 1), footprintM2=area)
 
+# small outcrops close to the EVA route: nearby landmarks give much sharper position fixes
+# (a bearing error of half a degree is 9 m at 1 km but under 3 m at 300 m)
+prom_s = z2 - ndi.grey_opening(z2, size=(31, 31))  # height above the local floor (60 m window)
+lab_s, cnt_s = ndi.label(prom_s > 3.5)
+fc_ = next(p for p in places if p["id"] == "forward_camp")
+hs_ = next(p for p in places if p["id"] == "stop_vera_rubin_ridge")
+ax, ay, bx, by = fc_["easting"], fc_["northing"], hs_["easting"], hs_["northing"]
+
+
+def dist_to_route(e, n):
+    t = max(0.0, min(1.0, ((e - ax) * (bx - ax) + (n - ay) * (by - ay)) / ((bx - ax) ** 2 + (by - ay) ** 2)))
+    return math.hypot(e - (ax + t * (bx - ax)), n - (ay + t * (by - ay)))
+
+
+cands = []
+for i in range(1, cnt_s + 1):
+    m = lab_s == i
+    area = m.sum() * 4
+    if not 40 <= area <= 6000:
+        continue
+    r, c = np.unravel_index(np.argmax(np.where(m, prom_s, -1)), prom_s.shape)
+    e, n = EN2(r, c)
+    d = dist_to_route(e, n)
+    if 60 < d < 420 and all(math.hypot(e - q["easting"], n - q["northing"]) > 140 for q in places):
+        cands.append((float(prom_s[r, c]), e, n, int(area)))
+cands.sort(reverse=True)
+outcrops = []
+for p, e, n, area in cands:
+    if all(math.hypot(e - q[1], n - q[2]) > 170 for q in outcrops):
+        outcrops.append((p, e, n, area))
+    if len(outcrops) == 8:
+        break
+outcrops.sort(key=lambda b: (b[1], -b[2]))
+for i, (p, e, n, area) in enumerate(outcrops, 1):
+    add(f"outcrop_{i}", f"Outcrop {i}", "landmark", e, n,
+        "top of a small rock outcrop near the EVA route, found in the HiRISE elevation model (stands > 3.5 m above its surroundings)",
+        heightAboveSurroundings=round(p, 1), footprintM2=area)
+
 # Vera Rubin Ridge crest: highest ground within 250 m of the hematite stop
 hstop = next(p for p in places if p["id"] == "stop_vera_rubin_ridge")
 r0, c0 = int((FN - hstop["northing"]) / 2), int((hstop["easting"] - FW) / 2)

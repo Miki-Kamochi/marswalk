@@ -5,8 +5,38 @@ NASA Space Apps Challenge 2026, "Interplanetary Survival Guide: Martian Map".
 A browser game about finding your way home on Mars, where there is no GPS and no compass, built
 on real NASA data of Gale Crater. The project vision is in [CLAUDE.md](CLAUDE.md).
 
-**Status: Phase 1.** The game is not built yet. The data, the processing pipeline and three
-check pages are ready.
+**Status: playable MVP.** One mission: collect the hematite sample, survive the storm, get home.
+Data check pages are at `/dev.html`.
+
+## How the game works
+
+You have an orbital map of Gale Crater but no "you are here": Mars has no GPS and no global
+magnetic field. **Wayfinder**, the suit's navigator, works the position out and always shows how
+unsure it is (the blue circle on the map).
+
+1. **Walk out** from the rover to Vera Rubin Ridge. Short cards explain each source as it is used:
+   step counting + gyro (drifts), the sun compass (true direction), and landmark bearings (look at
+   a ◇ landmark and hold steady; two landmarks fix the position).
+2. **Collect** the hematite sample.
+3. **Storm.** Visibility drops to about 50 m. You are asked to point to where you think the rover
+   is, and shown how far off that is.
+4. **Walk home** on Wayfinder's recorded path. A red line on the map shows where your own guess
+   would have taken you. When the dust thins, sight a landmark to check the position.
+5. **Reveal**: your real path, Wayfinder's estimate and the path without Wayfinder.
+
+Wayfinder is a particle filter in `src/nav/` that only receives simulated sensor readings, never
+the true position. `npm test` checks its drift, sun compass, landmark fixes and line-of-sight maths.
+
+### What it is based on
+
+- Apollo 14 (1971): with a map in hand, the crew stopped about 30 m short of Cone Crater's rim,
+  unsure of their position.
+- The Apollo Lunar Roving Vehicle navigated by directional gyro, odometer and a sun-shadow device:
+  dead reckoning plus a sun compass.
+- NASA Goddard is developing landmark/horizon-based positioning as backup navigation for the Moon.
+- Souman et al. (Current Biology, 2009): people walk in circles when they cannot see the sun.
+- The 2018 global dust storm ended Opportunity's mission; Curiosity recorded its thickest haze in Gale.
+- Sun position: NASA GISS Mars24 algorithm (Allison & McEwen 2000), tested against its published example.
 
 ## Run it
 

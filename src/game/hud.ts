@@ -1,4 +1,4 @@
-/** Helmet display: Wayfinder's compass, guidance, sources, uncertainty map, oxygen. */
+/** Helmet display: Wayfinder's compass, guidance, sources, the orbital map with the estimate. */
 import { DEG, wrap } from "../nav/rng";
 import type { Nav } from "./nav";
 import type { World } from "./world";
@@ -14,13 +14,29 @@ export interface HudState {
   alertLevel: "info" | "warn" | "danger";
   prompt: string;
   dust: number;
+  /** live "where you would be without Wayfinder" path, drawn on the map */
+  ghost: [number, number][];
+}
+
+/** A landmark as it appears on the visor. */
+export interface Marker {
+  id: string;
+  name: string;
+  /** screen position in CSS pixels; if off-screen, side says which edge */
+  x: number;
+  y: number;
+  side: "" | "left" | "right";
+  state: "idle" | "aim" | "done";
 }
 
 export class Hud {
   private tape = $<HTMLCanvasElement>("tape");
   private map = $<HTMLCanvasElement>("minimap");
   private imagery = new Image();
-  private mapRange = 260; // metres from centre to edge of the minimap
+  private mapRange = 110; // metres from centre to edge of the map
+  private markerEls = new Map<string, HTMLElement>();
+  private coachUntil = 0;
+  private coachSticky = false;
 
   constructor(private world: World, imageryUrl: string) {
     this.imagery.src = imageryUrl;
@@ -42,10 +58,59 @@ export class Hud {
     if (on) this.resize(); // canvases have no size while hidden
   }
 
-  update(nav: Nav, s: HudState) {
+  /** Hide everything Wayfinder provides (used when the player is asked to guess unaided). */
+  blind(on: boolean) {
+    $("hud").classList.toggle("blind", on);
+  }
+
+  /** A short explanation card. sticky = stays until replaced or cleared. */
+  coach(title: string, text: string, now: number, seconds = 9, sticky = false) {
+    $("coachTitle").textContent = title;
+    $("coachText").textContent = text;
+    $("coach").classList.add("on");
+    this.coachUntil = now + seconds;
+    this.coachSticky = sticky;
+  }
+
+  clearCoach() {
+    $("coach").classList.remove("on");
+    this.coachSticky = false;
+  }
+
+  /** Landmark brackets on the visor and the aiming ring in the centre. */
+  markers(list: Marker[], aimProgress: number) {
+    const box = $("markers");
+    const seen = new Set<string>();
+    for (const m of list) {
+      seen.add(m.id);
+      let el = this.markerEls.get(m.id);
+      if (!el) {
+        el = document.createElement("div");
+        el.innerHTML = "<i></i><span></span>";
+        box.appendChild(el);
+        this.markerEls.set(m.id, el);
+      }
+      el.className = `marker ${m.state} ${m.side}`;
+      el.style.transform = `translate(${m.x}px, ${m.y}px)`;
+      el.querySelector("span")!.textContent = m.state === "done" ? `${m.name} ✓` : m.side ? m.name : m.name;
+    }
+    for (const [id, el] of this.markerEls) {
+      if (!seen.has(id)) {
+        el.remove();
+        this.markerEls.delete(id);
+      }
+    }
+    const ring = $("aim");
+    ring.style.opacity = aimProgress > 0 ? "1" : "0.35";
+    ring.style.setProperty("--p", `${Math.round(aimProgress * 360)}deg`);
+  }
+
+  update(nav: Nav, s: HudState, now: number) {
     const est = nav.wf.estimate;
     const st = nav.status;
     const g = st.guidance;
+
+    if (!this.coachSticky && now > this.coachUntil) $("coach").classList.remove("on");
 
     $("objective").textContent = s.objective;
     $("clock").textContent = s.clock;
@@ -53,9 +118,14 @@ export class Hud {
     $("o2fill").className = s.o2Fraction < 0.2 ? "danger" : s.o2Fraction < 0.4 ? "warn" : "";
     $("o2text").textContent = `O₂ ${Math.max(0, Math.ceil(s.o2Minutes))} min`;
 
-    $("headline").textContent = g ? g.headline : "";
-    $("distance").textContent = g ? `${Math.round(g.distance / 5) * 5} m ${nav.mode === "home" ? "to rover" : "to go"}` : "";
-    $("cues").textContent = g?.cues ? `Keep: ${g.cues}` : g ? "No sun or landmark in view: steering by gyro and steps" : "";
+    let arrow = "";
+    if (g) {
+      const d = Math.abs(g.turn) / DEG;
+      arrow = d < 10 ? "▲ " : d > 150 ? "▼ " : g.turn < 0 ? "◀ " : "";
+      $("headline").textContent = `${arrow}${g.headline}${d >= 10 && d <= 150 && g.turn > 0 ? " ▶" : ""}`;
+    } else $("headline").textContent = "";
+    $("distance").textContent = g ? `${Math.round(g.distance / 5) * 5} m ${nav.mode === "home" ? "to the rover" : "to the sample site"}` : "";
+    $("cues").textContent = g?.cues ? `Keep: ${g.cues}` : g ? "Nothing to steer by: using step count and gyro only" : "";
 
     const alert = $("alert");
     alert.textContent = s.alert;
@@ -64,24 +134,26 @@ export class Hud {
     prompt.textContent = s.prompt;
     prompt.style.display = s.prompt ? "block" : "none";
 
-    // sources panel
-    const row = (id: string, on: boolean, text: string) => {
+    // how Wayfinder knows where you are
+    const row = (id: string, cls: string, text: string) => {
       const el = $(id);
-      el.className = on ? "src on" : "src off";
+      el.className = `src ${cls}`;
       el.querySelector("span")!.textContent = text;
     };
-    row("srcDr", true, `drifts ~4% of distance`);
-    row("srcSun", st.sunOk, st.sunOk ? `heading ±${st.sunSigmaDeg.toFixed(1)}°` : s.dust > 0.5 ? "sun hidden by dust" : "sun not usable");
-    const names = st.inView.map((l) => l.name);
-    row("srcLm", names.length > 0, names.length ? (names.length > 2 ? `${names.length} in view` : names.join(", ")) : "none in view");
+    row("srcDr", "on", "always on, drifts");
+    row("srcSun", st.sunOk ? "on" : "off", st.sunOk ? "true direction" : s.dust > 0.4 ? "hidden by dust" : "not usable");
+    const n = st.inView.length;
+    row("srcLm", n ? "on" : "off", n ? `${n} visible: look at a ◇` : "none visible");
     const pos = $("srcPos");
-    pos.className = est.r95 > 60 ? "src bad" : est.r95 > 25 ? "src mid" : "src on";
-    pos.querySelector("span")!.textContent = `within ±${Math.round(est.r95)} m`;
+    const cls = est.r95 > 40 ? "bad" : est.r95 > 18 ? "mid" : "on";
+    pos.className = `total ${cls}`;
+    pos.textContent = `Wayfinder knows your position to ±${Math.round(est.r95)} m`;
+    $("mapCaption").textContent = `Map from orbit · blue circle = Wayfinder's estimate (±${Math.round(est.r95)} m), not GPS`;
 
     if (this.map.width < 8 || this.tape.width < 8) this.resize();
     if (this.map.width < 8 || this.tape.width < 8) return;
     this.drawTape(nav, s);
-    this.drawMap(nav);
+    this.drawMap(nav, s);
   }
 
   /** Compass strip: Wayfinder's heading, with the course to walk and what is in view. */
@@ -109,41 +181,44 @@ export class Hud {
       const px = x(d * DEG);
       if (px < -20 || px > W + 20) continue;
       const major = d % 45 === 0;
+      const h = (major ? 14 : d % 15 === 0 ? 9 : 5) * k;
       ctx.fillStyle = major ? "#fff" : "rgba(255,255,255,0.55)";
-      ctx.fillRect(px - k * 0.5, H - (major ? 14 : d % 15 === 0 ? 9 : 5) * k, k, (major ? 14 : d % 15 === 0 ? 9 : 5) * k);
+      ctx.fillRect(px - k * 0.5, H - h, k, h);
       if (major) ctx.fillText(["N", "NE", "E", "SE", "S", "SW", "W", "NW"][d / 45], px, 3 * k);
       else if (d % 15 === 0) {
         ctx.fillStyle = "rgba(255,255,255,0.6)";
         ctx.fillText(String(d), px, 3 * k);
       }
     }
-    const mark = (b: number, color: string, label: string) => {
+    const mark = (b: number, color: string, label: string, big = false) => {
       const px = Math.min(Math.max(x(b), 10 * k), W - 10 * k);
+      const r = (big ? 9 : 5) * k;
       ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.moveTo(px, H - 16 * k);
-      ctx.lineTo(px - 6 * k, H - 27 * k);
-      ctx.lineTo(px + 6 * k, H - 27 * k);
+      ctx.moveTo(px, H - 15 * k);
+      ctx.lineTo(px - r, H - 15 * k - r * 1.6);
+      ctx.lineTo(px + r, H - 15 * k - r * 1.6);
       ctx.fill();
       if (label) {
         ctx.font = `${10 * k}px system-ui, sans-serif`;
-        ctx.fillText(label, px, H - 40 * k);
+        ctx.fillText(label, px, H - 42 * k);
       }
     };
     if (st.sunOk) mark(this.world.sun.azimuth * DEG, "#fff2a8", "SUN");
-    for (const l of st.inView.slice(0, 4)) mark(Math.atan2(l.e - est.e, l.n - est.n), "#ffffff", "");
-    if (st.guidance) mark(st.guidance.course, "#ffb86b", "");
+    if (st.guidance) mark(st.guidance.course, "#ffb86b", "", true);
     // centre line = where Wayfinder thinks you are facing
     ctx.fillStyle = s.dust > 0.5 ? "#ff8d7a" : "#7fe3ff";
     ctx.fillRect(W / 2 - k, 0, 2 * k, H);
   }
 
-  /** North-up map centred on Wayfinder's ESTIMATE, with the uncertainty circle. */
-  private drawMap(nav: Nav) {
+  /** North-up orbital map centred on Wayfinder's ESTIMATE, with the uncertainty circle. */
+  private drawMap(nav: Nav, s: HudState) {
     const cv = this.map;
     const ctx = cv.getContext("2d")!;
     const S = cv.width;
     const est = nav.wf.estimate;
+    // zoom so the uncertainty circle is always easy to see
+    this.mapRange += (Math.max(110, Math.min(320, est.r95 * 3.2)) - this.mapRange) * 0.04;
     const R = this.mapRange;
     const scale = S / (2 * R); // px per metre
     const X = (e: number) => S / 2 + (e - est.e) * scale;
@@ -159,27 +234,22 @@ export class Hud {
     if (this.imagery.complete && this.imagery.naturalWidth) {
       const mpp = (b.east - b.west) / this.imagery.naturalWidth;
       ctx.globalAlpha = 0.85;
-      ctx.drawImage(
-        this.imagery,
-        (est.e - R - b.west) / mpp,
-        (b.north - (est.n + R)) / mpp,
-        (2 * R) / mpp,
-        (2 * R) / mpp,
-        0,
-        0,
-        S,
-        S,
-      );
+      ctx.drawImage(this.imagery, (est.e - R - b.west) / mpp, (b.north - (est.n + R)) / mpp, (2 * R) / mpp, (2 * R) / mpp, 0, 0, S, S);
       ctx.globalAlpha = 1;
     }
-    // recorded trail
-    ctx.strokeStyle = "#ffffff";
-    ctx.lineWidth = Math.max(1.5, S / 130);
-    ctx.setLineDash([S / 40, S / 50]);
-    ctx.beginPath();
-    nav.wf.breadcrumbs.forEach((p, i) => (i ? ctx.lineTo(X(p[0]), Y(p[1])) : ctx.moveTo(X(p[0]), Y(p[1]))));
-    ctx.stroke();
-    ctx.setLineDash([]);
+    const line = (pts: [number, number][], color: string, width: number, dash: number[]) => {
+      if (pts.length < 2) return;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.setLineDash(dash);
+      ctx.beginPath();
+      pts.forEach((p, i) => (i ? ctx.lineTo(X(p[0]), Y(p[1])) : ctx.moveTo(X(p[0]), Y(p[1]))));
+      ctx.stroke();
+      ctx.setLineDash([]);
+    };
+    // recorded trail, and where you would be without Wayfinder
+    line(nav.wf.breadcrumbs, "#ffffff", Math.max(1.5, S / 130), [S / 40, S / 50]);
+    line(s.ghost, "#ff5a47", Math.max(2, S / 100), [S / 60, S / 60]);
     // landmarks
     for (const l of nav.landmarks) {
       const seen = nav.status.inView.includes(l);
@@ -192,14 +262,6 @@ export class Hud {
       ctx.lineTo(px - S / 50, py + S / 80);
       ctx.lineTo(px + S / 50, py + S / 80);
       ctx.fill();
-      if (seen) {
-        ctx.strokeStyle = "rgba(255,255,255,0.5)";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(S / 2, S / 2);
-        ctx.lineTo(px, py);
-        ctx.stroke();
-      }
     }
     const dot = (e: number, n: number, color: string, r: number) => {
       // pin things that are off the map to its edge
@@ -221,27 +283,28 @@ export class Hud {
     };
     dot(nav.home.e, nav.home.n, "#7fe3ff", S / 28);
     if (nav.mode === "site" && nav.site) dot(nav.site.e, nav.site.n, "#ffe066", S / 28);
-    // particle cloud + 95% circle: where you might really be
-    ctx.fillStyle = "rgba(127,227,255,0.5)";
-    for (const p of nav.wf.cloud(60)) ctx.fillRect(X(p[0]) - 1, Y(p[1]) - 1, 2, 2);
-    ctx.strokeStyle = est.r95 > 60 ? "#ff6b57" : est.r95 > 25 ? "#ffb86b" : "#7fe3ff";
-    ctx.lineWidth = Math.max(2, S / 90);
+    if (s.ghost.length) dot(s.ghost[s.ghost.length - 1][0], s.ghost[s.ghost.length - 1][1], "#ff5a47", S / 36);
+    // where you might really be: the cloud of guesses and the circle that holds 95% of them
+    const color = est.r95 > 40 ? "#ff6b57" : est.r95 > 18 ? "#ffb86b" : "#7fe3ff";
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.6;
+    for (const p of nav.wf.cloud(70)) ctx.fillRect(X(p[0]) - 1, Y(p[1]) - 1, 2, 2);
+    ctx.globalAlpha = 0.18;
     ctx.beginPath();
-    ctx.arc(S / 2, S / 2, Math.max(est.r95 * scale, 3), 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.fillStyle = ctx.strokeStyle;
-    ctx.globalAlpha = 0.12;
+    ctx.arc(S / 2, S / 2, Math.max(est.r95 * scale, 4), 0, Math.PI * 2);
     ctx.fill();
     ctx.globalAlpha = 1;
-    // heading arrow
+    ctx.strokeStyle = color;
+    ctx.lineWidth = Math.max(2, S / 90);
+    ctx.stroke();
+    // small heading tick (direction only: the position is the whole circle)
     ctx.translate(S / 2, S / 2);
     ctx.rotate(est.heading);
     ctx.fillStyle = "#ffffff";
     ctx.beginPath();
-    ctx.moveTo(0, -S / 16);
-    ctx.lineTo(-S / 32, S / 32);
-    ctx.lineTo(0, S / 64);
-    ctx.lineTo(S / 32, S / 32);
+    ctx.moveTo(0, -S / 22);
+    ctx.lineTo(-S / 50, S / 60);
+    ctx.lineTo(S / 50, S / 60);
     ctx.fill();
     ctx.restore();
     // rim + north mark

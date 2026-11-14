@@ -9,7 +9,8 @@
  *    magnetic compass to correct it, because Mars has no global magnetic field;
  *  - sun sensor: about 1 degree, worse when the sun is high (its direction along the ground
  *    is then poorly defined) and in dust, lost when the sun disc is hidden;
- *  - landmark camera: about 2 degrees in bearing to a recognised landmark.
+ *  - landmark camera: under a degree in bearing to a recognised landmark (a camera resolves
+ *    far finer angles; the limit is knowing exactly which point of the hill was matched).
  */
 import { DEG, Rng, wrap } from "./rng.ts";
 
@@ -31,7 +32,7 @@ export const DEFAULT_SENSORS: SensorConfig = {
   gyroBiasSigma: (15 * DEG) / 3600,
   gyroNoise: 0.02 * DEG,
   sunSigma: 1.0 * DEG,
-  landmarkSigma: 2.0 * DEG,
+  landmarkSigma: 0.5 * DEG,
 };
 
 export class SensorSim {
