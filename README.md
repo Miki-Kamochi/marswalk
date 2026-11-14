@@ -8,7 +8,7 @@ home. Built on real NASA data. Runs in a browser with no backend.
 
 | Page | What it is |
 |---|---|
-| `/` | Title screen and menu (3D Gale Crater in the background) |
+| `/` | Home screen: title and menu over a pixel-art 3D Gale Crater |
 | `/sim.html` | **Route simulator**: pick a destination on the 2D map or in 3D, compare four routes |
 | `/how.html` | How it works: the problem, the layers, the route rules, every assumption |
 | `/game.html` | The earlier first-person game prototype (see below) |

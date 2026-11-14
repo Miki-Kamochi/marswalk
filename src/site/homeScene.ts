@@ -1,7 +1,11 @@
 /**
- * The moving background of the title screen and the menu: the real Gale Crater terrain
- * (the same faceted mesh as the planner and the game), a camera that drifts and follows the
- * pointer, blowing dust, and one camera "shot" per menu item.
+ * The moving background of the home screen: the real Gale Crater terrain (the same faceted
+ * mesh as the planner and the game), a camera that drifts and follows the pointer, blowing
+ * dust, and one camera "shot" per menu item.
+ *
+ * It is drawn like pixel art: the scene is rendered at a fraction of the screen size, then a
+ * second pass reduces it to a few shades per colour channel with ordered (Bayer) dithering,
+ * and the browser scales it up without smoothing.
  */
 import * as THREE from "three";
 import { Line2 } from "three/addons/lines/Line2.js";
@@ -34,6 +38,41 @@ const SHOTS: Record<ShotId, Shot> = {
   credits: { pos: [8142900, -280300, 60], look: [8171517, -318840, -1500], drift: 20 },
 };
 
+/** screen pixels per drawn pixel */
+const PIXEL = 3;
+/** shades per colour channel after dithering */
+const LEVELS = 8;
+
+const POST_VERTEX = `
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = vec4(position.xy, 0.0, 1.0);
+}`;
+const POST_FRAGMENT = `
+uniform sampler2D tScene;
+uniform float uLevels;
+/* where the menu sits: 0 = left side (wide screens), 1 = bottom (narrow screens) */
+uniform float uMenuBottom;
+varying vec2 vUv;
+float bayer4(vec2 p) {
+  int x = int(mod(p.x, 4.0));
+  int y = int(mod(p.y, 4.0));
+  int i = x + y * 4;
+  int m[16] = int[16](0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5);
+  return (float(m[i]) + 0.5) / 16.0 - 0.5;
+}
+void main() {
+  vec3 c = texture2D(tScene, vUv).rgb;
+  c = pow(max(c, 0.0), vec3(1.0 / 2.2));            // to display brightness before quantising
+  // darken behind the menu; the dithering below turns the fade into pixel-art shading
+  float t = mix(smoothstep(0.56, 0.22, vUv.x), smoothstep(0.72, 0.38, vUv.y), uMenuBottom);
+  c *= 1.0 - 0.82 * t;
+  c += bayer4(gl_FragCoord.xy) / (uLevels - 1.0);
+  c = floor(clamp(c, 0.0, 1.0) * (uLevels - 1.0) + 0.5) / (uLevels - 1.0);
+  gl_FragColor = vec4(c, 1.0);
+}`;
+
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
 export interface Readout {
@@ -61,20 +100,36 @@ export class HomeScene {
   private dust: THREE.Points;
   private routes = new THREE.Group();
   private clock = performance.now();
+  private target: THREE.WebGLRenderTarget;
+  private post = new THREE.Scene();
+  private postCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
   static async create(host: HTMLElement, reduced: boolean): Promise<HomeScene> {
     const low = matchMedia("(pointer: coarse)").matches || innerWidth < 900;
     const world = await World.load(() => {}, low);
-    return new HomeScene(host, world, reduced, low);
+    return new HomeScene(host, world, reduced);
   }
 
-  private constructor(host: HTMLElement, world: World, reduced: boolean, low: boolean) {
+  private constructor(host: HTMLElement, world: World, reduced: boolean) {
     this.world = world;
     this.reduced = reduced;
-    this.renderer = new THREE.WebGLRenderer({ antialias: !low, logarithmicDepthBuffer: true, powerPreference: "high-performance" });
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio, low ? 1.25 : 1.75));
+    this.renderer = new THREE.WebGLRenderer({ antialias: false, logarithmicDepthBuffer: true, powerPreference: "high-performance" });
+    this.renderer.setPixelRatio(1);
     this.canvas = this.renderer.domElement;
     host.appendChild(this.canvas);
+    this.target = new THREE.WebGLRenderTarget(1, 1, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter });
+    this.post.add(
+      new THREE.Mesh(
+        new THREE.PlaneGeometry(2, 2),
+        new THREE.ShaderMaterial({
+          uniforms: { tScene: { value: this.target.texture }, uLevels: { value: LEVELS }, uMenuBottom: { value: 0 } },
+          vertexShader: POST_VERTEX,
+          fragmentShader: POST_FRAGMENT,
+          depthTest: false,
+          depthWrite: false,
+        }),
+      ),
+    );
 
     // late afternoon at Gale: low sun, long shadows
     const base = world.place("base");
@@ -136,7 +191,7 @@ export class HomeScene {
       geo.setPositions(pts);
       const mat = new LineMaterial({
         color: rec ? 0xff6b2c : 0xf4ede6,
-        linewidth: rec ? 4 : 1.5,
+        linewidth: rec ? 2 : 1,
         transparent: true,
         opacity: rec ? 1 : 0.55,
         fog: false,
@@ -158,7 +213,7 @@ export class HomeScene {
     }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-    const mat = new THREE.PointsMaterial({ color: 0xe8b48c, size: 0.18, transparent: true, opacity: 0.55, depthWrite: false, fog: false });
+    const mat = new THREE.PointsMaterial({ color: 0xf0c49a, size: 0.25, transparent: true, opacity: 0.7, depthWrite: false, fog: false });
     const p = new THREE.Points(geo, mat);
     p.frustumCulled = false;
     return p;
@@ -213,7 +268,10 @@ export class HomeScene {
 
     if (!this.reduced) this.moveDust(dt);
     this.world.setSky(this.utc, f.toEasting(pos.x), f.toNorthing(pos.z), 0, this.camera);
+    this.renderer.setRenderTarget(this.target);
     this.renderer.render(this.world.scene, this.camera);
+    this.renderer.setRenderTarget(null);
+    this.renderer.render(this.post, this.postCamera);
   }
 
   /** Where the camera is looking: shown in the corner of the screen. */
@@ -229,9 +287,15 @@ export class HomeScene {
   resize(): void {
     const w = this.canvas.parentElement!.clientWidth;
     const h = this.canvas.parentElement!.clientHeight;
-    this.renderer.setSize(w, h);
+    const lw = Math.max(1, Math.ceil(w / PIXEL));
+    const lh = Math.max(1, Math.ceil(h / PIXEL));
+    // drawing buffer at low resolution; CSS stretches it to the window without smoothing
+    this.renderer.setSize(lw, lh, false);
+    this.target.setSize(lw, lh);
+    const post = (this.post.children[0] as THREE.Mesh).material as THREE.ShaderMaterial;
+    post.uniforms.uMenuBottom.value = w <= 720 ? 1 : 0;
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
-    for (const l of this.routes.children) (l as Line2).material.resolution.set(w, h);
+    for (const l of this.routes.children) (l as Line2).material.resolution.set(lw, lh);
   }
 }
