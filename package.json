@@ -10,7 +10,8 @@
     "preview": "vite preview --host",
     "typecheck": "tsc --noEmit",
     "data:download": ".venvScriptspython scripts/download_data.py",
-    "data:process": ".venvScriptspython scripts/process_data.py && .venvScriptspython scripts/positions.py"
+    "data:process": ".venvScriptspython scripts/process_data.py && .venvScriptspython scripts/positions.py",
+    "test": "node --test \"src/**/*.test.ts\""
   },
   "dependencies": {
     "leaflet": "^1.9.4",

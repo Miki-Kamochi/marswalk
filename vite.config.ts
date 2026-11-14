@@ -13,6 +13,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, "index.html"),
+        dev: resolve(__dirname, "dev.html"),
         terrain: resolve(__dirname, "terrain-test.html"),
         sensors: resolve(__dirname, "sensor-test.html"),
         map: resolve(__dirname, "map-test.html"),

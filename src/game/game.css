@@ -1,0 +1,120 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --amber: #ffb86b;
+  --cyan: #7fe3ff;
+  --warn: #ff6b57;
+  --panel: rgba(18, 10, 6, 0.72);
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #1a0f0a;
+  color: #f6ece2;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+#view canvas {
+  display: block;
+}
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 10, 6, 0.78);
+  z-index: 20;
+  padding: 16px;
+  text-align: center;
+}
+.card {
+  max-width: 460px;
+  padding: 24px 22px;
+  background: rgba(26, 15, 10, 0.92);
+  border: 1px solid rgba(255, 184, 107, 0.35);
+  border-radius: 12px;
+}
+.card h1 {
+  margin: 0 0 8px;
+  letter-spacing: 0.3em;
+  font-size: 26px;
+  color: var(--amber);
+}
+.card h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  color: var(--amber);
+}
+.lead {
+  font-size: 16px;
+  line-height: 1.45;
+  margin: 0 0 12px;
+}
+.help,
+.credit {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #d3b8a3;
+  margin: 0 0 14px;
+}
+.credit {
+  font-size: 11px;
+  margin: 14px 0 0;
+}
+button {
+  font: inherit;
+  font-weight: 700;
+  font-size: 17px;
+  padding: 13px 26px;
+  color: #1a0f0a;
+  background: var(--amber);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+#debug {
+  position: fixed;
+  left: 8px;
+  bottom: 8px;
+  margin: 0;
+  padding: 6px 8px;
+  font: 11px/1.4 ui-monospace, Consolas, monospace;
+  background: var(--panel);
+  border-radius: 6px;
+  z-index: 15;
+  display: none;
+  pointer-events: none;
+}
+#stick {
+  position: fixed;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.07);
+  display: none;
+  z-index: 12;
+  pointer-events: none;
+}
+#knob {
+  position: absolute;
+  left: 35px;
+  top: 35px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.45);
+}
+#hud {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
