@@ -74,7 +74,7 @@ function renderBelow(): void {
   const tabBtn = (id: "plans" | "targets", label: string) =>
     `<button role="tab" data-tab="${id}" aria-selected="${tab === id}">${esc(label)}</button>`;
   const head = plans.length
-    ? `<div class="head" role="tablist">${tabBtn("plans", tr("Recent plans", "最近の計画"))}${tabBtn("targets", tr("Science targets", "科学目標"))}${
+    ? `<div class="head" role="tablist">${tabBtn("plans", tr("History", "履歴"))}${tabBtn("targets", tr("Science targets", "科学目標"))}${
         tab === "plans" && plans.length > 6 ? `<span class="count">${esc(tr(`${plans.length} saved`, `${plans.length}件保存`))}</span>` : ""
       }</div>`
     : `<div class="head"><h2>${esc(tr("Start with a science target", "科学目標から始める"))}</h2></div>`;
@@ -85,7 +85,7 @@ function renderBelow(): void {
 
 function renderButton(): void {
   const n = listProjects().length;
-  $("ddLabel").textContent = n ? tr("My plans", "計画") : tr("Science targets", "科学目標");
+  $("ddLabel").textContent = n ? tr("History", "履歴") : tr("Science targets", "科学目標");
   $("ddCount").textContent = n ? String(n) : "";
 }
 
@@ -158,10 +158,21 @@ async function start(): Promise<void> {
     spot.style.opacity = String(Math.max(0, Math.min(1, (facing - 0.3) / 0.25)));
   };
   addEventListener("resize", () => g.resize());
+  // Stop drawing the moment we leave: a page that keeps redrawing while the browser takes its
+  // snapshot makes Chrome skip the page-change animation. Restart if we come back via back/forward.
+  let running = true;
   const loop = (now: number) => {
+    if (!running) return;
     g.frame(now);
     requestAnimationFrame(loop);
   };
+  addEventListener("pageswap", () => (running = false));
+  addEventListener("pageshow", (e) => {
+    if (e.persisted && !running) {
+      running = true;
+      requestAnimationFrame(loop);
+    }
+  });
   requestAnimationFrame(loop);
   host.classList.add("ready");
 }
