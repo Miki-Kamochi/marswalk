@@ -40,5 +40,3 @@ export function minEnergyPerMetre(c: PlanConfig): number {
   for (let s = -0.5; s <= 0.5; s += 0.005) best = Math.min(best, energyPerMetre(s, c));
   return best;
 }
-
-export const gramsO2 = (joules: number, c: PlanConfig) => joules / c.joulesPerGramO2;

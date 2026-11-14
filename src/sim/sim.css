@@ -20,14 +20,6 @@ button {
   font: inherit;
   color: inherit;
 }
-.kicker {
-  font-variant-numeric: tabular-nums;
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  color: var(--accent-glow);
-}
-
 /* ---------------------------------------------------------------- plan panel */
 .card {
   position: absolute;
@@ -617,6 +609,7 @@ button {
   height: 19px;
 }
 .fab.label {
+  letter-spacing: 0.14em;
   font-variant-numeric: tabular-nums;
   font-size: 12px;
   font-weight: 600;

@@ -81,35 +81,13 @@ const LIMITER: Record<string, Pair> = {
 };
 export const limiterName = (k: string) => tr(...LIMITER[k]);
 
-const PROFILE: Record<Profile, { name: Pair; what: Pair }> = {
-  short: {
-    name: ["Shortest", "最短"],
-    what: ["Keeps the distance as small as the three rules allow.", "3つの条件を守ったうえで、距離を最小にします。"],
-  },
-  o2: {
-    name: ["Least oxygen", "省エネ"],
-    what: [
-      "Keeps the energy, and so the oxygen, as small as possible. It goes around climbs and soft sand.",
-      "エネルギー（＝酸素）を最小にします。登りや砂地を避けて回り込みます。",
-    ],
-  },
-  found: {
-    name: ["Easiest to locate", "迷いにくさ"],
-    what: [
-      "Stays on ground where a photo fix is expected to work, so the position can be checked at any time.",
-      "写真で位置を確かめられる地面を選んで通ります。いつでも位置を確認できます。",
-    ],
-  },
-  mix: {
-    name: ["Balanced", "統合"],
-    what: [
-      "Weighs energy and position error together, with fixed weights. Our recommended route.",
-      "エネルギーと位置の誤差を、決まった重みで両方考えます。おすすめのルートです。",
-    ],
-  },
+const PROFILE: Record<Profile, Pair> = {
+  short: ["Shortest", "最短"],
+  o2: ["Least oxygen", "省エネ"],
+  found: ["Easiest to locate", "迷いにくさ"],
+  mix: ["Balanced", "統合"],
 };
-export const profileName = (p: Profile) => tr(...PROFILE[p].name);
-export const profileWhat = (p: Profile) => tr(...PROFILE[p].what);
+export const profileName = (p: Profile) => tr(...PROFILE[p]);
 
 const PLACE: Record<string, string> = {
   base: "ベースキャンプ",
