@@ -13,7 +13,7 @@ home. Built on real NASA data. Runs in a browser with no backend.
 | `/` | Home: a faceted pixel Mars between "Ares" and "Sight", one search bar with New plan, and cards for recent plans or science targets |
 | `/sim.html` | **Route simulator**: pick a destination on the 2D map or in 3D, compare four routes |
 | `/how.html` | How it works: the problem, the layers, the route rules, every assumption |
-| `/game.html` | Walk preview: the earlier first-person prototype (see below) |
+| `/game.html` | Walk preview: the earlier first-person prototype (see below), opened from the planner |
 | `/credits.html` | Data, methods and software |
 | `/dev/` | Data check pages for developers |
 

@@ -60,7 +60,7 @@ export class Globe {
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }`,
         fragmentShader: `uniform vec3 uSun; varying vec3 vN; varying vec3 vW;
           void main(){ float edge = pow(1. - abs(vN.z), 3.); float lit = smoothstep(-0.3, 0.6, dot(vW, uSun));
-          gl_FragColor = vec4(vec3(1., .55, .3), edge * lit * .6); }`,
+          gl_FragColor = vec4(vec3(1., .55, .3), edge * (0.4 + 0.6 * lit) * .75); }`,
       }),
     );
     this.scene.add(rim);
@@ -189,10 +189,15 @@ export class Globe {
     // draw at 1/pixel of the CSS size; CSS scales it back up with crisp pixels
     this.renderer.setPixelRatio(1 / this.pixel);
     this.renderer.setSize(w, h, true);
-    // room below for the cards and the search bar at the bottom, and for the top bar above
-    const below = w < 720 ? 330 : 270;
-    const d = Math.max(160, Math.min(0.56 * h, 0.66 * w, h - below - 84));
-    const cy = Math.min(0.45 * h, h - below - d / 2 - 12);
+    // the globe fills the space between the top bar and the cards above the search bar,
+    // and leaves room for "Ares" and "Sight" on either side (on phones the title sits above)
+    const phone = w < 720;
+    const top = phone ? 130 : 64;
+    const below = phone ? 330 : 274;
+    const font = Math.min(124, Math.max(46, 0.075 * w));
+    const sideRoom = phone ? w - 40 : w - 2 * (2.8 * font + 32 + 24);
+    const d = Math.max(160, Math.min(h - below - top - 8, sideRoom));
+    const cy = top + (h - below - top) / 2;
     const half = h / d; // world units from the screen centre to its top edge (radius 1 = d/2 px)
     const lift = ((h / 2 - cy) * 2) / d;
     this.camera.aspect = w / Math.max(1, h);
@@ -202,6 +207,7 @@ export class Globe {
     const root = document.documentElement.style;
     root.setProperty("--globe-d", `${Math.round(d)}px`);
     root.setProperty("--globe-y", `${Math.round(cy)}px`);
+    root.setProperty("--title-size", `${Math.round(font)}px`);
   }
 
   frame(now: number): void {

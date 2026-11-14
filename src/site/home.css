@@ -1,8 +1,8 @@
 /* Home: black space, a faceted pixel Mars in the middle, "Ares" and "Sight" either side,
    one search bar and a row of cards below. --globe-d / --globe-y come from globe.ts. */
 :root {
-  --globe-d: min(56vh, 66vw);
-  --globe-y: 44vh;
+  --globe-d: min(calc(100vh - 346px), 60vw);
+  --globe-y: calc(32px + (100vh - 274px) / 2);
   --gap: clamp(20px, 3vw, 48px);
 }
 body.home {
@@ -40,6 +40,18 @@ body.home::after {
   height: 26vh;
   pointer-events: none;
   background: linear-gradient(to top, rgba(120, 50, 20, 0.2), rgba(120, 50, 20, 0));
+}
+
+/* a soft warm glow behind the planet, so its outline reads against black even on the night side */
+.halo {
+  position: absolute;
+  left: calc(50% - var(--globe-d) * 0.7);
+  top: calc(var(--globe-y) - var(--globe-d) * 0.7);
+  width: calc(var(--globe-d) * 1.4);
+  height: calc(var(--globe-d) * 1.4);
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 120, 60, 0.2) 34%, rgba(255, 110, 50, 0.07) 46%, rgba(255, 100, 40, 0) 68%);
 }
 
 /* the label that follows Gale Crater on the globe (moved by home.ts) */
@@ -115,7 +127,7 @@ body.home::after {
 /* ---------------------------------------------------------------- title around the globe */
 .title {
   margin: 0;
-  font-size: clamp(40px, 6vw, 88px);
+  font-size: var(--title-size, clamp(46px, 7.5vw, 124px));
   line-height: 1;
   letter-spacing: -0.03em;
   pointer-events: none;
@@ -448,7 +460,7 @@ body.no-globe #globe::before {
     z-index: 2;
     left: 0;
     right: 0;
-    top: calc(var(--globe-y) - var(--globe-d) / 2 - 70px);
+    top: 70px;
     text-align: center;
   }
   .title span {

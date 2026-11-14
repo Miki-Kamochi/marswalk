@@ -12,6 +12,11 @@ import { makeRover, makeSampleSite } from "./props";
 import { drawReveal } from "./reveal";
 import { World } from "../world/world";
 
+// opened from the planner: "← Planner" goes back to the same plan
+if (/\/sim\.html/.test(document.referrer)) {
+  for (const a of document.querySelectorAll<HTMLAnchorElement>("a.menuLink")) a.href = document.referrer;
+}
+
 /** The mission clock runs this many times faster than real time (and so does walking). */
 export const TIME_SCALE = WALK_SPEED / REAL_PACE;
 /** Oxygen for this EVA, minutes of mission time. */

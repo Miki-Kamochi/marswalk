@@ -4,506 +4,229 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AresSight — How it works</title>
+    <meta name="theme-color" content="#000000" />
     <link rel="stylesheet" href="/src/site/site.css" />
+    <link rel="stylesheet" href="/src/site/doc.css" />
   </head>
-  <body>
-    <header class="topbar">
-      <a class="brand" href="/">ARESSIGHT</a>
-      <span class="where"><span data-l="en">How it works</span><span data-l="ja">仕組み</span></span>
-      <span class="spacer"></span>
-      <a class="link" href="/sim.html"><span data-l="en">Open the simulator</span><span data-l="ja">シミュレーターを開く</span></a>
-      <div class="seg" role="group" aria-label="Language">
-        <button data-set-lang="en">EN</button>
-        <button data-set-lang="ja">日本語</button>
-      </div>
+  <body class="read">
+    <header class="pbar">
+      <a class="logo" href="/">AresSight</a>
+      <nav aria-label="Pages">
+        <a href="/how.html" aria-current="page"><span data-l="en">How it works</span><span data-l="ja">仕組み</span></a>
+        <a href="/credits.html"><span data-l="en">Credits</span><span data-l="ja">クレジット</span></a>
+        <a class="go" href="/sim.html"><span data-l="en">Plan a walk</span><span data-l="ja">計画する</span></a>
+        <button class="lang" data-toggle-lang aria-label="Language"></button>
+      </nav>
     </header>
 
-    <main class="doc">
-      <div data-l="en">
-        <h1>How AresSight works</h1>
-        <p class="lead">
-          A layered map of Gale Crater that tells an astronaut on foot where the ground is safe, where they can check
-          their position, and which route gets them home.
-        </p>
-        <ul class="toc">
-          <li><a href="#problem">1. The problem</a></li>
-          <li><a href="#position">2. Knowing where you are</a></li>
-          <li><a href="#layers">3. The map layers</a></li>
-          <li><a href="#routes">4. The routes</a></li>
-          <li><a href="#assumptions">5. Assumptions</a></li>
-          <li><a href="#limits">6. Limits</a></li>
-          <li><a href="#sources">7. Sources</a></li>
-        </ul>
-        <p class="note">
-          Labels used on this page:
-          <span class="tagchip real">In use</span> a method or system that already exists.
-          <span class="tagchip ours">Our proposal</span> how we put them together.
-          <span class="tagchip guess">Our assumption</span> a number we chose; it is not a NASA value.
-        </p>
-      </div>
-      <div data-l="ja">
-        <h1>AresSightの仕組み</h1>
-        <p class="lead">
-          歩いて探査する宇宙飛行士のための、ゲール・クレーターの重ね合わせ地図です。どこが安全か、どこなら自分の位置を確かめられるか、どのルートなら帰れるかを示します。
-        </p>
-        <ul class="toc">
-          <li><a href="#problem">1. 問題</a></li>
-          <li><a href="#position">2. 位置の知り方</a></li>
-          <li><a href="#layers">3. 地図のレイヤー</a></li>
-          <li><a href="#routes">4. ルート</a></li>
-          <li><a href="#assumptions">5. 仮定</a></li>
-          <li><a href="#limits">6. 限界</a></li>
-          <li><a href="#sources">7. 出典</a></li>
-        </ul>
-        <p class="note">
-          このページで使うラベル：
-          <span class="tagchip real">実用済み</span> すでにある手法やシステム。
-          <span class="tagchip ours">私たちの提案</span> それらの組み合わせ方。
-          <span class="tagchip guess">私たちの仮定</span> 私たちが決めた数値。NASAの公式値ではありません。
-        </p>
-      </div>
+    <main class="page">
+      <h1><span data-l="en">How AresSight works</span><span data-l="ja">AresSightの仕組み</span></h1>
+      <p class="lead">
+        <span data-l="en">A map of Gale Crater for astronauts on foot. It shows where the ground is safe, where you can check your position, and which route always gets you home.</span>
+        <span data-l="ja">歩いて探査する宇宙飛行士のための、ゲール・クレーターの地図です。安全な場所、自分の位置を確かめられる場所、そして必ず帰れるルートを示します。</span>
+      </p>
+      <ul class="toc">
+        <li><a href="#problem"><span data-l="en">The problem</span><span data-l="ja">問題</span></a></li>
+        <li><a href="#position"><span data-l="en">Staying found</span><span data-l="ja">位置の知り方</span></a></li>
+        <li><a href="#layers"><span data-l="en">Map layers</span><span data-l="ja">地図のレイヤー</span></a></li>
+        <li><a href="#routes"><span data-l="en">Routes</span><span data-l="ja">ルート</span></a></li>
+        <li><a href="#assumptions"><span data-l="en">Assumptions</span><span data-l="ja">仮定</span></a></li>
+        <li><a href="#limits"><span data-l="en">Limits</span><span data-l="ja">限界</span></a></li>
+      </ul>
 
-      <!-- ------------------------------------------------------------ 1 -->
+      <!-- ------------------------------------------------------------ problem -->
       <section id="problem">
-        <div data-l="en">
-          <h2>1. The problem: you can get lost on Mars</h2>
-          <ul>
-            <li>Mars has no GPS satellites, and no global magnetic field, so a compass does not work either.</li>
-            <li>A radio signal takes 3 to 22 minutes to reach Earth, one way. Nobody at home can tell you where you are in time.</li>
-            <li>A walking astronaut can count steps to keep track of position, but the error grows with every step.</li>
-            <li>
-              The error can be reset by matching a photo of the ground to a map made from orbit. NASA's Perseverance
-              rover has done this on its own since February 2026, to about 25 cm, in about 2 minutes
-              <span class="tagchip real">In use</span>
-              (<a href="https://www.jpl.nasa.gov/news/nasas-perseverance-now-autonomously-pinpoints-its-location-on-mars/" target="_blank" rel="noopener">JPL</a>).
-            </li>
-            <li>
-              A match needs ground that looks different from the ground around it. The Ingenuity helicopter's last
-              flight ended over smooth sand ripples that its camera could not track. In 1971 the Apollo 14 crew, map in
-              hand, turned back about 30 m short of the crater rim they were looking for.
-            </li>
-            <li>The suit's oxygen is limited, so being lost is a life-support problem.</li>
-          </ul>
-          <p class="note">
-            So an AresSight plan has to answer two questions, not one: <b>is the ground safe?</b> and
-            <b>will I be able to check where I am?</b>
-          </p>
+        <h2><span class="n">01</span><span data-l="en">You can get lost on Mars</span><span data-l="ja">火星では迷う</span></h2>
+        <div class="grid">
+          <div class="box">
+            <span class="big">0</span>
+            <h3><span data-l="en">GPS satellites</span><span data-l="ja">GPS衛星</span></h3>
+            <p><span data-l="en">And no global magnetic field, so a compass does not work either.</span><span data-l="ja">全体をおおう磁場もないので、方位磁針も使えません。</span></p>
+          </div>
+          <div class="box">
+            <span class="big">3–22 min</span>
+            <h3><span data-l="en">to reach Earth</span><span data-l="ja">地球まで片道</span></h3>
+            <p><span data-l="en">Nobody at home can tell you where you are in time.</span><span data-l="ja">地球から「今どこにいるか」を教えても間に合いません。</span></p>
+          </div>
+          <div class="box">
+            <span class="big">O₂</span>
+            <h3><span data-l="en">is limited</span><span data-l="ja">には限りがある</span></h3>
+            <p><span data-l="en">Being lost in a suit is a life-support problem.</span><span data-l="ja">宇宙服で迷うことは、命に関わります。</span></p>
+          </div>
         </div>
-        <div data-l="ja">
-          <h2>1. 問題：火星では迷う</h2>
-          <ul>
-            <li>火星にはGPS衛星がありません。全体をおおう磁場もないので、方位磁針も使えません。</li>
-            <li>電波が地球に届くまで、片道3〜22分かかります。地球の人が「今どこにいるか」を教えても間に合いません。</li>
-            <li>歩く宇宙飛行士は歩数で位置を追えますが、歩くほど誤差がたまります。</li>
-            <li>
-              誤差は、地面の写真を軌道から作った地図と照合すればリセットできます。NASAの探査車パーサヴィアランスは2026年2月から、これを自力で行っています。精度は約25 cm、所要時間は約2分です
-              <span class="tagchip real">実用済み</span>
-              （<a href="https://www.jpl.nasa.gov/news/nasas-perseverance-now-autonomously-pinpoints-its-location-on-mars/" target="_blank" rel="noopener">JPL</a>）。
-            </li>
-            <li>
-              ただし照合には、周りと見分けのつく地面が必要です。ヘリコプターのインジェニュイティは、カメラで追えない、なめらかな砂の上で最後の飛行を終えました。1971年のアポロ14号の飛行士は、地図を持っていながら、目的のクレーターの縁の約30 m手前で引き返しました。
-            </li>
-            <li>宇宙服の酸素には限りがあるので、迷うことは命に関わります。</li>
-          </ul>
-          <p class="note">
-            ですからAresSightの計画は、2つの問いに答える必要があります。<b>その地面は安全か？</b>
-            そして<b>そこで自分の位置を確かめられるか？</b>
-          </p>
-        </div>
+        <p class="callout">
+          <span data-l="en">So every plan answers two questions: <b>is the ground safe?</b> and <b>can I check where I am?</b></span>
+          <span data-l="ja">だから計画は2つの問いに答えます。<b>その地面は安全か？</b> そして <b>そこで自分の位置を確かめられるか？</b></span>
+        </p>
+        <details class="more">
+          <summary><span data-l="en">Why this matters</span><span data-l="ja">なぜ大事か</span></summary>
+          <div>
+            <ul>
+              <li><span data-l="en">In 1971 the Apollo 14 crew, map in hand, turned back about 30 m short of the crater rim they were looking for.</span><span data-l="ja">1971年、アポロ14号の飛行士は地図を持っていながら、目的のクレーターの縁の約30 m手前で引き返しました。</span></li>
+              <li><span data-l="en">The Ingenuity helicopter's last flight ended over smooth sand ripples that its camera could not track.</span><span data-l="ja">ヘリコプターのインジェニュイティは、カメラで追えないなめらかな砂の上で最後の飛行を終えました。</span></li>
+              <li><span data-l="en">Counting steps keeps track of position, but the error grows with every step.</span><span data-l="ja">歩数で位置は追えますが、歩くほど誤差がたまります。</span></li>
+            </ul>
+          </div>
+        </details>
       </section>
 
-      <!-- ------------------------------------------------------------ 2 -->
+      <!-- ------------------------------------------------------------ position -->
       <section id="position">
-        <div data-l="en">
-          <h2>2. Knowing where you are while walking</h2>
-          <p>
-            We assume the astronaut's suit works the way Mars rovers already do, with steps in place of wheels
-            <span class="tagchip guess">Our assumption</span>.
-          </p>
-          <div class="tablewrap">
-            <table>
-              <thead>
-                <tr><th>Job</th><th>Mars rover</th><th>Astronaut on foot</th></tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Follow the movement all the time</td>
-                  <td>Wheel turns and a motion sensor</td>
-                  <td>Step count and a motion sensor in the suit. The error grows by about 3 m for every 100 m walked.</td>
-                </tr>
-                <tr><td>Keep the heading true</td><td>Looks at the Sun</td><td>Looks at the Sun</td></tr>
-                <tr>
-                  <td>Reset the error now and then</td>
-                  <td>Matches its own photos to the orbital image</td>
-                  <td>The suit camera does the same at a <b>photo fix</b>: stand still for about 2 minutes, error back to about 2 m.</td>
-                </tr>
-              </tbody>
-            </table>
+        <h2><span class="n">02</span><span data-l="en">Staying found, like a Mars rover</span><span data-l="ja">探査車と同じ方法で位置を知る</span></h2>
+        <div class="grid steps">
+          <div class="box">
+            <h3><span data-l="en">Count steps</span><span data-l="ja">歩数を数える</span></h3>
+            <p><span data-l="en">The suit follows every step. The error grows by about 3 m per 100 m.</span><span data-l="ja">宇宙服が歩数を追います。100 mごとに誤差が約3 m増えます。</span></p>
           </div>
-          <p>
-            We did not build the photo matcher. AresSight predicts <b>where it would work</b> and plans the walk around
-            that <span class="tagchip ours">Our proposal</span>.
-          </p>
-        </div>
-        <div data-l="ja">
-          <h2>2. 歩いている間の位置の知り方</h2>
-          <p>
-            宇宙服は、火星探査車と同じ仕組みで位置を追うと仮定しています。車輪の代わりに歩数を使います
-            <span class="tagchip guess">私たちの仮定</span>。
-          </p>
-          <div class="tablewrap">
-            <table>
-              <thead>
-                <tr><th>役割</th><th>火星探査車</th><th>歩く宇宙飛行士</th></tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>動きを常に追う</td>
-                  <td>車輪の回転数と動きのセンサー</td>
-                  <td>歩数と、宇宙服の動きのセンサー。100 m歩くごとに誤差が約3 m増えます。</td>
-                </tr>
-                <tr><td>向きを正しく保つ</td><td>太陽を見る</td><td>太陽を見る</td></tr>
-                <tr>
-                  <td>ときどき誤差をリセットする</td>
-                  <td>自分の写真を軌道からの画像と照合する</td>
-                  <td>宇宙服のカメラで同じことをします（<b>撮影</b>）。約2分立ち止まり、誤差は約2 mに戻ります。</td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="box">
+            <h3><span data-l="en">Look at the Sun</span><span data-l="ja">太陽を見る</span></h3>
+            <p><span data-l="en">The Sun's direction keeps the heading true.</span><span data-l="ja">太陽の方向で、向きを正しく保ちます。</span></p>
           </div>
-          <p>
-            写真を照合するプログラムそのものは作っていません。AresSightは、照合が<b>うまくいく場所</b>を予測し、それに合わせて歩く道を計画します
-            <span class="tagchip ours">私たちの提案</span>。
-          </p>
+          <div class="box">
+            <h3><span data-l="en">Take a photo fix</span><span data-l="ja">写真で確かめる</span></h3>
+            <p><span data-l="en">The suit camera matches the ground to the orbital map. About 2 minutes; the error drops to about 2 m.</span><span data-l="ja">宇宙服のカメラで地面を軌道からの地図と照合します。約2分で、誤差は約2 mに戻ります。</span></p>
+          </div>
         </div>
+        <p class="callout">
+          <span data-l="en">NASA's Perseverance rover already finds itself this way, to about 25 cm <span class="tag real">In use</span>. A photo fix only works on ground that looks unique, so AresSight predicts <b>where it will work</b> and plans around it <span class="tag ours">Our idea</span>.</span>
+          <span data-l="ja">NASAの探査車パーサヴィアランスは、すでにこの方法で約25 cmの精度で自分の位置を出しています <span class="tag real">実用済み</span>。写真の照合は見分けのつく地面でしか使えないので、AresSightは<b>うまくいく場所</b>を予測して計画します <span class="tag ours">私たちの提案</span>。</span>
+        </p>
       </section>
 
-      <!-- ------------------------------------------------------------ 3 -->
+      <!-- ------------------------------------------------------------ layers -->
       <section id="layers">
-        <div data-l="en">
-          <h2>3. The map: three layers from three kinds of NASA data</h2>
-          <div class="tablewrap">
-            <table>
-              <thead>
-                <tr><th>Layer</th><th>Question it answers</th><th>Kind of data</th><th>Instrument and mission</th></tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><b>Destination</b></td>
-                  <td>Where is the science?</td>
-                  <td>Spectral</td>
-                  <td>CRISM on Mars Reconnaissance Orbiter (18 m per pixel)</td>
-                </tr>
-                <tr>
-                  <td><b>Safety</b></td>
-                  <td>Can I walk here?</td>
-                  <td>Topographic, plus optical for sand</td>
-                  <td>HiRISE stereo elevation (1 m) and image, on Mars Reconnaissance Orbiter</td>
-                </tr>
-                <tr>
-                  <td><b>Localizability</b></td>
-                  <td>Can I check my position here?</td>
-                  <td>Optical</td>
-                  <td>HiRISE image on Mars Reconnaissance Orbiter (we use it at 1 m per pixel)</td>
-                </tr>
-              </tbody>
-            </table>
+        <h2><span class="n">03</span><span data-l="en">Three heat maps, three kinds of NASA data</span><span data-l="ja">3つのヒートマップ、3種類のNASAデータ</span></h2>
+        <div class="grid">
+          <div class="box">
+            <h3><span data-l="en">Safety</span><span data-l="ja">安全性</span></h3>
+            <p><span data-l="en">Can I walk here? Slope, roughness, steps and loose sand.</span><span data-l="ja">ここを歩けるか？ 傾き、でこぼこ、段差、砂地。</span></p>
+            <span class="ramp safety"></span>
+            <span class="ends"><span><span data-l="en">Risky</span><span data-l="ja">危険</span></span><span><span data-l="en">Safe</span><span data-l="ja">安全</span></span></span>
+            <span class="src"><span data-l="en">Topographic · HiRISE elevation, 1 m</span><span data-l="ja">地形 · HiRISEの標高（1 m）</span></span>
           </div>
-          <p>
-            Also shown: the far landscape from the MOLA laser altimeter on Mars Global Surveyor, and the path the
-            Curiosity rover (Mars Science Laboratory) really drove here.
-          </p>
-
-          <h3>Destination: hematite <span class="tagchip real">In use</span></h3>
-          <p>
-            CRISM splits the sunlight reflected by the ground into hundreds of colours. Each mineral absorbs its own
-            colours, like a fingerprint. Hematite, an iron mineral that often forms in water, absorbs near 0.86 µm. The
-            layer shows how deep that absorption is. It is the reason Curiosity climbed Vera Rubin Ridge, and the reason
-            a person would walk there.
-          </p>
-
-          <h3>Safety <span class="tagchip real">In use</span> <span class="tagchip guess">Our assumption</span></h3>
-          <p>
-            The structure follows GESTALT, the hazard check NASA's Mars Exploration Rovers used to drive themselves. The
-            map is cut into 6 m cells. A flat plane is fitted to the 36 elevation samples of each cell, and three things
-            are measured:
-          </p>
-          <ul>
-            <li><b>Tilt</b>: the slope of the plane.</li>
-            <li><b>Roughness</b>: how far the samples lie from the plane on average.</li>
-            <li><b>Step</b>: the biggest height difference between two neighbouring samples, with the plane removed.</li>
-          </ul>
-          <p>
-            Each measure gets a score from 1 (fine) to 0 (no-go). Dark sand, found from the HiRISE image, gets a score
-            too and lowers the slope limits. The cell's safety is the <b>worst</b> of the four scores. The limits are in
-            the <a href="#assumptions">assumptions table</a>.
-          </p>
-
-          <h3>Localizability <span class="tagchip ours">Our proposal</span></h3>
-          <p>
-            This layer predicts whether a photo fix would work at each cell, using the same principle as the rover's
-            photo matching: comparing what the ground looks like with the orbital image.
-          </p>
-          <ol>
-            <li>Cut a 32 m patch out of the HiRISE image around the cell: about the ground a suit camera can see.</li>
-            <li>Slide the patch over its surroundings, up to 24 m in every direction, and measure how well it matches at each position (normalised cross-correlation).</li>
-            <li><b>Texture</b>: does the patch have contrast well above the noise? Smooth sand does not.</li>
-            <li><b>Uniqueness</b>: is the best match at another spot, at least 5 m away, weak? On repeating patterns such as dunes it is strong, so the matcher could pick the wrong spot.</li>
-          </ol>
-          <span class="formula">score = texture × uniqueness
-texture    = √( variance / (variance + noise²) )
-uniqueness = 1 − (highest correlation with another spot, 5 to 24 m away)</span>
-          <p>
-            A photo fix is expected to work where the score is at least 0.4. On this map that is about two thirds of
-            the ground. Dark sand scores lower (middle value 0.33) than the rest (0.55).
-          </p>
-        </div>
-        <div data-l="ja">
-          <h2>3. 地図：3種類のNASAデータから作る3つのレイヤー</h2>
-          <div class="tablewrap">
-            <table>
-              <thead>
-                <tr><th>レイヤー</th><th>答える問い</th><th>データの種類</th><th>観測装置とミッション</th></tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><b>目的地</b></td>
-                  <td>科学的に面白い場所はどこか？</td>
-                  <td>スペクトル</td>
-                  <td>MRO（マーズ・リコネッサンス・オービター）のCRISM（1ピクセル18 m）</td>
-                </tr>
-                <tr>
-                  <td><b>安全</b></td>
-                  <td>ここを歩けるか？</td>
-                  <td>地形（砂地の判定には光学）</td>
-                  <td>MROのHiRISEによる立体視の標高（1 m）と画像</td>
-                </tr>
-                <tr>
-                  <td><b>迷いにくさ</b></td>
-                  <td>ここで位置を確かめられるか？</td>
-                  <td>光学</td>
-                  <td>MROのHiRISE画像（1ピクセル1 mで使用）</td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="box">
+            <h3><span data-l="en">Easy to locate</span><span data-l="ja">迷いにくさ</span></h3>
+            <p><span data-l="en">Can I check my position here? Ground with a unique look.</span><span data-l="ja">ここで位置を確かめられるか？ 見分けのつく地面。</span></p>
+            <span class="ramp loc"></span>
+            <span class="ends"><span><span data-l="en">Easy to get lost</span><span data-l="ja">迷いやすい</span></span><span><span data-l="en">Easy to locate</span><span data-l="ja">迷いにくい</span></span></span>
+            <span class="src"><span data-l="en">Optical · HiRISE image, 1 m</span><span data-l="ja">光学 · HiRISE画像（1 m）</span></span>
           </div>
-          <p>
-            このほか、遠くの地形にはマーズ・グローバル・サーベイヤーのレーザー高度計MOLAを使い、探査車キュリオシティ（マーズ・サイエンス・ラボラトリー）が実際に走った道も表示できます。
-          </p>
-
-          <h3>目的地：ヘマタイト <span class="tagchip real">実用済み</span></h3>
-          <p>
-            CRISMは、地面が反射した太陽の光を数百の色に分けて測ります。鉱物ごとに吸収する色が決まっていて、指紋のように見分けられます。ヘマタイトは水のある環境でできやすい鉄の鉱物で、0.86 µm付近の光を吸収します。このレイヤーは、その吸収の強さを示します。キュリオシティがヴェラ・ルービン・リッジに登った理由であり、人がそこまで歩く理由でもあります。
-          </p>
-
-          <h3>安全 <span class="tagchip real">実用済み</span> <span class="tagchip guess">私たちの仮定</span></h3>
-          <p>
-            作りは、NASAの火星探査車（スピリットとオポチュニティ）が自動走行に使った危険判定GESTALTにならっています。地図を6 mのマスに区切り、各マスの36個の標高の値に平面を当てはめて、3つを測ります。
-          </p>
-          <ul>
-            <li><b>傾き</b>：平面の傾斜。</li>
-            <li><b>でこぼこ</b>：標高の値が平面から平均でどれだけ離れているか。</li>
-            <li><b>段差</b>：平面の傾きを除いたうえで、隣り合う2点の高さの差の最大値。</li>
-          </ul>
-          <p>
-            それぞれを1（問題なし）から0（通行不可）の点数にします。HiRISE画像から見つけた暗い砂地にも点数を付け、砂地では傾斜の限界を低くします。マスの安全度は、4つの点数のうち<b>一番悪いもの</b>です。閾値は<a href="#assumptions">仮定の表</a>にあります。
-          </p>
-
-          <h3>迷いにくさ <span class="tagchip ours">私たちの提案</span></h3>
-          <p>
-            各マスで撮影（写真による位置確認）がうまくいくかを予測するレイヤーです。探査車の写真照合と同じ原理、つまり「地面の見た目を軌道からの画像と比べる」を使います。
-          </p>
-          <ol>
-            <li>マスの周り32 m四方をHiRISE画像から切り出します。宇宙服のカメラで見える地面とほぼ同じ広さです。</li>
-            <li>切り出した画像を、周りに最大24 mまでずらしながら重ね、それぞれの位置でどれだけ一致するかを測ります（正規化相互相関）。</li>
-            <li><b>模様の強さ</b>：ノイズよりはっきりした明暗があるか。なめらかな砂地にはありません。</li>
-            <li><b>ユニークさ</b>：5 m以上離れた別の場所との一致が弱いか。砂丘のような繰り返し模様では一致が強くなり、照合が場所を取り違えるおそれがあります。</li>
-          </ol>
-          <span class="formula">点数 = 模様の強さ × ユニークさ
-模様の強さ = √( 分散 / (分散 + ノイズ²) )
-ユニークさ = 1 − （5〜24 m離れた別の場所との相関の最大値）</span>
-          <p>
-            点数が0.4以上の場所で、撮影がうまくいくと見なします。この地図では地面の約3分の2がそうです。暗い砂地の点数（中央値0.33）は、それ以外（0.55）より低くなります。
-          </p>
+          <div class="box">
+            <h3><span data-l="en">Hematite</span><span data-l="ja">ヘマタイト</span></h3>
+            <p><span data-l="en">Where is the science? An iron mineral that often forms in water.</span><span data-l="ja">科学的な目的地はどこか？ 水のある環境でできやすい鉄の鉱物。</span></p>
+            <span class="ramp hem"></span>
+            <span class="ends"><span><span data-l="en">Less</span><span data-l="ja">少</span></span><span><span data-l="en">More</span><span data-l="ja">多</span></span></span>
+            <span class="src"><span data-l="en">Spectral · CRISM, 18 m</span><span data-l="ja">スペクトル · CRISM（18 m）</span></span>
+          </div>
         </div>
+        <details class="more">
+          <summary><span data-l="en">How each layer is computed</span><span data-l="ja">各レイヤーの計算方法</span></summary>
+          <div>
+            <h4><span data-l="en">Safety</span><span data-l="ja">安全性</span> <span class="tag real"><span data-l="en">In use</span><span data-l="ja">実用済み</span></span></h4>
+            <p>
+              <span data-l="en">Built like GESTALT, the hazard check NASA's rovers used to drive themselves. The map is cut into 6 m cells and a flat plane is fitted to each. We measure the plane's <b>tilt</b>, the <b>roughness</b> around it and the biggest <b>step</b>. Dark sand, found in the image, lowers the score. The cell's safety is the worst of these.</span>
+              <span data-l="ja">NASAの探査車が自動走行に使った危険判定GESTALTと同じ作りです。地図を6 mのマスに区切って平面を当てはめ、平面の<b>傾き</b>、周りの<b>でこぼこ</b>、最大の<b>段差</b>を測ります。画像から見つけた暗い砂地は点数を下げます。マスの安全度は、その中で一番悪い値です。</span>
+            </p>
+            <h4><span data-l="en">Easy to locate</span><span data-l="ja">迷いにくさ</span> <span class="tag ours"><span data-l="en">Our idea</span><span data-l="ja">私たちの提案</span></span></h4>
+            <p>
+              <span data-l="en">We cut a 32 m patch of the HiRISE image around each cell (about what a suit camera sees) and slide it over its surroundings, up to 24 m away. A good spot has <b>texture</b> and <b>no look-alike</b> nearby. Dunes repeat, so they score low.</span>
+              <span data-l="ja">各マスの周り32 m四方（宇宙服のカメラに写る広さ）をHiRISE画像から切り出し、周り24 mまでずらして重ねます。<b>模様がはっきり</b>していて、近くに<b>似た場所がない</b>ほど良い場所です。砂丘は同じ模様が続くので点数が低くなります。</span>
+            </p>
+            <span class="formula">score = texture × uniqueness
+uniqueness = 1 − (best match with another spot 5–24 m away)
+photo fix works from score ≥ 0.4  (about 2/3 of this map)</span>
+            <h4><span data-l="en">Hematite</span><span data-l="ja">ヘマタイト</span> <span class="tag real"><span data-l="en">In use</span><span data-l="ja">実用済み</span></span></h4>
+            <p>
+              <span data-l="en">CRISM splits reflected sunlight into hundreds of colours; each mineral absorbs its own, like a fingerprint. Hematite absorbs near 0.86 µm. It is the reason Curiosity climbed Vera Rubin Ridge.</span>
+              <span data-l="ja">CRISMは地面が反射した太陽光を数百の色に分けます。鉱物ごとに吸収する色が決まっていて、指紋のように見分けられます。ヘマタイトは0.86 µm付近を吸収します。キュリオシティがヴェラ・ルービン・リッジに登った理由です。</span>
+            </p>
+          </div>
+        </details>
       </section>
 
-      <!-- ------------------------------------------------------------ 4 -->
+      <!-- ------------------------------------------------------------ routes -->
       <section id="routes">
-        <div data-l="en">
-          <h2>4. The routes</h2>
-          <h3>Three rules every route obeys</h3>
-          <ol>
-            <li><b>Safe.</b> It never enters a no-go cell.</li>
-            <li>
-              <b>Never lost.</b> The position error must stay under the limit (20 m unless you change it). The planner
-              therefore lets a route cross only a limited stretch of ground where no photo fix works (600 m with the
-              default numbers). On the finished route a photo fix is placed whenever the error reaches 10 m, on the last
-              good cell before such a stretch, and on arrival.
-            </li>
-            <li>
-              <b>Always able to walk home.</b> From every point on the way there must be enough oxygen to walk home and
-              still have 20 % of a full tank. Apollo's Moon-rover drives were planned with the same walk-back rule
-              <span class="tagchip real">In use</span>.
-            </li>
-          </ol>
-          <h3>Four routes, four priorities <span class="tagchip ours">Our proposal</span></h3>
-          <div class="tablewrap">
-            <table>
-              <thead>
-                <tr><th>Route</th><th>What it keeps small</th></tr>
-              </thead>
-              <tbody>
-                <tr><td><span class="swatch" style="background: #ffffff"></span><b>Shortest</b></td><td>Distance.</td></tr>
-                <tr>
-                  <td><span class="swatch" style="background: #52c8ff"></span><b>Least oxygen</b></td>
-                  <td>Energy, and so oxygen. Walking speed comes from Tobler's hiking function and the effort from Pandolf's load-carrying equation: climbs and sand cost more.</td>
-                </tr>
-                <tr>
-                  <td><span class="swatch" style="background: #ff8fdc"></span><b>Easiest to locate</b></td>
-                  <td>The position error added up along the way. It prefers ground where a photo fix works.</td>
-                </tr>
-                <tr>
-                  <td><span class="swatch" style="background: #ffe14d"></span><b>Balanced</b></td>
-                  <td>Energy and position error together, with fixed weights: walking one metre at the error limit counts like one extra metre of level walking.</td>
-                </tr>
-              </tbody>
-            </table>
+        <h2><span class="n">04</span><span data-l="en">Four routes, three rules</span><span data-l="ja">4つのルート、3つの条件</span></h2>
+        <div class="grid">
+          <div class="box">
+            <h3><span class="dot" style="background: var(--ok)"></span><span data-l="en">Safe</span><span data-l="ja">安全</span></h3>
+            <p><span data-l="en">Never crosses no-go ground.</span><span data-l="ja">通行不可の場所を通らない。</span></p>
           </div>
-          <h3>How they are computed</h3>
-          <ul>
-            <li>The search is A* on the 6 m grid. A step may go to any of the 16 nearest cells.</li>
-            <li>The search remembers, for every cell, how far it has walked since the last possible photo fix. That is how rule 2 is built into the route instead of being checked afterwards. Planning with the uncertainty as part of the state is an idea from robotics.</li>
-            <li>For rule 3, one extra search from the start gives the energy needed to walk home from every cell, with stops for photo fixes as often as on good ground. The dark area on the map (the walk-back limit) is everything you could not visit and leave with the reserve.</li>
-          </ul>
-          <span class="formula">speed (m/s)  = 0.6 × 6 × e^(−3.5 × |slope + 0.05|) ÷ 3.6          (Tobler, off-path)
-power (W)    = 1.5 × body + 0.38 × [ 2 × (body + suit) × (suit ÷ body)²
-               + terrain × (body + suit) × (1.5 × speed² + 0.35 × speed × grade%) ]   (Pandolf, load terms × Mars gravity)
-oxygen (g)   = energy ÷ 14 300 J</span>
-        </div>
-        <div data-l="ja">
-          <h2>4. ルート</h2>
-          <h3>すべてのルートが守る3つの条件</h3>
-          <ol>
-            <li><b>安全。</b>通行不可のマスには入りません。</li>
-            <li>
-              <b>迷わない。</b>位置の誤差を上限（変更しなければ20 m）より小さく保ちます。そのため、撮影がうまくいかない地面を続けて歩ける距離を制限しています（初期値では600 m）。できあがったルートでは、誤差が10 mに達したとき、撮影できない区間に入る直前の最後のマス、そして到着時に撮影します。
-            </li>
-            <li>
-              <b>必ず歩いて帰れる。</b>道中のどの地点からでも、歩いて帰って、なお満タンの20%が残るだけの酸素が必要です。アポロ計画の月面車の走行も、同じ「歩いて帰れる限界」の考え方で計画されました
-              <span class="tagchip real">実用済み</span>。
-            </li>
-          </ol>
-          <h3>4つのルート、4つの優先順位 <span class="tagchip ours">私たちの提案</span></h3>
-          <div class="tablewrap">
-            <table>
-              <thead>
-                <tr><th>ルート</th><th>小さくするもの</th></tr>
-              </thead>
-              <tbody>
-                <tr><td><span class="swatch" style="background: #ffffff"></span><b>最短</b></td><td>距離。</td></tr>
-                <tr>
-                  <td><span class="swatch" style="background: #52c8ff"></span><b>省エネ</b></td>
-                  <td>エネルギー（＝酸素）。歩く速さはToblerの式、運動の強さはPandolfの式（荷物を持って歩くときの式）で出します。登りと砂地は高くつきます。</td>
-                </tr>
-                <tr>
-                  <td><span class="swatch" style="background: #ff8fdc"></span><b>迷いにくさ</b></td>
-                  <td>道中の位置の誤差の合計。撮影がうまくいく地面を優先します。</td>
-                </tr>
-                <tr>
-                  <td><span class="swatch" style="background: #ffe14d"></span><b>統合</b></td>
-                  <td>エネルギーと位置の誤差の両方。重みは固定で、「誤差が上限の状態で1 m歩く」ことを「平地を1 m余分に歩く」ことと同じに数えます。</td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="box">
+            <h3><span class="dot" style="background: #7fe3ff"></span><span data-l="en">Never lost</span><span data-l="ja">迷わない</span></h3>
+            <p><span data-l="en">The position error stays under 20 m.</span><span data-l="ja">位置の誤差が20 mを超えない。</span></p>
           </div>
-          <h3>計算の方法</h3>
-          <ul>
-            <li>6 mのマス目の上でA*（エースター）探索をします。1歩で、近くの16マスのどれかに進めます。</li>
-            <li>探索は、マスごとに「最後に撮影できた場所から何 m歩いたか」を覚えています。条件2を、あとから確かめるのではなく、ルートの作り方そのものに組み込むためです。不確かさを状態に含めて計画する考え方は、ロボット工学にあります。</li>
-            <li>条件3のために、出発点からもう一度探索して、各マスから歩いて帰るのに必要なエネルギーを出します。帰り道でも、撮影しやすい地面と同じ頻度で撮影のために立ち止まると見込んでいます。地図の暗い部分（ウォークバック限界）は、行って帰ると余裕が残らない場所です。</li>
-          </ul>
-          <span class="formula">速さ (m/s)   = 0.6 × 6 × e^(−3.5 × |傾斜 + 0.05|) ÷ 3.6          （Tobler、道のない地面）
-運動の強さ (W) = 1.5 × 体重 + 0.38 × [ 2 × (体重 + 宇宙服) × (宇宙服 ÷ 体重)²
-               + 地面の係数 × (体重 + 宇宙服) × (1.5 × 速さ² + 0.35 × 速さ × 勾配%) ]   （Pandolf、荷重の項に火星の重力）
-酸素 (g)     = エネルギー ÷ 14 300 J</span>
+          <div class="box">
+            <h3><span class="dot"></span><span data-l="en">Always home</span><span data-l="ja">必ず帰れる</span></h3>
+            <p><span data-l="en">From any point you can walk home with 20% oxygen left, like Apollo's walk-back rule.</span><span data-l="ja">どこからでも酸素を20%残して歩いて帰れる。アポロ計画と同じ考え方。</span></p>
+          </div>
         </div>
+        <ul class="routes" style="margin-top: 12px">
+          <li><b><span data-l="en">Balanced</span><span data-l="ja">統合</span><span class="rec"><span data-l="en">Recommended</span><span data-l="ja">おすすめ</span></span></b><span><span data-l="en">Oxygen and position error together.</span><span data-l="ja">酸素と位置の誤差の両方を小さく。</span></span></li>
+          <li><b><span data-l="en">Shortest</span><span data-l="ja">最短</span></b><span><span data-l="en">Distance.</span><span data-l="ja">距離を最小に。</span></span></li>
+          <li><b><span data-l="en">Least oxygen</span><span data-l="ja">省エネ</span></b><span><span data-l="en">Energy: goes around climbs and soft sand.</span><span data-l="ja">エネルギーを最小に。登りと砂地を避けます。</span></span></li>
+          <li><b><span data-l="en">Easiest to locate</span><span data-l="ja">迷いにくさ</span></b><span><span data-l="en">Position error: stays where photo fixes work.</span><span data-l="ja">位置の誤差を最小に。写真で確かめられる地面を通ります。</span></span></li>
+        </ul>
+        <details class="more">
+          <summary><span data-l="en">How the routes are computed</span><span data-l="ja">ルートの計算方法</span></summary>
+          <div>
+            <ul>
+              <li><span data-l="en">A* search on the 6 m grid; each step can go to any of the 16 nearest cells.</span><span data-l="ja">6 mのマス目でA*探索をします。1歩で近くの16マスのどれかに進めます。</span></li>
+              <li><span data-l="en">The search remembers how far you have walked since the last possible photo fix, so the "never lost" rule is part of the route, not a check afterwards.</span><span data-l="ja">探索は「最後に撮影できた場所から何 m歩いたか」を覚えているので、「迷わない」条件がルートの作り方そのものに入っています。</span></li>
+              <li><span data-l="en">One more search from the start gives the oxygen needed to walk home from every cell. That is the walk-back limit on the map.</span><span data-l="ja">出発点からもう一度探索して、各マスから歩いて帰るのに必要な酸素を出します。これが地図の「歩いて帰れる範囲」です。</span></li>
+            </ul>
+            <span class="formula">speed (m/s) = 0.6 × 6 × e^(−3.5 × |slope + 0.05|) ÷ 3.6        Tobler, off-path
+power (W)   = Pandolf load-carrying equation, scaled to Mars gravity
+oxygen (g)  = energy ÷ 14 300 J</span>
+          </div>
+        </details>
       </section>
 
-      <!-- ------------------------------------------------------------ 5 -->
+      <!-- ------------------------------------------------------------ assumptions -->
       <section id="assumptions">
-        <div data-l="en">
-          <h2>5. Every assumption <span class="tagchip guess">Our assumption</span></h2>
-          <p>
-            These numbers are ours. They were chosen to show the method from end to end, and none of them is an
-            official NASA value. The table is read from the same settings the simulator uses.
-          </p>
-        </div>
-        <div data-l="ja">
-          <h2>5. すべての仮定 <span class="tagchip guess">私たちの仮定</span></h2>
-          <p>
-            以下の数値は私たちが決めたものです。方法を最初から最後まで示すために選んだ値で、NASAの公式値は1つもありません。この表は、シミュレーターが使っている設定からそのまま表示しています。
-          </p>
-        </div>
-        <div class="tablewrap"><table id="assumptionTable"></table></div>
+        <h2><span class="n">05</span><span data-l="en">Our assumptions</span><span data-l="ja">私たちの仮定</span></h2>
+        <p>
+          <span data-l="en">These numbers are ours, chosen to show the method end to end. None is an official NASA value. The table is read from the planner's own settings.</span>
+          <span data-l="ja">以下は方法を示すために私たちが決めた数値で、NASAの公式値ではありません。表はプランナーの設定からそのまま表示しています。</span>
+        </p>
+        <details class="more">
+          <summary><span data-l="en">Show all numbers</span><span data-l="ja">すべての数値を見る</span></summary>
+          <div class="tablewrap"><table id="assumptionTable"></table></div>
+        </details>
       </section>
 
-      <!-- ------------------------------------------------------------ 6 -->
+      <!-- ------------------------------------------------------------ limits -->
       <section id="limits">
-        <div data-l="en">
-          <h2>6. What this does not do</h2>
-          <ul>
-            <li><b>The localizability layer is a prediction, not a measurement.</b> It comes from the orbital image alone. It has not been tested against real photos taken on the ground. Real matching also depends on the lighting and the viewing angle.</li>
-            <li><b>We use the HiRISE image at 1 m per pixel.</b> The original is 25 cm. Rocks smaller than about a metre, which a real matcher would use, are invisible to us.</li>
-            <li><b>No weather.</b> Dust can hide the Sun and flatten shadows. That would change both the heading and the photo matching. It is not modelled.</li>
-            <li><b>The walking model comes from Earth.</b> Tobler's and Pandolf's formulas were measured without a pressure suit. Scaling them to Mars gravity is our approximation. They rank routes sensibly; the minutes and percentages are estimates.</li>
-            <li><b>The drift (3 %) and the fix accuracy (2 m) are assumptions.</b> Perseverance's 25 cm is for a rover with a camera mast, not a person.</li>
-            <li><b>CRISM covers the southern 70 % of this map</b>, at 18 m per pixel. It points to an area, not to a rock.</li>
-            <li><b>Mosaic seams.</b> Where two source images or elevation models meet, a thin straight line can appear in the layers.</li>
-            <li><b>Gale Crater is our example</b>, because it has the best data on Mars. Nobody has chosen it as a human landing site. The method needs only a HiRISE stereo pair and a CRISM observation, so it would work the same way elsewhere.</li>
-          </ul>
+        <h2><span class="n">06</span><span data-l="en">What it does not do</span><span data-l="ja">できないこと</span></h2>
+        <div class="grid">
+          <div class="box">
+            <h3><span data-l="en">A prediction</span><span data-l="ja">予測である</span></h3>
+            <p><span data-l="en">"Easy to locate" comes from the orbital image only. It has not been tested with real ground photos.</span><span data-l="ja">「迷いにくさ」は軌道からの画像だけで出した予測で、実際の地上写真では検証していません。</span></p>
+          </div>
+          <div class="box">
+            <h3><span data-l="en">No weather</span><span data-l="ja">天気は扱わない</span></h3>
+            <p><span data-l="en">Dust can hide the Sun and flatten shadows. That is not modelled.</span><span data-l="ja">砂ぼこりは太陽を隠し影を薄くしますが、モデルに入れていません。</span></p>
+          </div>
+          <div class="box">
+            <h3><span data-l="en">Estimates</span><span data-l="ja">数値は推定</span></h3>
+            <p><span data-l="en">The walking formulas come from Earth, without a suit. They rank routes well; minutes and percentages are estimates.</span><span data-l="ja">歩行の式は宇宙服なしで地球で測ったものです。ルートの比較には使えますが、時間や%は推定です。</span></p>
+          </div>
         </div>
-        <div data-l="ja">
-          <h2>6. できないこと・限界</h2>
-          <ul>
-            <li><b>迷いにくさレイヤーは予測で、実測ではありません。</b>軌道からの画像だけで出しています。地上で撮った実際の写真では検証していません。実際の照合は、光の当たり方や見る角度にも左右されます。</li>
-            <li><b>HiRISE画像は1ピクセル1 mで使っています。</b>元の画像は25 cmです。実際の照合で手がかりになる1 m未満の岩は、私たちの計算には写っていません。</li>
-            <li><b>天気は扱っていません。</b>砂ぼこりは太陽を隠し、影を薄くします。向きの確認にも写真の照合にも影響するはずですが、モデルに入れていません。</li>
-            <li><b>歩行のモデルは地球のものです。</b>ToblerとPandolfの式は、宇宙服なしで測ったものです。火星の重力への換算は私たちの近似です。ルートの順位づけには使えますが、分やパーセントの値は推定です。</li>
-            <li><b>ずれ（3%）と撮影の精度（2 m）は仮定です。</b>パーサヴィアランスの25 cmは、カメラのマストを持つ探査車の値で、人の値ではありません。</li>
-            <li><b>CRISMはこの地図の南側70%しか観測していません。</b>1ピクセルは18 mで、分かるのは「この辺り」までです。</li>
-            <li><b>画像の継ぎ目。</b>元の画像や標高モデルの継ぎ目に、細いまっすぐな線がレイヤーに出ることがあります。</li>
-            <li><b>ゲール・クレーターは例です。</b>火星で最もデータがそろっているので選びました。有人着陸地点として選ばれているわけではありません。必要なのはHiRISEの立体視ペアとCRISMの観測だけなので、ほかの場所でも同じ方法が使えます。</li>
-          </ul>
-        </div>
-      </section>
-
-      <!-- ------------------------------------------------------------ 7 -->
-      <section id="sources">
-        <div data-l="en">
-          <h2>7. Sources</h2>
-          <ul>
-            <li>NASA JPL (2026), “NASA's Perseverance Now Autonomously Pinpoints Its Location on Mars”. <a href="https://www.jpl.nasa.gov/news/nasas-perseverance-now-autonomously-pinpoints-its-location-on-mars/" target="_blank" rel="noopener">jpl.nasa.gov</a></li>
-            <li>Goldberg, Maimone and Matthies (2002), “Stereo vision and rover navigation software for planetary exploration”, IEEE Aerospace Conference: the GESTALT hazard check.</li>
-            <li>Tobler (1993), “Three presentations on geographical analysis and modeling”: the hiking function.</li>
-            <li>Pandolf, Givoni and Goldman (1977), “Predicting energy expenditure with loads while standing or walking very slowly”, Journal of Applied Physiology.</li>
-            <li>Prentice and Roy (2009), “The Belief Roadmap”, International Journal of Robotics Research: planning with position uncertainty.</li>
-            <li>NASA, Apollo Lunar Surface Journal: Apollo 14's walk to Cone Crater and the walk-back limits of Apollo 15 to 17.</li>
-            <li>The data sets are listed on the <a href="/credits.html">credits page</a>.</li>
-          </ul>
-        </div>
-        <div data-l="ja">
-          <h2>7. 出典</h2>
-          <ul>
-            <li>NASA JPL（2026）「NASA's Perseverance Now Autonomously Pinpoints Its Location on Mars」 <a href="https://www.jpl.nasa.gov/news/nasas-perseverance-now-autonomously-pinpoints-its-location-on-mars/" target="_blank" rel="noopener">jpl.nasa.gov</a></li>
-            <li>Goldberg, Maimone, Matthies（2002）「Stereo vision and rover navigation software for planetary exploration」IEEE Aerospace Conference：危険判定GESTALT。</li>
-            <li>Tobler（1993）「Three presentations on geographical analysis and modeling」：歩く速さの式。</li>
-            <li>Pandolf, Givoni, Goldman（1977）「Predicting energy expenditure with loads while standing or walking very slowly」Journal of Applied Physiology。</li>
-            <li>Prentice, Roy（2009）「The Belief Roadmap」International Journal of Robotics Research：位置の不確かさを含めた経路計画。</li>
-            <li>NASA、Apollo Lunar Surface Journal：アポロ14号のコーン・クレーターへの歩行と、アポロ15〜17号のウォークバック限界。</li>
-            <li>データセットは<a href="/credits.html">クレジットのページ</a>にまとめています。</li>
-          </ul>
-        </div>
+        <details class="more">
+          <summary><span data-l="en">More limits</span><span data-l="ja">その他の限界</span></summary>
+          <div>
+            <ul>
+              <li><span data-l="en">We use the HiRISE image at 1 m per pixel (the original is 25 cm), so rocks under a metre are invisible to us.</span><span data-l="ja">HiRISE画像は1ピクセル1 mで使っています（元は25 cm）。1 m未満の岩は計算に写っていません。</span></li>
+              <li><span data-l="en">The drift (3%) and the photo-fix accuracy (2 m) are assumptions. Perseverance's 25 cm is for a rover with a camera mast.</span><span data-l="ja">ずれ（3%）と撮影の精度（2 m）は仮定です。パーサヴィアランスの25 cmはカメラのマストを持つ探査車の値です。</span></li>
+              <li><span data-l="en">CRISM covers the southern 70% of this map, at 18 m per pixel: it points to an area, not a rock.</span><span data-l="ja">CRISMはこの地図の南側70%だけを、1ピクセル18 mで観測しています。分かるのは「この辺り」までです。</span></li>
+              <li><span data-l="en">Gale Crater is our example because it has the best data on Mars. The method needs only a HiRISE stereo pair and a CRISM observation, so it works elsewhere too.</span><span data-l="ja">ゲール・クレーターは、データが最もそろっているので例に選びました。必要なのはHiRISEの立体視ペアとCRISMの観測だけなので、ほかの場所でも使えます。</span></li>
+            </ul>
+          </div>
+        </details>
+        <p class="foot-note">
+          <span data-l="en">Sources: NASA JPL (2026) on Perseverance's self-localization; Goldberg, Maimone and Matthies (2002), GESTALT; Tobler (1993); Pandolf, Givoni and Goldman (1977); Prentice and Roy (2009), planning with uncertainty; NASA Apollo Lunar Surface Journal. Data sets: <a href="/credits.html">Credits</a>.</span>
+          <span data-l="ja">出典：NASA JPL（2026）パーサヴィアランスの自己位置推定、Goldberg・Maimone・Matthies（2002）GESTALT、Tobler（1993）、Pandolf・Givoni・Goldman（1977）、Prentice・Roy（2009）不確かさを含めた計画、NASA Apollo Lunar Surface Journal。データセットは<a href="/credits.html">クレジット</a>へ。</span>
+        </p>
       </section>
     </main>
     <script type="module" src="/src/site/how.ts"></script>

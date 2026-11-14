@@ -25,6 +25,8 @@ export function setLang(lang: Lang): void {
   for (const b of document.querySelectorAll<HTMLElement>("[data-set-lang]")) {
     b.setAttribute("aria-pressed", String(b.dataset.setLang === lang));
   }
+  // one-button switches show the language you would switch to
+  for (const b of document.querySelectorAll<HTMLElement>("[data-toggle-lang]")) b.textContent = lang === "ja" ? "EN" : "日本語";
   document.dispatchEvent(new CustomEvent("langchange"));
 }
 
@@ -39,6 +41,9 @@ export function initLang(): void {
   }
   for (const b of document.querySelectorAll<HTMLElement>("[data-set-lang]")) {
     b.addEventListener("click", () => setLang(b.dataset.setLang as Lang));
+  }
+  for (const b of document.querySelectorAll<HTMLElement>("[data-toggle-lang]")) {
+    b.addEventListener("click", () => setLang(getLang() === "ja" ? "en" : "ja"));
   }
   setLang(lang);
 }

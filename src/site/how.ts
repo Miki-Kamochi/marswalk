@@ -58,3 +58,10 @@ function render() {
 initLang();
 render();
 document.addEventListener("langchange", render);
+// links like how.html#assumptions open the dropdown in that section
+const openFromHash = () => {
+  const d = document.querySelector<HTMLDetailsElement>(`${location.hash || "#none"} details.more`);
+  if (d && location.hash === "#assumptions") d.open = true;
+};
+openFromHash();
+addEventListener("hashchange", openFromHash);

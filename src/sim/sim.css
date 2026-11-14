@@ -34,7 +34,7 @@ button {
   z-index: 5;
   top: 12px;
   left: 12px;
-  max-height: calc(100% - 24px);
+  bottom: 12px;
   width: var(--panel-w);
   display: flex;
   flex-direction: column;
@@ -68,6 +68,30 @@ button {
 .back svg {
   width: 20px;
   height: 20px;
+}
+.walk {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 32px;
+  padding: 0 12px 0 9px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ui-text);
+  text-decoration: none;
+  border: 1px solid var(--ui-line);
+  border-radius: 99px;
+  white-space: nowrap;
+}
+.walk:hover {
+  border-color: var(--accent);
+  background: var(--ui-hover);
+}
+.walk svg {
+  width: 17px;
+  height: 17px;
+  color: var(--accent);
 }
 .title {
   flex: 1;
@@ -275,6 +299,8 @@ button {
 .card-body {
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
   scrollbar-width: none;
   padding: 0 0 14px;
@@ -534,7 +560,8 @@ button {
 
 /* what if */
 .whatif {
-  margin: 14px 14px 0;
+  /* sits at the bottom of the panel, so the panel can take the full height without a gap */
+  margin: auto 14px 0;
   padding-top: 10px;
   border-top: 1px solid var(--ui-line);
   font-size: 13px;
