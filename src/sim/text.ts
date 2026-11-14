@@ -145,7 +145,7 @@ export const INFO: Record<string, Info> = {
     anchor: "layers",
   },
   safety: {
-    title: ["Safe ground", "安全な地面"],
+    title: ["Safety", "安全性"],
     body: [
       [
         "Built like the hazard check of NASA's Mars rovers (GESTALT). A flat plane is fitted to each 6 m patch of the HiRISE elevation data. Three things are measured: the tilt of the plane, how rough the ground is around it, and the biggest step.",
@@ -163,19 +163,19 @@ export const INFO: Record<string, Info> = {
     anchor: "layers",
   },
   loc: {
-    title: ["Position checks", "位置確認"],
+    title: ["Easy to locate", "迷いにくさ"],
     body: [
       [
         "Shows where a photo fix is expected to work. NASA's Perseverance rover finds its position by matching photos of the ground around it to the orbital image. We assume a suit camera does the same.",
         "写真で位置を確かめられそうな場所を示します。NASAの探査車パーサヴィアランスは、周りの地面の写真を周回機の画像と照合して自分の位置を出しています。宇宙服のカメラで同じことをする想定です。",
       ],
       [
-        "For every cell we cut a 32 m patch out of the HiRISE image and slide it over its own surroundings. If the patch has texture and no other spot within 24 m looks like it, a match should work (green).",
-        "各マスについて、HiRISE画像から32 m四方を切り出し、その周りにずらしながら重ねます。模様がはっきりしていて、24 m以内に似た場所がなければ、照合はうまくいくはずです（緑）。",
+        "For every cell we cut a 32 m patch out of the HiRISE image and slide it over its own surroundings. If the patch has texture and no other spot within 24 m looks like it, a match should work (cyan).",
+        "各マスについて、HiRISE画像から32 m四方を切り出し、その周りにずらしながら重ねます。模様がはっきりしていて、24 m以内に似た場所がなければ、照合はうまくいくはずです（水色）。",
       ],
       [
-        "Smooth ground or repeating patterns, such as dunes, look the same everywhere, so a match fails (red). This is a prediction from the orbital image only. It has not been tested with real ground photos.",
-        "なめらかな地面や、砂丘のような繰り返し模様はどこも同じに見えるので、照合は失敗します（赤）。これは周回機の画像だけから出した予測で、実際の地上写真では検証していません。",
+        "Smooth ground or repeating patterns, such as dunes, look the same everywhere, so a match fails (violet). This is a prediction from the orbital image only. It has not been tested with real ground photos.",
+        "なめらかな地面や、砂丘のような繰り返し模様はどこも同じに見えるので、照合は失敗します（紫）。これは周回機の画像だけから出した予測で、実際の地上写真では検証していません。",
       ],
     ],
     anchor: "layers",

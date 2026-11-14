@@ -16,20 +16,22 @@ function ramp(stops: Stop[], t: number, out: Uint8ClampedArray, o: number): void
   for (let j = 0; j < 4; j++) out[o + j] = a[j + 1] + (b[j + 1] - a[j + 1]) * f;
 }
 
-// only what matters is coloured; good ground keeps its own colour (DESIGN.md section 5)
-export const NO_GO: Stop = [0, 235, 64, 52, 215];
+// heat maps: every cell coloured by its score, so the really good ground stands out too
+export const NO_GO: Stop = [0, 200, 30, 40, 225];
+/** safety score (0 worst … 1 best): red → amber → green */
 export const SAFETY: Stop[] = [
-  [0, 255, 186, 60, 175],
-  [0.5, 255, 199, 90, 120],
-  [0.62, 255, 199, 90, 0],
-  [1, 255, 199, 90, 0],
+  [0, 235, 70, 50, 190],
+  [0.5, 255, 196, 70, 150],
+  [0.8, 150, 215, 110, 140],
+  [1, 60, 205, 130, 165],
 ];
+/** how well a photo fix should work (0 … 1): violet where it fails, cyan where it works well */
 export function locStops(c: PlanConfig): Stop[] {
   return [
-    [0, 140, 100, 255, 200],
-    [c.locFix - 0.001, 155, 123, 255, 140],
-    [c.locFix, 155, 123, 255, 0],
-    [1, 155, 123, 255, 0],
+    [0, 125, 80, 255, 200],
+    [c.locFix, 190, 170, 255, 70],
+    [Math.min(0.99, c.locFix + 0.15), 90, 220, 235, 120],
+    [1, 40, 230, 220, 200],
   ];
 }
 export const HEMATITE: Stop[] = [

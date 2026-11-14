@@ -20,10 +20,6 @@
         <div class="title">
           <input id="planName" type="text" maxlength="60" spellcheck="false" aria-label="Plan name" />
         </div>
-        <div class="seg" role="group" aria-label="Language">
-          <button data-set-lang="en">EN</button>
-          <button data-set-lang="ja">日本語</button>
-        </div>
       </div>
 
       <div class="od">
@@ -66,8 +62,8 @@
             <input type="range" id="err" min="6" max="40" step="1" value="20" />
           </label>
           <p class="fine">
-            <span data-l="en">All numbers are estimates from our assumptions, not NASA values.</span>
-            <span data-l="ja">数値はすべて私たちの仮定にもとづく推定で、NASAの公式値ではありません。</span>
+            <span data-l="en">Estimates from our assumptions.</span>
+            <span data-l="ja">数値は私たちの仮定による推定です。</span>
             <a href="/how.html#assumptions"><span data-l="en">See assumptions</span><span data-l="ja">仮定を見る</span></a>
           </p>
         </details>
@@ -103,10 +99,10 @@
           <span class="sw terrain"></span><span data-l="en">Terrain</span><span data-l="ja">地形</span>
         </button>
         <button class="tile" data-layer="safety" role="radio">
-          <span class="sw safety"></span><span data-l="en">Safe ground</span><span data-l="ja">安全な地面</span>
+          <span class="sw safety"></span><span data-l="en">Safety</span><span data-l="ja">安全性</span>
         </button>
         <button class="tile" data-layer="loc" role="radio">
-          <span class="sw loc"></span><span data-l="en">Position checks</span><span data-l="ja">位置確認</span>
+          <span class="sw loc"></span><span data-l="en">Easy to locate</span><span data-l="ja">迷いにくさ</span>
         </button>
         <button class="tile" data-layer="hematite" role="radio">
           <span class="sw hem"></span><span data-l="en">Hematite</span><span data-l="ja">ヘマタイト</span>
@@ -120,6 +116,11 @@
 
     <!-- ============================================================ route profile -->
     <section class="strip" id="strip" hidden aria-label="Route profile">
+      <button class="strip-btn" id="stripBtn" aria-expanded="false" aria-controls="profile">
+        <span class="strip-title"><span data-l="en">Profile</span><span data-l="ja">断面</span></span>
+        <span class="strip-sum" id="stripSum"></span>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      </button>
       <canvas class="profile" id="profile"></canvas>
     </section>
 

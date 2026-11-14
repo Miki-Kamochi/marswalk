@@ -189,8 +189,10 @@ export class Globe {
     // draw at 1/pixel of the CSS size; CSS scales it back up with crisp pixels
     this.renderer.setPixelRatio(1 / this.pixel);
     this.renderer.setSize(w, h, true);
-    const d = Math.min(0.54 * h, 0.66 * w);
-    const cy = 0.37 * h;
+    // room below for the cards and the search bar at the bottom, and for the top bar above
+    const below = w < 720 ? 330 : 270;
+    const d = Math.max(160, Math.min(0.56 * h, 0.66 * w, h - below - 84));
+    const cy = Math.min(0.45 * h, h - below - d / 2 - 12);
     const half = h / d; // world units from the screen centre to its top edge (radius 1 = d/2 px)
     const lift = ((h / 2 - cy) * 2) / d;
     this.camera.aspect = w / Math.max(1, h);

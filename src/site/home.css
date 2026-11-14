@@ -2,7 +2,7 @@
    one search bar and a row of cards below. --globe-d / --globe-y come from globe.ts. */
 :root {
   --globe-d: min(56vh, 66vw);
-  --globe-y: 37vh;
+  --globe-y: 44vh;
   --gap: clamp(20px, 3vw, 48px);
 }
 body.home {

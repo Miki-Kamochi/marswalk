@@ -76,6 +76,9 @@ async function main() {
     o2: 1,
     pickStart: false,
     beyond: 0,
+    /** the selected route's details dropdown, and the profile strip, both closed at first */
+    detailsOpen: false,
+    stripOpen: false,
   };
   let token = 0;
   let view: View3D | null = null;
@@ -270,22 +273,19 @@ async function main() {
 
   function why(r: Route): string {
     const s = r.stats;
-    if (!s.o2Ok) return tr("Not enough oxygen to walk home with the reserve.", "余裕を残して歩いて帰る酸素が足りません。");
-    if (!s.errorOk) return tr("Your position would become too uncertain on the way.", "途中で位置が分からなくなりすぎます。");
+    if (!s.o2Ok) return tr("Not enough oxygen to get home with the reserve.", "余裕を残して帰る酸素が足りません。");
+    if (!s.errorOk) return tr("Your position gets too uncertain.", "途中で位置が分からなくなりすぎます。");
     const blind = Math.round(s.blindDistance);
     const sand = Math.round(s.sandDistance);
     switch (r.profile) {
       case "mix":
-        return tr(
-          `Balances oxygen and position checks: <b>${blind} m</b> without a check, <b>${sand} m</b> of sand.`,
-          `酸素と位置確認のバランスをとります。確認できない区間 <b>${blind} m</b>、砂地 <b>${sand} m</b>。`,
-        );
+        return tr(`Balances oxygen and position checks. <b>${blind} m</b> without a check.`, `酸素と位置確認のバランス。確認できない区間 <b>${blind} m</b>。`);
       case "short":
-        return tr(`Shortest, but <b>${blind} m</b> where you can't check your position.`, `最短ですが、位置を確かめられない区間が <b>${blind} m</b> あります。`);
+        return tr(`Shortest. <b>${blind} m</b> without a position check.`, `最短。確認できない区間 <b>${blind} m</b>。`);
       case "o2":
-        return tr(`Least oxygen: goes around climbs and soft sand (<b>${sand} m</b> of sand).`, `酸素が最少。登りとやわらかい砂を避けます（砂地 <b>${sand} m</b>）。`);
+        return tr(`Avoids climbs and soft sand (<b>${sand} m</b> of sand).`, `登りと砂を避ける（砂地 <b>${sand} m</b>）。`);
       default:
-        return tr(`You can check your position almost all the way (<b>${blind} m</b> without).`, `ほぼ全行程で位置を確かめられます（確認できない区間 <b>${blind} m</b>）。`);
+        return tr(`Position can be checked almost all the way (<b>${blind} m</b> without).`, `ほぼ全行程で位置を確認できる（確認できない区間 <b>${blind} m</b>）。`);
     }
   }
 
@@ -293,14 +293,11 @@ async function main() {
     const s = r.stats;
     const on = r.profile === state.selected;
     const bad = !s.errorOk || !s.o2Ok;
-    const l2 = [km(s.distance), tr(`O₂ ${pc(s.o2Out)} out`, `行きの酸素 ${pc(s.o2Out)}`), tr(`${s.photoCount} position checks`, `位置確認 ${s.photoCount}回`)].join(" · ");
     return `<button class="opt${bad ? " bad" : ""}" data-route="${r.profile}" aria-pressed="${on}">
       <span class="ic" aria-hidden="true"></span>
-      <span class="l1"><span class="name">${esc(profileName(r.profile))}</span>${
-        r.profile === "mix" ? `<span class="rec">${esc(t("recommended"))}</span>` : ""
-      }<span class="time">${dur(s.duration)}</span></span>
-      <span class="l2">${esc(l2)}</span>
-      <span class="why">${why(r)}</span>
+      <span class="name">${esc(profileName(r.profile))}${r.profile === "mix" ? `<span class="rec">${esc(t("recommended"))}</span>` : ""}</span>
+      <span class="time">${dur(s.duration)}</span>
+      <span class="l2">${esc(km(s.distance))} · O₂ ${pc(s.o2Out + s.o2Work + s.o2Back)}${bad ? ` · <b>${esc(tr("not safe", "条件を満たさない"))}</b>` : ""}</span>
     </button>${on ? detail(r) : ""}`;
   }
 
@@ -309,25 +306,24 @@ async function main() {
     const check = (ok: boolean, text: string) => `<li class="${ok ? "" : "bad"}"><span class="m">${ok ? "✓" : "!"}</span><span>${esc(text)}</span></li>`;
     const seg = (w: number, c: string) => `<i style="width:${Math.max(0, w) * 100}%;background:${c}"></i>`;
     const key = (c: string, label: string, v: number) => `<span><i style="background:${c}"></i>${esc(label)} <b>${pc(v)}</b></span>`;
-    return `<div class="detail">
+    return `<details class="detail" ${state.detailsOpen ? "open" : ""}>
+      <summary>${esc(tr("Details", "詳しく"))}</summary>
+      <p class="why">${why(r)}</p>
       <ul class="checks">
-        ${check(true, tr("Stays on safe ground", "安全な地面だけを通る"))}
-        ${check(s.errorOk, tr(`Position known to within ${cfg.errorLimit} m (worst ${s.maxError.toFixed(0)} m)`, `位置の誤差は${cfg.errorLimit} m以内（最大 ${s.maxError.toFixed(0)} m）`))}
-        ${check(s.o2Ok, tr(`Can walk home from any point with ${pc(cfg.reserve)} oxygen left`, `どこからでも酸素を${pc(cfg.reserve)}残して歩いて帰れる`))}
+        ${check(true, tr("Safe ground only", "安全な地面だけ"))}
+        ${check(s.errorOk, tr(`Position error ≤ ${cfg.errorLimit} m (max ${s.maxError.toFixed(0)} m)`, `位置の誤差 ${cfg.errorLimit} m以内（最大 ${s.maxError.toFixed(0)} m）`))}
+        ${check(s.o2Ok, tr(`Walk home from anywhere, ${pc(cfg.reserve)} O₂ left`, `どこからでも帰れる（酸素${pc(cfg.reserve)}残る）`))}
       </ul>
-      <div class="o2">
-        <div class="lbl"><span>${esc(t("o2Title"))}</span><span>${esc(tr(`climb ${Math.round(s.ascent)} m`, `登り ${Math.round(s.ascent)} m`))}</span></div>
-        <div class="o2bar">${seg(1 - state.o2, O2_COLORS.before)}${seg(s.o2Out, O2_COLORS.out)}${seg(s.o2Work, O2_COLORS.work)}${seg(s.o2Back, O2_COLORS.back)}${seg(
-          s.o2Left,
-          O2_COLORS.left,
-        )}<span class="reserve" style="width:${cfg.reserve * 100}%"></span></div>
-        <div class="o2key">${key(O2_COLORS.out, t("o2Out"), s.o2Out)}${key(O2_COLORS.work, t("o2Work"), s.o2Work)}${key(O2_COLORS.back, t("o2Back"), s.o2Back)}${key(
-          O2_COLORS.left,
-          t("o2Left"),
-          Math.max(0, s.o2Left),
-        )}</div>
-      </div>
-    </div>`;
+      <div class="o2bar">${seg(1 - state.o2, O2_COLORS.before)}${seg(s.o2Out, O2_COLORS.out)}${seg(s.o2Work, O2_COLORS.work)}${seg(s.o2Back, O2_COLORS.back)}${seg(
+        s.o2Left,
+        O2_COLORS.left,
+      )}<span class="reserve" style="width:${cfg.reserve * 100}%"></span></div>
+      <div class="o2key">${key(O2_COLORS.out, t("o2Out"), s.o2Out)}${key(O2_COLORS.work, t("o2Work"), s.o2Work)}${key(O2_COLORS.back, t("o2Back"), s.o2Back)}${key(
+        O2_COLORS.left,
+        t("o2Left"),
+        Math.max(0, s.o2Left),
+      )}</div>
+    </details>`;
   }
 
   function renderRoutes() {
@@ -349,10 +345,24 @@ async function main() {
     const r = state.routes.find((r) => r.profile === state.selected);
     const strip = $("strip");
     strip.hidden = !r || narrow();
-    if (r && !strip.hidden) {
+    strip.classList.toggle("open", state.stripOpen);
+    $("stripBtn").setAttribute("aria-expanded", String(state.stripOpen));
+    if (!r || strip.hidden) return;
+    const elev = grid.layers.elev;
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (const c of r.cells) {
+      lo = Math.min(lo, elev[c]);
+      hi = Math.max(hi, elev[c]);
+    }
+    $("stripSum").textContent = tr(
+      `Elevation ${Math.round(hi - lo)} m · position error max ${r.stats.maxError.toFixed(0)} m`,
+      `高低差 ${Math.round(hi - lo)} m ・ 位置の誤差 最大 ${r.stats.maxError.toFixed(0)} m`,
+    );
+    if (state.stripOpen) {
       drawProfile($<HTMLCanvasElement>("profile"), r, grid, cfg, ACCENT, {
         elev: t("chartElev"),
-        err: tr("How sure we are of your position (m)", "位置の不確かさ (m)"),
+        err: tr("Position error (m)", "位置の誤差 (m)"),
         limit: t("chartLimit"),
       });
     }
@@ -360,12 +370,13 @@ async function main() {
 
   function renderLayers() {
     for (const b of document.querySelectorAll<HTMLElement>(".tile")) b.setAttribute("aria-checked", String(b.dataset.layer === state.overlay));
-    const sw = (c: string, label: string) => `<span><i style="background:${c}"></i>${esc(label)}</span>`;
+    const bar = (stops: readonly (readonly number[])[], lo: string, hi: string) =>
+      `<span class="grad" style="background:linear-gradient(90deg,${stops.map((s) => `${css(s)} ${s[0] * 100}%`).join(",")})"></span><span class="ends"><span>${esc(lo)}</span><span>${esc(hi)}</span></span>`;
     const legend: Record<OverlayId, string> = {
-      none: esc(tr("Real HiRISE colours. Yellow squares are science targets.", "HiRISEの実際の色。黄色の四角は科学目標です。")),
-      safety: sw(css(NO_GO), tr("No-go", "通行不可")) + sw(css(SAFETY[0]), tr("Careful", "注意")),
-      loc: sw(css(locStops(cfg)[0]), tr("A photo can't fix your position here", "写真で位置を確かめられない場所")),
-      hematite: sw(css(HEMATITE[2]), tr("More hematite", "ヘマタイトが多い")),
+      none: esc(tr("Real HiRISE colours.", "HiRISEの実際の色。")),
+      safety: bar(SAFETY, tr("Risky", "危険"), tr("Safe", "安全")) + `<span class="ng"><i style="background:${css(NO_GO)}"></i>${esc(tr("No-go", "通行不可"))}</span>`,
+      loc: bar(locStops(cfg), tr("Easy to get lost", "迷いやすい"), tr("Easy to locate", "迷いにくい")),
+      hematite: bar(HEMATITE, tr("Less", "少"), tr("More hematite", "ヘマタイト多")),
     };
     $("layerLegend").innerHTML = legend[state.overlay];
     $("layerInfo").hidden = state.overlay === "none";
@@ -390,7 +401,6 @@ async function main() {
       return;
     }
     const L = grid.layers;
-    const g = toLonLat(grid.east(cell), grid.northOf(cell));
     const good = grid.good[cell];
     const cls = grid.blocked[cell] ? "bad" : good < 0.5 ? "warn" : "good";
     const word = grid.blocked[cell] ? tr("No-go", "通行不可") : good < 0.5 ? tr("Careful", "注意") : tr("Safe", "安全");
@@ -398,11 +408,10 @@ async function main() {
     const fix = grid.fixable[cell];
     const hem = L.hematite[cell];
     box.innerHTML = [
-      `${Math.abs(g.lat).toFixed(4)}°S ${g.lon.toFixed(4)}°E`,
       `${Math.round(L.elev[cell]).toLocaleString("en-US")} m`,
       `${tr("slope", "傾斜")} ${L.tilt[cell].toFixed(0)}°`,
       `<b class="${cls}">${esc(word + reason)}</b>`,
-      `${tr("position check", "位置確認")} <b class="${fix ? "good" : "vio"}">${esc(fix ? tr("possible", "できる") : tr("not possible", "できない"))}</b>`,
+      `<b class="${fix ? "good" : "vio"}">${esc(fix ? tr("Easy to locate", "迷いにくい") : tr("Easy to get lost", "迷いやすい"))}</b>`,
       Number.isNaN(hem) ? "" : `${tr("hematite", "ヘマタイト")} ${hem.toFixed(2)}`,
     ]
       .filter(Boolean)
@@ -433,6 +442,13 @@ async function main() {
       if (p) void setDest(cellOfPlace(p), placeName(p.id, p.name));
     }
   });
+  $("stripBtn").addEventListener("click", () => {
+    state.stripOpen = !state.stripOpen;
+    renderStrip();
+  });
+  $("routes").addEventListener("toggle", (e) => {
+    if ((e.target as HTMLElement).matches("details.detail")) state.detailsOpen = (e.target as HTMLDetailsElement).open;
+  }, true);
   $("changeStart").addEventListener("click", () => {
     state.pickStart = !state.pickStart;
     renderTop();
@@ -555,6 +571,9 @@ async function main() {
     return;
   }
   $("boot").remove();
+  // sim.html?layer=safety|loc|hematite opens with that heat map
+  const layer = params.get("layer");
+  if (layer === "safety" || layer === "loc" || layer === "hematite") state.overlay = layer;
   pushOverlay();
   if (project) {
     // reopen a saved plan with its settings
