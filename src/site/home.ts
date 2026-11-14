@@ -1,9 +1,9 @@
 /**
- * Home: Mars in the middle, the title either side of it, a search box and "New plan" below,
- * and the plans saved in this browser. Simple on purpose.
+ * Home: Mars in the middle with "Ares" and "Sight" either side, one search bar with "New plan"
+ * inside it, and a row of cards below: your recent plans, or the science targets to start from.
  */
 import { loadJson, type Place, type Positions } from "../data/loader";
-import { placeName } from "../sim/text";
+import { placeName, profileName } from "../sim/text";
 import { Globe } from "./globe";
 import { getLang, initLang, setLang, tr } from "./lang";
 import { attachPlaceSearch, searchable } from "./placeSearch";
@@ -18,56 +18,98 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 let places: Place[] = [];
 const open = (p: Place) => location.assign(`/sim.html?dest=${encodeURIComponent(p.id)}`);
 
-function planPill(p: Project): string {
-  return `<li>
-    <a href="/sim.html?project=${encodeURIComponent(p.id)}"${p.summary && !p.summary.ok ? ' class="bad"' : ""}>
-      <span class="nm">${esc(p.name)}</span><span class="when">${esc(ago(p.updated, getLang() === "ja"))}</span>
+/** what each science target is for, in a few words */
+const WHY: Record<string, [string, string]> = {
+  stop_murray_buttes: ["Rock layers of an old lake", "古い湖の地層"],
+  stop_bagnold_dunes: ["Active dark sand dunes", "動いている黒い砂丘"],
+  stop_vera_rubin_ridge: ["Hematite seen from orbit", "軌道から見えたヘマタイト"],
+};
+
+const dur = (s: number) => {
+  const m = Math.round(s / 60);
+  const h = Math.floor(m / 60);
+  return h ? tr(`${h} h ${m % 60} min`, `${h}時間${m % 60}分`) : tr(`${m} min`, `${m}分`);
+};
+
+function planCard(p: Project): string {
+  const s = p.summary;
+  const facts = s ? `${profileName(s.profile)} · ${dur(s.duration)}` : tr("No route yet", "ルート未計算");
+  return `<li class="card">
+    <a href="/sim.html?project=${encodeURIComponent(p.id)}">
+      <span class="dot${s && !s.ok ? " bad" : " plan"}" aria-hidden="true"></span>
+      <span class="nm">${esc(p.name)}</span>
+      <span class="sub">${esc(facts)}</span>
+      <span class="meta">${esc(ago(p.updated, getLang() === "ja"))}</span>
     </a>
-    <button class="del" data-del="${esc(p.id)}" aria-label="${esc(tr(`Delete ${p.name}`, `${p.name}を削除`))}">
+    <button class="del" data-del="${esc(p.id)}" aria-label="${esc(tr(`Delete ${p.name}`, `${p.name}を削除`))}" title="${esc(tr("Delete", "削除"))}">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8l8 8M16 8l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
     </button>
   </li>`;
 }
 
-function renderPlans(): void {
-  const list = listProjects();
-  const box = $("plans");
-  if (!list.length) {
-    const stops = places.filter((p) => p.kind === "stop");
-    box.innerHTML = stops.length
-      ? `<p class="try">${esc(tr("Try", "例えば"))} ${stops.map((p) => `<a href="/sim.html?dest=${p.id}">${esc(placeName(p.id, p.name))}</a>`).join("")}</p>`
-      : "";
-    return;
-  }
-  box.innerHTML = `<ul>${list.slice(0, 4).map(planPill).join("")}</ul>${
-    list.length > 4 ? `<p class="more">${esc(tr(`+${list.length - 4} more`, `ほか${list.length - 4}件`))}</p>` : ""
-  }`;
+function targetCard(p: Place, base: Place | undefined): string {
+  const km = base ? `${(Math.hypot(p.easting - base.easting, p.northing - base.northing) / 1000).toFixed(1)} km` : "";
+  const why = WHY[p.id];
+  return `<li class="card">
+    <a href="/sim.html?dest=${encodeURIComponent(p.id)}">
+      <span class="dot" aria-hidden="true"></span>
+      <span class="nm">${esc(placeName(p.id, p.name).replace(/（ヘマタイト）|\s*\(hematite\)/i, ""))}</span>
+      <span class="sub">${why ? esc(tr(...why)) : ""}</span>
+      <span class="meta">${esc(tr(`${km} from Base Camp`, `ベースキャンプから ${km}`))}</span>
+    </a>
+  </li>`;
+}
+
+/** which tab is open below the search: saved plans or science targets */
+let tab: "plans" | "targets" | null = null;
+
+function renderBelow(): void {
+  const plans = listProjects();
+  const stops = places.filter((p) => p.kind === "stop");
+  const base = places.find((p) => p.kind === "base");
+  const box = $("below");
+  if (!plans.length) tab = "targets";
+  else if (!tab) tab = "plans";
+  const tabBtn = (id: "plans" | "targets", label: string) =>
+    `<button role="tab" data-tab="${id}" aria-selected="${tab === id}">${esc(label)}</button>`;
+  const head = plans.length
+    ? `<div class="head" role="tablist">${tabBtn("plans", tr("Recent plans", "最近の計画"))}${tabBtn("targets", tr("Science targets", "科学目標"))}${
+        tab === "plans" && plans.length > 3 ? `<span class="count">${esc(tr(`${plans.length} saved`, `${plans.length}件保存`))}</span>` : ""
+      }</div>`
+    : `<div class="head"><h2>${esc(tr("Start with a science target", "科学目標から始める"))}</h2></div>`;
+  const cards = tab === "plans" ? plans.slice(0, 3).map(planCard) : stops.map((p) => targetCard(p, base));
+  box.innerHTML = `${head}<ul class="cards">${cards.join("")}</ul>`;
 }
 
 function renderText(): void {
-  ($("q") as HTMLInputElement).placeholder = tr("Search Gale Crater", "ゲール・クレーターを検索");
+  ($("q") as HTMLInputElement).placeholder = tr("Search a place in Gale Crater", "ゲール・クレーターの場所を検索");
   $("lang").textContent = getLang() === "ja" ? "EN" : "日本語";
-  renderPlans();
+  renderBelow();
 }
 
 $("lang").addEventListener("click", () => setLang(getLang() === "ja" ? "en" : "ja"));
-$("plans").addEventListener("click", (e) => {
+$("below").addEventListener("click", (e) => {
+  const t = (e.target as HTMLElement).closest<HTMLElement>("[data-tab]");
+  if (t) {
+    tab = t.dataset.tab as "plans" | "targets";
+    renderBelow();
+    return;
+  }
   const b = (e.target as HTMLElement).closest<HTMLElement>("[data-del]");
   if (!b) return;
   const p = listProjects().find((q) => q.id === b.dataset.del);
   if (p && confirm(tr(`Delete the plan "${p.name}"?`, `計画「${p.name}」を削除しますか？`))) {
     removeProject(p.id);
-    renderPlans();
+    renderBelow();
   }
 });
 document.addEventListener("langchange", renderText);
 // back from the planner with the browser's back button: show what was saved meanwhile
-addEventListener("pageshow", renderPlans);
+addEventListener("pageshow", renderBelow);
 renderText();
 
 async function start(): Promise<void> {
   const host = $("globe");
-  // the globe does not need the place list, so start both at once
   const globe = Globe.create(host, "/img/home/mars.jpg", reduced).catch((err) => {
     console.warn("globe unavailable", err);
     document.body.classList.add("no-globe");
@@ -80,6 +122,12 @@ async function start(): Promise<void> {
 
   const g = await globe;
   if (!g) return;
+  // the "Gale Crater" label follows the marker while it faces us
+  const spot = $("spot");
+  g.onSpot = (x, y, facing) => {
+    spot.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
+    spot.style.opacity = String(Math.max(0, Math.min(1, (facing - 0.3) / 0.25)));
+  };
   addEventListener("resize", () => g.resize());
   const loop = (now: number) => {
     g.frame(now);

@@ -1,4 +1,4 @@
-/** Marswalk: game entry point and mission flow. */
+/** AresSight: game entry point and mission flow. */
 import * as THREE from "three";
 import { toLonLat } from "../data/frame";
 import { dataUrl, loadRaster } from "../data/loader";

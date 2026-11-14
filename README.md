@@ -1,4 +1,6 @@
-# Marswalk
+# AresSight
+
+(Repository name: marswalk.)
 
 NASA Space Apps Challenge 2026, "Interplanetary Survival Guide: Martian Map".
 
@@ -8,7 +10,7 @@ home. Built on real NASA data. Runs in a browser with no backend.
 
 | Page | What it is |
 |---|---|
-| `/` | Home: a faceted pixel Mars, place search, New plan, and the plans saved in this browser |
+| `/` | Home: a faceted pixel Mars between "Ares" and "Sight", one search bar with New plan, and cards for recent plans or science targets |
 | `/sim.html` | **Route simulator**: pick a destination on the 2D map or in 3D, compare four routes |
 | `/how.html` | How it works: the problem, the layers, the route rules, every assumption |
 | `/game.html` | Walk preview: the earlier first-person prototype (see below) |

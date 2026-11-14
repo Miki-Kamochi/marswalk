@@ -24,6 +24,10 @@ export class Globe {
   private dragging = false;
   private lastX = 0;
   private t0 = performance.now();
+  /** called every frame with Gale Crater's screen position (CSS px) and how much it faces us (0..1) */
+  onSpot: ((x: number, y: number, facing: number) => void) | null = null;
+  private tmpV = new THREE.Vector3();
+  private tmpN = new THREE.Vector3();
 
   private constructor(
     private host: HTMLElement,
@@ -34,7 +38,7 @@ export class Globe {
     this.renderer.setClearColor(0x000000, 0);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     host.appendChild(this.renderer.domElement);
-    
+
     this.spin.rotation.z = 25.2 * D2R * 0.35; // a hint of Mars's axial tilt
     this.scene.add(this.spin);
 
@@ -136,16 +140,23 @@ export class Globe {
     this.spin.add(planet);
   }
 
+  /** two layers of pixel stars: many faint ones, a few bright ones that slowly twinkle */
+  private stars: THREE.PointsMaterial[] = [];
   private addStars(): void {
-    const n = 260;
-    const a = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) {
-      const v = new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, -1).normalize().multiplyScalar(30);
-      v.toArray(a, i * 3);
-    }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.BufferAttribute(a, 3));
-    this.scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0xb8aa9c, size: 1, sizeAttenuation: false, transparent: true, opacity: 0.55 })));
+    const layer = (n: number, size: number, opacity: number, color: number) => {
+      const a = new Float32Array(n * 3);
+      for (let i = 0; i < n; i++) {
+        const v = new THREE.Vector3(Math.random() * 2.4 - 1.2, Math.random() * 1.6 - 0.8, -1).normalize().multiplyScalar(40);
+        v.toArray(a, i * 3);
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute("position", new THREE.BufferAttribute(a, 3));
+      const m = new THREE.PointsMaterial({ color, size, sizeAttenuation: false, transparent: true, opacity, depthWrite: false });
+      this.scene.add(new THREE.Points(g, m));
+      this.stars.push(m);
+    };
+    layer(420, 1, 0.85, 0xe6dccf);
+    layer(46, 2, 1, 0xfff4e6);
   }
 
   private bindDrag(): void {
@@ -178,8 +189,8 @@ export class Globe {
     // draw at 1/pixel of the CSS size; CSS scales it back up with crisp pixels
     this.renderer.setPixelRatio(1 / this.pixel);
     this.renderer.setSize(w, h, true);
-    const d = Math.min(0.44 * h, 0.62 * w);
-    const cy = 0.42 * h;
+    const d = Math.min(0.56 * h, 0.66 * w);
+    const cy = 0.39 * h;
     const half = h / d; // world units from the screen centre to its top edge (radius 1 = d/2 px)
     const lift = ((h / 2 - cy) * 2) / d;
     this.camera.aspect = w / Math.max(1, h);
@@ -200,6 +211,15 @@ export class Globe {
     this.spin.rotation.y = this.yaw;
     const pulse = this.still ? 1 : 0.85 + 0.35 * Math.abs(Math.sin(t * 1.6));
     this.marker.scale.setScalar(pulse);
+    if (!this.still) this.stars[1].opacity = 0.75 + 0.25 * Math.sin(t * 0.9);
     this.renderer.render(this.scene, this.camera);
+    if (this.onSpot) {
+      this.marker.getWorldPosition(this.tmpV);
+      this.tmpN.copy(this.tmpV).normalize();
+      const facing = this.tmpN.dot(this.tmpV.clone().sub(this.camera.position).normalize().negate());
+      this.tmpV.project(this.camera);
+      const el = this.renderer.domElement;
+      this.onSpot(((this.tmpV.x + 1) / 2) * el.clientWidth, ((1 - this.tmpV.y) / 2) * el.clientHeight, facing);
+    }
   }
 }

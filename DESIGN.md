@@ -1,13 +1,13 @@
-# Marswalk design
+# AresSight design
 
 How Marswalk should look and behave.
 
-## 0. What Marswalk is (decided)
+## 0. What AresSight is (decided)
 
-Marswalk is **a planning display inside the crew's habitat**. It is one of the formats the challenge suggests. The crew uses it to prepare an EVA (spacewalk on foot) at Gale Crater. It is a working tool for astronauts, **not a game**. Every screen should look like it belongs on a mission console: calm and operational, with real data and one clear next action.
+The app is called **AresSight** (renamed from Marswalk on 2026-11-15; the repository keeps its name). It is **a planning display inside the crew's habitat**. It is one of the formats the challenge suggests. The crew uses it to prepare an EVA (spacewalk on foot) at Gale Crater. It is a working tool for astronauts, **not a game**. Every screen should look like it belongs on a mission console: calm and operational, with real data and one clear next action.
 
 - **Look (decided 2026-11-15, final revision):** simple and clean, rounded (pill inputs and buttons, round tool buttons, 16-22 px panel corners), warm near-black, one orange accent, thin type. Deliberately not a copy of Google Maps (no blue "you are here" dot, no teardrop pin). The 3D is a **subtle pixel rendering**: faceted low-poly surfaces drawn at a fraction of the screen resolution and scaled up with crisp pixels, matching the walk preview's polygon terrain. Markers are a square habitat, a flag on a stake for the goal and diamonds for photo checks.
-- **Home:** black space with a faceted pixel Mars in the centre (Viking colour mosaic, lit from the side so a night half shows, Gale Crater marked, slowly turning, can be dragged). "Mars" and "walk" sit either side of the globe. Below: a search pill and a **New plan** button, then the saved plans as small pills. With no plans yet it suggests the three science targets.
+- **Home:** black space with a faceted pixel Mars in the centre (Viking colour mosaic, lit from the side so a night half shows, slowly turning, can be dragged). A "Gale Crater" label follows the marker on the globe. "Ares" and "Sight" sit either side. Below: one search bar with **New plan** inside it, then three cards: recent plans and science targets as two tabs (targets only, until a plan is saved). Font: Space Grotesk. Brighter two-layer pixel stars.
 - **Plans (projects):** every planner session is a plan, saved automatically in the browser (localStorage, no backend) once a destination is chosen. The name follows the destination until the user renames it in the panel header. `sim.html?project=<id>` reopens one.
 - **Planner:** choose a destination and compare routes. This is the core tool. It works like map directions:
   - **Panel (docked left):** plan name, Start / Goal, then the four route options. The recommended route comes first, and each option has a one-line reason. The selected option opens its safety checks and oxygen bar.
@@ -276,4 +276,4 @@ Each step ships something that works and is committed on its own.
 - **Name of the localizability idea in the UI:** "Getting lost risk" or "Can I check my position?" The first is shorter. The second is more accurate.
 - **Default view:** 3D (more impressive) or 2D (easier to read)? This plan proposes 3D, with the camera fitted to the routes.
 - **Game:** keep it in the footer as "Prototype", or remove it from the site?
-- **Fonts:** Manrope (softer) or Space Grotesk (more "space")?
+- **Fonts:** decided: Space Grotesk (self-hosted), which suits the pixel 3D.

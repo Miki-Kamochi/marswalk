@@ -20,7 +20,7 @@
   --pink: #ff4fd8;
   --r-panel: 20px;
   --r-card: 14px;
-  --font: "Manrope Variable", "Manrope", system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", "Noto Sans JP", sans-serif;
+  --font: "Space Grotesk Variable", "Space Grotesk", system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", "Noto Sans JP", sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   /* tool surfaces: warm near-black panels with hairline edges (DESIGN.md section 0) */
