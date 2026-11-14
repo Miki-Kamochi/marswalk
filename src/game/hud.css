@@ -394,3 +394,8 @@
 #actionBtn.ready {
   background: #7fe3ff;
 }
+
+/* fade in and out like the other pages (cross-document view transitions) */
+@view-transition {
+  navigation: auto;
+}
