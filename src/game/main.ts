@@ -10,7 +10,7 @@ import { MIN_HORIZON_RANGE, Nav } from "./nav";
 import { EYE_HEIGHT, Player, REAL_PACE, WALK_SPEED } from "./player";
 import { makeRover, makeSampleSite } from "./props";
 import { drawReveal } from "./reveal";
-import { World } from "./world";
+import { World } from "../world/world";
 
 /** The mission clock runs this many times faster than real time (and so does walking). */
 export const TIME_SCALE = WALK_SPEED / REAL_PACE;

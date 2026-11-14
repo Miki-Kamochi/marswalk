@@ -9,7 +9,7 @@ import { Line2 } from "three/addons/lines/Line2.js";
 import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { LineMaterial } from "three/addons/lines/LineMaterial.js";
 import { toLonLat } from "../data/frame";
-import { World } from "../game/world";
+import { World } from "../world/world";
 import { nextLocalTime } from "../nav/sun";
 import type { NavGrid } from "../plan/grid";
 import type { Profile, Route } from "../plan/planner";

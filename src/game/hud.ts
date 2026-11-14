@@ -2,7 +2,7 @@
 import type { Bounds } from "../data/loader";
 import { DEG, wrap } from "../nav/rng";
 import type { Nav, SnapshotResult } from "./nav";
-import type { World } from "./world";
+import type { World } from "../world/world";
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 

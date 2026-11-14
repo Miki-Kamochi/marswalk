@@ -13,7 +13,7 @@ home. Built on real NASA data. Runs in a browser with no backend.
 | `/how.html` | How it works: the problem, the layers, the route rules, every assumption |
 | `/game.html` | The earlier first-person game prototype (see below) |
 | `/credits.html` | Data, methods and software |
-| `/dev.html` | Data check pages |
+| `/dev/` | Data check pages for developers |
 
 The new pages are in English and Japanese. The original project vision is in [CLAUDE.md](CLAUDE.md);
 the simulator is where the idea went after that.
@@ -97,9 +97,9 @@ is needed.
 
 | Page | What it checks |
 |---|---|
-| `/terrain-test.html` | The real terrain in 3D: play area, Mount Sharp, crater rim, places, Curiosity's path |
-| `/map-test.html` | The 2D layered map: imagery, slope, minerals, sand, route |
-| `/sensor-test.html` | Phone sensors: turn the phone to look around, step counter |
+| `/dev/terrain.html` | The real terrain in 3D: play area, Mount Sharp, crater rim, places, Curiosity's path |
+| `/dev/map.html` | The 2D layered map: imagery, slope, minerals, sand, route |
+| `/dev/sensors.html` | Phone sensors: turn the phone to look around, step counter |
 
 ### Test on a phone before deploying
 
@@ -156,17 +156,18 @@ Datasets and credits are listed in [DATA_SOURCES.md](DATA_SOURCES.md).
 ## Layout
 
 ```
-index.html, sim.html, how.html, game.html, credits.html, *-test.html   pages (Vite multi-page)
+index.html, sim.html, how.html, game.html, credits.html   the pages (Vite multi-page)
+dev/                      data check pages
 src/data/                 frame.ts (coordinates), loader.ts (typed loaders for public/data)
 src/plan/                 route planner: config, grid, energy model, search (no browser code)
 src/sim/                  route simulator: 2D map, 3D view, panel, text in two languages
 src/site/                 shared styles, language switch, home and "how it works" scripts
+src/world/                the 3D Gale Crater terrain, shared by the simulator and the game
 src/game/, src/nav/       the game prototype and its navigator
-src/test/                 the Phase 1 check pages
+src/dev/                  scripts of the data check pages
 public/data/              processed NASA data (see meta.json for a description of every file)
-public/models/            3D models (Phase 2)
 scripts/                  Python data pipeline
-data/raw/                 downloaded source data (git-ignored)
+data/raw/, data/interim/  downloaded source data and intermediate files (git-ignored)
 ```
 
 ## Coordinates

@@ -12,7 +12,7 @@ import { visualRange } from "../nav/visibility";
 import { Wayfinder } from "../nav/wayfinder";
 import type { Controls } from "./controls";
 import type { Player } from "./player";
-import type { World } from "./world";
+import type { World } from "../world/world";
 
 /** seconds of mission time between automatic sun sightings */
 const SUN_PERIOD = 6;

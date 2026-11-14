@@ -1,5 +1,5 @@
 /** End-of-mission map: the real path, Wayfinder's estimate, and where you would have gone without it. */
-import type { World } from "./world";
+import type { World } from "../world/world";
 
 export interface RevealData {
   /** true path, whole EVA */

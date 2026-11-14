@@ -1,6 +1,6 @@
 /** The astronaut's TRUE state in the world (Wayfinder never reads this directly). */
 import type { Controls } from "./controls";
-import type { World } from "./world";
+import type { World } from "../world/world";
 
 export const EYE_HEIGHT = 1.7;
 /** Movement is time-compressed with the mission clock (see TIME_SCALE in main.ts). */
