@@ -13,6 +13,10 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, "index.html"),
+        sim: resolve(__dirname, "sim.html"),
+        game: resolve(__dirname, "game.html"),
+        how: resolve(__dirname, "how.html"),
+        credits: resolve(__dirname, "credits.html"),
         dev: resolve(__dirname, "dev.html"),
         terrain: resolve(__dirname, "terrain-test.html"),
         sensors: resolve(__dirname, "sensor-test.html"),

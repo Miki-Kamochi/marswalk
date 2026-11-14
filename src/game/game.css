@@ -68,6 +68,12 @@ body {
   font-size: 11px;
   margin: 14px 0 0;
 }
+.menuLink {
+  display: inline-block;
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: #d3b8a3;
+}
 button {
   font: inherit;
   font-weight: 700;

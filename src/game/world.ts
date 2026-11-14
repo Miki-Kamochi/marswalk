@@ -31,6 +31,8 @@ export class World {
   private sunDisc: THREE.Sprite;
   /** current sun direction in the sky */
   sun = { azimuth: 0, elevation: 45 };
+  /** the drawn play-area terrain (the route simulator recolours it with map layers) */
+  playMesh = new THREE.Group();
 
   private constructor(
     readonly meta: Meta,
@@ -75,8 +77,9 @@ export class World {
     const playB = meta.frame.play;
     const fetchB = meta.frame.fetch;
     const k = lowDetail ? 2 : 1;
+    w.playMesh = buildTerrain(play, frame, { step, color: rasterColor(color, elevationTint), chunkCells: 48 });
     w.scene.add(
-      buildTerrain(play, frame, { step, color: rasterColor(color, elevationTint), chunkCells: 48 }),
+      w.playMesh,
       buildTerrain(surround, frame, {
         step: 2 * k,
         color: rasterColor(surroundImg, elevationTint),

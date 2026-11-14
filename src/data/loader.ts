@@ -1,4 +1,5 @@
 /** Loaders for the processed NASA data in /public/data (see scripts/process_data.py). */
+import type { NavMeta } from "../plan/grid";
 
 export interface Bounds {
   west: number;
@@ -51,6 +52,8 @@ export interface Meta {
   grids: Record<"play" | "surround" | "mid" | "far", GridMeta>;
   images: Record<"ortho" | "color" | "surround", ImageMeta>;
   layers: Record<string, LayerMeta>;
+  /** the route planner's 6 m grid (scripts/nav_layers.py) */
+  nav: { grid: NavMeta };
 }
 
 export interface Place {

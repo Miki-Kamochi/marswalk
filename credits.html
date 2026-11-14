@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Marswalk — Credits</title>
+    <link rel="stylesheet" href="/src/site/site.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/#menu">MARSWALK</a>
+      <span class="where"><span data-l="en">Credits</span><span data-l="ja">クレジット</span></span>
+      <span class="spacer"></span>
+      <div class="seg" role="group" aria-label="Language">
+        <button data-set-lang="en">EN</button>
+        <button data-set-lang="ja">日本語</button>
+      </div>
+    </header>
+
+    <main class="doc">
+      <h1><span data-l="en">Credits</span><span data-l="ja">クレジット</span></h1>
+      <p class="lead">
+        <span data-l="en">
+          Made for the NASA Space Apps Challenge 2026, “Interplanetary Survival Guide: Martian Map”. Everything on the
+          map comes from public NASA, USGS and PDS data.
+        </span>
+        <span data-l="ja">
+          NASA Space Apps Challenge 2026「Interplanetary Survival Guide: Martian Map」のために作りました。地図のデータはすべて、NASA・USGS・PDSの公開データです。
+        </span>
+      </p>
+
+      <h2><span data-l="en">NASA data, by mission</span><span data-l="ja">NASAのデータ（ミッション別）</span></h2>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th><span data-l="en">Mission and instrument</span><span data-l="ja">ミッションと観測装置</span></th>
+              <th><span data-l="en">Data set</span><span data-l="ja">データセット</span></th>
+              <th><span data-l="en">Used for</span><span data-l="ja">使い道</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Mars Reconnaissance Orbiter / HiRISE</td>
+              <td>
+                MSL Gale Merged DEM, 1 m, v3 (USGS Astrogeology, planetarymaps.usgs.gov)
+              </td>
+              <td>
+                <span data-l="en">Terrain, safety layer (tilt, roughness, step), walking slopes</span>
+                <span data-l="ja">地形、安全レイヤー（傾き・でこぼこ・段差）、歩くときの勾配</span>
+              </td>
+            </tr>
+            <tr>
+              <td>Mars Reconnaissance Orbiter / HiRISE</td>
+              <td>
+                MSL Gale Orthophoto Mosaic, 25 cm, v3 (USGS Astrogeology, planetarymaps.usgs.gov)
+              </td>
+              <td>
+                <span data-l="en">Imagery, sand mask, localizability layer</span>
+                <span data-l="ja">画像、砂地の判定、迷いにくさレイヤー</span>
+              </td>
+            </tr>
+            <tr>
+              <td>Mars Reconnaissance Orbiter / HiRISE</td>
+              <td>
+                PSP_009650_1755 colour orthoimage (University of Arizona, uahirise.org)
+              </td>
+              <td>
+                <span data-l="en">Colour of the imagery (approximate natural colour)</span>
+                <span data-l="ja">画像の色づけ（おおよその自然色）</span>
+              </td>
+            </tr>
+            <tr>
+              <td>Mars Reconnaissance Orbiter / CRISM</td>
+              <td>
+                MTRDR targeted observation FRT0000B6F1 (PDS Geosciences Node, pds-geosciences.wustl.edu)
+              </td>
+              <td>
+                <span data-l="en">Destination layer: hematite (band depth at 0.86 µm)</span>
+                <span data-l="ja">目的地レイヤー：ヘマタイト（0.86 µmの吸収の深さ）</span>
+              </td>
+            </tr>
+            <tr>
+              <td>Mars Global Surveyor / MOLA</td>
+              <td>
+                MOLA MEGDR global elevation mosaic, 463 m (USGS Astrogeology, planetarymaps.usgs.gov)
+              </td>
+              <td>
+                <span data-l="en">Far landscape in 3D: the crater rim and Mount Sharp</span>
+                <span data-l="ja">3Dの遠景：クレーターの縁とシャープ山</span>
+              </td>
+            </tr>
+            <tr>
+              <td>Mars Science Laboratory (Curiosity)</td>
+              <td>
+                <a href="https://mars.nasa.gov/mmgis-maps/MSL/Layers/json/MSL_waypoints.json" target="_blank" rel="noopener">Localized waypoints</a>
+                (JPL)
+              </td>
+              <td>
+                <span data-l="en">Curiosity's real path; positions of the science targets</span>
+                <span data-l="ja">キュリオシティが実際に走った道、科学目標の位置</span>
+              </td>
+            </tr>
+            <tr>
+              <td>Mars Science Laboratory / REMS</td>
+              <td>
+                <a href="https://mars.nasa.gov/rss/api/?feed=weather&category=msl&feedtype=json" target="_blank" rel="noopener">REMS weather feed</a>
+                (Centro de Astrobiología, JPL)
+              </td>
+              <td>
+                <span data-l="en">Processed and kept with the project; not used by the simulator</span>
+                <span data-l="ja">処理してプロジェクトに含めていますが、シミュレーターでは使っていません</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">
+        <span data-l="en">
+          Credit: NASA/JPL-Caltech/University of Arizona/USGS (HiRISE), NASA/JPL-Caltech/JHUAPL (CRISM), NASA/GSFC
+          (MOLA), NASA/JPL-Caltech (Curiosity), NASA/JPL-Caltech/CAB (CSIC-INTA) (REMS). The elevation mosaic also
+          contains MRO CTX and ESA Mars Express HRSC data outside the HiRISE coverage; our map lies inside the HiRISE
+          part. The exact download address of every data set is in DATA_SOURCES.md in the project's repository.
+        </span>
+        <span data-l="ja">
+          クレジット：NASA/JPL-Caltech/University of Arizona/USGS（HiRISE）、NASA/JPL-Caltech/JHUAPL（CRISM）、NASA/GSFC（MOLA）、NASA/JPL-Caltech（キュリオシティ）、NASA/JPL-Caltech/CAB (CSIC-INTA)（REMS）。標高モザイクには、HiRISEの範囲外でMROのCTXとESAマーズ・エクスプレスのHRSCのデータも含まれますが、私たちの地図はHiRISEの範囲内です。各データセットの正確なダウンロード先は、プロジェクトのリポジトリにあるDATA_SOURCES.mdに書いてあります。
+        </span>
+      </p>
+
+      <h2><span data-l="en">Methods we built on</span><span data-l="ja">土台にした手法</span></h2>
+      <ul>
+        <li>
+          <span data-l="en">Photo matching against orbital images: NASA JPL's Mars Global Localization on Perseverance (principle only; we did not use its software).</span>
+          <span data-l="ja">軌道からの画像との写真照合：NASA JPLがパーサヴィアランスで使うMars Global Localization（原理のみ。ソフトウェアは使っていません）。</span>
+        </li>
+        <li>
+          <span data-l="en">Hazard check from a fitted plane (tilt, roughness, step): GESTALT, Goldberg, Maimone and Matthies, 2002.</span>
+          <span data-l="ja">平面の当てはめによる危険判定（傾き・でこぼこ・段差）：GESTALT、Goldberg, Maimone, Matthies（2002）。</span>
+        </li>
+        <li>
+          <span data-l="en">Walking speed: Tobler's hiking function, 1993. Effort: Pandolf, Givoni and Goldman, 1977.</span>
+          <span data-l="ja">歩く速さ：Toblerの式（1993）。運動の強さ：Pandolf, Givoni, Goldman（1977）。</span>
+        </li>
+        <li>
+          <span data-l="en">Walk-back limit: Apollo 15 to 17 traverse planning. Planning with uncertainty: Prentice and Roy, 2009.</span>
+          <span data-l="ja">ウォークバック限界：アポロ15〜17号の行動計画。不確かさを含めた計画：Prentice, Roy（2009）。</span>
+        </li>
+        <li>
+          <span data-l="en">Sun position in the 3D view: NASA GISS Mars24 algorithm (Allison and McEwen, 2000).</span>
+          <span data-l="ja">3D表示の太陽の位置：NASA GISSのMars24アルゴリズム（Allison, McEwen 2000）。</span>
+        </li>
+      </ul>
+
+      <h2><span data-l="en">Software</span><span data-l="ja">ソフトウェア</span></h2>
+      <ul>
+        <li>Three.js (3D), Leaflet (2D map), Vite and TypeScript.</li>
+        <li>
+          <span data-l="en">Data processing: Python with rasterio, NumPy, SciPy and Pillow.</span>
+          <span data-l="ja">データ処理：Python（rasterio、NumPy、SciPy、Pillow）。</span>
+        </li>
+        <li>
+          <span data-l="en">The 3D models and the terrain meshes are original, built for this project.</span>
+          <span data-l="ja">3Dモデルと地形メッシュは、このプロジェクトのために作ったオリジナルです。</span>
+        </li>
+        <li>
+          <span data-l="en">Written with the help of an AI coding assistant (Claude Code by Anthropic).</span>
+          <span data-l="ja">AIのコーディングアシスタント（AnthropicのClaude Code）の助けを借りて作りました。</span>
+        </li>
+      </ul>
+
+      <p class="note">
+        <span data-l="en">
+          NASA does not endorse this project. The numbers in the simulator are estimates;
+          <a href="/how.html#assumptions">every assumption is listed here</a>.
+        </span>
+        <span data-l="ja">
+          このプロジェクトはNASAの公認ではありません。シミュレーターの数値は推定です。<a href="/how.html#assumptions">すべての仮定はこちら</a>にあります。
+        </span>
+      </p>
+    </main>
+    <script type="module" src="/src/site/page.ts"></script>
+  </body>
+</html>

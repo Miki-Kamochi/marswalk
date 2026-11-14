@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Marswalk — Route simulator</title>
+    <link rel="stylesheet" href="/src/site/site.css" />
+    <link rel="stylesheet" href="/src/sim/sim.css" />
+  </head>
+  <body class="sim">
+    <header class="topbar">
+      <a class="brand" href="/#menu">MARSWALK</a>
+      <span class="where"><span data-l="en">Route simulator</span><span data-l="ja">ルート・シミュレーター</span></span>
+      <span class="spacer"></span>
+      <div class="seg" id="viewSeg" role="group" aria-label="View">
+        <button data-view="2d">2D</button>
+        <button data-view="split">2D + 3D</button>
+        <button data-view="3d">3D</button>
+      </div>
+      <a class="link" href="/how.html"><span data-l="en">How it works</span><span data-l="ja">仕組み</span></a>
+      <div class="seg" role="group" aria-label="Language">
+        <button data-set-lang="en">EN</button>
+        <button data-set-lang="ja">日本語</button>
+      </div>
+    </header>
+
+    <main id="app" data-view="2d">
+      <aside id="panel">
+        <section class="block" id="trip">
+          <div class="end">
+            <span class="dot home"></span>
+            <div class="grow">
+              <div class="lbl"><span data-l="en">Start and return</span><span data-l="ja">出発・帰還地点</span></div>
+              <div id="homeName" class="val"></div>
+            </div>
+            <button id="changeStart" class="btn small ghost"></button>
+          </div>
+          <div class="end">
+            <span class="dot dest"></span>
+            <div class="grow">
+              <div class="lbl"><span data-l="en">Destination</span><span data-l="ja">目的地</span></div>
+              <div id="destName" class="val"></div>
+            </div>
+          </div>
+          <p id="hint" class="hint"></p>
+          <div class="lbl"><span data-l="en">Science targets</span><span data-l="ja">科学目標</span></div>
+          <div id="quick" class="chips"></div>
+        </section>
+
+        <section class="block">
+          <h2>
+            <span data-l="en">Routes</span><span data-l="ja">ルート</span>
+            <button class="info" data-info="routes" aria-label="About the routes">i</button>
+          </h2>
+          <div id="notice"></div>
+          <div id="routes"></div>
+        </section>
+
+        <section class="block" id="settings">
+          <h2><span data-l="en">Assumptions you can change</span><span data-l="ja">変えられる前提</span></h2>
+          <label class="slider">
+            <span class="top">
+              <span><span data-l="en">Oxygen in the tank at the start</span><span data-l="ja">出発時の酸素残量</span></span>
+              <output id="o2Val"></output>
+            </span>
+            <input type="range" id="o2" min="30" max="100" step="2" value="100" />
+          </label>
+          <label class="slider">
+            <span class="top">
+              <span><span data-l="en">Largest position error allowed</span><span data-l="ja">許容する位置誤差の上限</span></span>
+              <output id="errVal"></output>
+            </span>
+            <input type="range" id="err" min="4" max="40" step="1" value="20" />
+          </label>
+          <p class="fine">
+            <span data-l="en">
+              Times, oxygen and limits are estimates from published walking models and our own assumptions, not NASA
+              values. <a href="/how.html#assumptions">See every assumption</a>.
+            </span>
+            <span data-l="ja">
+              時間・酸素・閾値は、公開されている歩行モデルと私たちの仮定から出した推定で、NASAの公式値ではありません。
+              <a href="/how.html#assumptions">すべての仮定を見る</a>
+            </span>
+          </p>
+        </section>
+      </aside>
+
+      <div id="stage">
+        <div id="map2d" class="pane"></div>
+        <div id="view3d" class="pane">
+          <div id="load3d"></div>
+          <div class="hint3d">
+            <span data-l="en">Drag: move · Right-drag: rotate · Wheel: zoom · Click: destination</span>
+            <span data-l="ja">ドラッグ：移動　右ドラッグ：回転　ホイール：拡大縮小　クリック：目的地</span>
+          </div>
+        </div>
+
+        <details id="layers" class="float" open>
+          <summary><span data-l="en">Map layers</span><span data-l="ja">地図レイヤー</span></summary>
+          <div class="rows">
+            <label><input type="radio" name="overlay" value="none" /><span data-l="en">Imagery only</span><span data-l="ja">画像のみ</span></label>
+            <label>
+              <input type="radio" name="overlay" value="hematite" /><span data-l="en">Destination: hematite</span
+              ><span data-l="ja">目的地：ヘマタイト</span>
+              <button class="info" data-info="hematite" aria-label="About this layer">i</button>
+            </label>
+            <label>
+              <input type="radio" name="overlay" value="safety" /><span data-l="en">Safety</span><span data-l="ja">安全</span>
+              <button class="info" data-info="safety" aria-label="About this layer">i</button>
+            </label>
+            <label>
+              <input type="radio" name="overlay" value="loc" /><span data-l="en">Localizability</span><span data-l="ja">迷いにくさ</span>
+              <button class="info" data-info="loc" aria-label="About this layer">i</button>
+            </label>
+            <hr />
+            <label>
+              <input type="checkbox" id="showLimit" checked /><span data-l="en">Walk-back limit</span><span data-l="ja">ウォークバック限界</span>
+              <button class="info" data-info="limit" aria-label="About this layer">i</button>
+            </label>
+            <label><input type="checkbox" id="showPlaces" checked /><span data-l="en">Places</span><span data-l="ja">地点</span></label>
+            <label>
+              <input type="checkbox" id="showTraverse" /><span data-l="en">Curiosity's path</span><span data-l="ja">キュリオシティの走行ルート</span>
+            </label>
+          </div>
+        </details>
+        <div id="legend" class="float"></div>
+        <div id="readout" class="float" hidden></div>
+        <div id="boot" class="boot"><span data-l="en">Loading Gale Crater…</span><span data-l="ja">ゲール・クレーターを読み込み中…</span></div>
+      </div>
+    </main>
+
+    <dialog id="info">
+      <h3 id="infoTitle"></h3>
+      <div id="infoBody"></div>
+      <div class="foot">
+        <a id="infoMore" href="/how.html"></a>
+        <form method="dialog"><button class="btn small" id="infoClose"></button></form>
+      </div>
+    </dialog>
+
+    <script type="module" src="/src/sim/main.ts"></script>
+  </body>
+</html>
