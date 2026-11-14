@@ -17,9 +17,33 @@ export interface TerrainOptions {
   curvature?: boolean;
   /** cells per chunk side (chunks let the renderer skip what is off-screen) */
   chunkCells?: number;
+  /** Optional close-range detail material; the default remains the orbital vertex colours. */
+  material?: THREE.Material;
 }
 
 export const terrainMaterial = new THREE.MeshLambertMaterial({ vertexColors: true });
+
+/** Mix a repeating ground photograph into the existing orbital vertex colours.
+ * World X/Z coordinates keep tiles aligned across independently generated chunks.
+ */
+export function groundDetailMaterial(detail: THREE.Texture): THREE.MeshLambertMaterial {
+  const material = new THREE.MeshLambertMaterial({ vertexColors: true });
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.mudDetailMap = { value: detail };
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nvarying vec2 vGroundXZ;")
+      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvGroundXZ = position.xz;");
+    shader.fragmentShader = shader.fragmentShader
+      .replace("#include <common>", "#include <common>\nuniform sampler2D mudDetailMap;\nvarying vec2 vGroundXZ;")
+      .replace("#include <map_fragment>", `#include <map_fragment>
+        vec3 mud = texture2D(mudDetailMap, vGroundXZ / 3.2).rgb;
+        float grain = clamp(1.0 + (dot(mud, vec3(0.2126, 0.7152, 0.0722)) - 0.22) * 1.35, 0.72, 1.38);
+        float nearby = 1.0 - smoothstep(18.0, 100.0, distance(vGroundXZ, cameraPosition.xz));
+        diffuseColor.rgb *= mix(1.0, grain, 0.85 * nearby);`);
+  };
+  material.customProgramCacheKey = () => "marswalk-ground-detail-v1";
+  return material;
+}
 
 export function buildTerrain(grid: HeightGrid, frame: Frame, o: TerrainOptions): THREE.Group {
   const m = grid.meta;
@@ -88,7 +112,7 @@ export function buildTerrain(grid: HeightGrid, frame: Frame, o: TerrainOptions):
       geo.setAttribute("position", new THREE.BufferAttribute(pos.subarray(0, k), 3));
       geo.setAttribute("color", new THREE.BufferAttribute(col.subarray(0, k), 3));
       geo.computeVertexNormals(); // non-indexed: one normal per face, which gives the faceted look
-      group.add(new THREE.Mesh(geo, terrainMaterial));
+      group.add(new THREE.Mesh(geo, o.material ?? terrainMaterial));
     }
   }
   return group;

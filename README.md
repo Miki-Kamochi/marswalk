@@ -42,6 +42,8 @@ MGLはJPLフライトコードの移植ではありません。実際に3Dシー
 
 遠景はユーザー提供の public/models/Mars_view.stl を使用。元ファイルは C:/Users/takoy/Mars_view.stl。地理参照・単位情報がないため遠景として演出配置し、測位と歩行には従来のNASA DEMを使用します。[データ出典](DATA_SOURCES.md)
 
+足元の地形には `public/models/brown_mud_dry_diff_2k.jpg` を3.2 m周期で繰り返し、元の衛星画像由来の頂点色へ明暗だけを重ねています。100 mほど先から徐々に薄くなるため、遠景の模様は維持されます。素材はユーザー提供の `C:/Users/takoy/mud_textures/` からコピーしました。
+
 ## 構成
 
 - src/game/: 帰還ミッション、操作、固定地図、パノラマ撮影、STL遠景。

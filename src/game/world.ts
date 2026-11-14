@@ -14,7 +14,7 @@ import {
   type Traverse,
 } from "../data/loader";
 import { sunPosition } from "../nav/sun";
-import { buildTerrain, elevationTint, facetHeight, rasterColor } from "./terrainMesh";
+import { buildTerrain, elevationTint, facetHeight, groundDetailMaterial, rasterColor } from "./terrainMesh";
 import { loadBackdrop } from './backdrop';
 
 export const HAZE = new THREE.Color(0xd4a076);
@@ -69,6 +69,12 @@ export class World {
       loadRaster(meta.images.color.file, meta.images.color.bounds),
       loadRaster(meta.images.surround.file, meta.images.surround.bounds),
     ]);
+    onProgress("Loading close-range ground texture…");
+    const groundDetail = await new THREE.TextureLoader().loadAsync(`${import.meta.env.BASE_URL}models/brown_mud_dry_diff_2k.jpg`);
+    groundDetail.wrapS = groundDetail.wrapT = THREE.MirroredRepeatWrapping;
+    groundDetail.colorSpace = THREE.SRGBColorSpace;
+    groundDetail.anisotropy = 8;
+    const groundMaterial = groundDetailMaterial(groundDetail);
     onProgress("Building terrain…");
     await new Promise((r) => setTimeout(r, 0));
     const step = lowDetail ? 6 : 3; // 12 m or 6 m triangles
@@ -77,7 +83,7 @@ export class World {
     const fetchB = meta.frame.fetch;
     const k = lowDetail ? 2 : 1;
     w.scene.add(
-      buildTerrain(play, frame, { step, color: rasterColor(color, elevationTint), chunkCells: 48 }),
+      buildTerrain(play, frame, { step, color: rasterColor(color, elevationTint), chunkCells: 48, material: groundMaterial }),
       buildTerrain(surround, frame, {
         step: 2 * k,
         color: rasterColor(surroundImg, elevationTint),
