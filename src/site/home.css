@@ -283,6 +283,7 @@ body.home::after {
   color: rgba(236, 228, 218, 0.45);
 }
 .cards {
+  animation: fade 0.35s var(--ease) both;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;

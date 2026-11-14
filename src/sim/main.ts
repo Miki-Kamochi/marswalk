@@ -10,6 +10,7 @@ import { cellElevations, decodeNav, NavGrid } from "../plan/grid";
 import { Planner, type Profile, type Route } from "../plan/planner";
 import { initLang, tr } from "../site/lang";
 import { attachPlaceSearch, searchable } from "../site/placeSearch";
+import { revealed } from "../site/reveal";
 import { getProject, newProjectId, saveProject, type Project } from "../site/projects";
 import { HEMATITE, makeCanvas, NO_GO, paintLimit, paintOverlay, SAFETY, css, locStops, type OverlayId } from "./overlays";
 import { drawProfile } from "./profile";
@@ -38,6 +39,7 @@ async function main() {
   initLang();
   const params = new URLSearchParams(location.search);
   const cfg: PlanConfig = { ...DEFAULTS };
+  // the data loads during the page-change animation; the heavy work waits until it is over
   const meta = await loadMeta();
   const nav = meta.nav.grid;
   const [play, navBuf, positions] = await Promise.all([
@@ -89,7 +91,7 @@ async function main() {
   let restoring = false;
   const nameInput = $<HTMLInputElement>("planName");
   const defaultName = () =>
-    state.dest >= 0 ? tr(`To ${state.destName || nameOf(state.dest)}`, `${state.destName || nameOf(state.dest)}へ`) : tr("New plan", "新しい計画");
+    state.dest < 0 ? tr("New plan", "新しい計画") : state.destName ? tr(`To ${state.destName}`, `${state.destName}へ`) : nameOf(state.dest);
   function renderName() {
     if (document.activeElement !== nameInput) nameInput.value = project?.custom ? project.name : defaultName();
   }
@@ -237,7 +239,7 @@ async function main() {
     const e = grid.east(cell);
     const n = grid.northOf(cell);
     let best: Place | null = null;
-    let bestD = 45;
+    let bestD = Infinity;
     for (const p of positions.places) {
       if (p.kind === "backdrop") continue;
       const d = Math.hypot(p.easting - e, p.northing - n);
@@ -246,9 +248,14 @@ async function main() {
         best = p;
       }
     }
-    if (best) return placeName(best.id, best.name);
+    if (best && bestD < 45) return placeName(best.id, best.name);
+    // a point on the map: say what it is near, not its coordinates
+    if (best && bestD < 1500) {
+      const name = placeName(best.id, best.name).replace(/（ヘマタイト）|\s*\(hematite\)/i, "");
+      return tr(`Near ${name}`, `${name}付近`);
+    }
     const g = toLonLat(e, n);
-    return `${Math.abs(g.lat).toFixed(4)}°${g.lat < 0 ? "S" : "N"} ${g.lon.toFixed(4)}°E`;
+    return `${Math.abs(g.lat).toFixed(3)}°S ${g.lon.toFixed(3)}°E`;
   }
 
   // ---------------------------------------------------------------- card
@@ -553,6 +560,7 @@ async function main() {
   renderTop();
   const needle = $("needle");
   try {
+    await revealed();
     view = await View3D.create($("map"), grid, {
       onPick: (e, n) => {
         const cell = grid.index(e, n);

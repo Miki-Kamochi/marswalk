@@ -418,3 +418,14 @@ details.more ol {
   font-weight: 600;
   color: var(--ui-text);
 }
+.intro-page {
+  margin-top: 40px !important;
+}
+.next {
+  margin-top: 56px;
+  font-size: 16px;
+}
+.next a {
+  font-weight: 600;
+  text-decoration: none;
+}

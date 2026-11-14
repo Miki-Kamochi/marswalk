@@ -8,6 +8,7 @@ import { Globe } from "./globe";
 import { getLang, initLang, tr } from "./lang";
 import { attachPlaceSearch, searchable } from "./placeSearch";
 import { ago, listProjects, removeProject, type Project } from "./projects";
+import { revealed } from "./reveal";
 
 initLang();
 
@@ -111,7 +112,8 @@ renderText();
 
 async function start(): Promise<void> {
   const host = $("globe");
-  const globe = Globe.create(host, "/img/home/mars.jpg", reduced).catch((err) => {
+  // building the globe is heavy: let the page-change animation finish first
+  const globe = revealed().then(() => Globe.create(host, "/img/home/mars.jpg", reduced)).catch((err) => {
     console.warn("globe unavailable", err);
     document.body.classList.add("no-globe");
     return null;

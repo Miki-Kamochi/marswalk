@@ -5,6 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AresSight — How it works</title>
     <meta name="theme-color" content="#000000" />
+    <script>
+      // pick the language before anything is drawn, so no text switches after the page appears
+      try {
+        var l = localStorage.getItem("marswalk-lang");
+        document.documentElement.dataset.lang = l === "ja" || l === "en" ? l : navigator.language.toLowerCase().indexOf("ja") === 0 ? "ja" : "en";
+      } catch (e) {
+        document.documentElement.dataset.lang = "en";
+      }
+      // resolves when the page-change animation is over; heavy 3D work waits for it
+      window.__revealed = new Promise(function (done) {
+        addEventListener("pagereveal", function (e) {
+          if (e.viewTransition) e.viewTransition.finished.then(done, done);
+          else done();
+        }, { once: true });
+        setTimeout(done, 700);
+      });
+    </script>
     <link rel="stylesheet" href="/src/site/site.css" />
     <link rel="stylesheet" href="/src/site/doc.css" />
   </head>
@@ -12,6 +29,7 @@
     <header class="bar">
       <a class="logo" href="/">AresSight</a>
       <nav class="links" aria-label="Pages">
+        <a href="/intro.html"><span data-l="en">Introduction</span><span data-l="ja">初めに</span></a>
         <a href="/how.html" aria-current="page"><span data-l="en">How it works</span><span data-l="ja">仕組み</span></a>
         <a href="/credits.html"><span data-l="en">Credits</span><span data-l="ja">クレジット</span></a>
         <button class="lang" data-toggle-lang aria-label="Language"></button>
@@ -25,7 +43,6 @@
         <span data-l="ja">歩いて探査する宇宙飛行士のための、ゲール・クレーターの地図です。安全な場所、自分の位置を確かめられる場所、そして必ず帰れるルートを示します。</span>
       </p>
       <ul class="toc">
-        <li><a href="#intro"><span data-l="en">Introduction</span><span data-l="ja">初めに</span></a></li>
         <li><a href="#problem"><span data-l="en">The problem</span><span data-l="ja">問題</span></a></li>
         <li><a href="#position"><span data-l="en">Staying found</span><span data-l="ja">位置の知り方</span></a></li>
         <li><a href="#layers"><span data-l="en">Map layers</span><span data-l="ja">地図のレイヤー</span></a></li>
@@ -33,33 +50,6 @@
         <li><a href="#assumptions"><span data-l="en">Assumptions</span><span data-l="ja">仮定</span></a></li>
         <li><a href="#limits"><span data-l="en">Limits</span><span data-l="ja">限界</span></a></li>
       </ul>
-
-      <!-- ------------------------------------------------------------ introduction -->
-      <section id="intro">
-        <h2><span class="n">00</span><span data-l="en">Introduction: why we built AresSight</span><span data-l="ja">初めに：なぜAresSightを作ったのか</span></h2>
-        <p class="intro-big">
-          <span data-l="en">One day, people will walk on Mars. When they step away from the habitat, one question decides whether they come back: <b>where am I?</b></span>
-          <span data-l="ja">いつか、人が火星を歩く日が来ます。基地から歩き出した宇宙飛行士が無事に帰れるかどうかは、ひとつの問いにかかっています。<b>「自分は今、どこにいるのか？」</b></span>
-        </p>
-        <div class="intro">
-          <p>
-            <span data-l="en">On Earth, a phone answers that in a second. On Mars there is no GPS, a compass does not work, and a message to Earth takes up to 22 minutes. The suit carries only so much oxygen, so getting lost is not an inconvenience: it is a life-or-death problem.</span>
-            <span data-l="ja">地球ならスマートフォンが一瞬で答えてくれます。でも火星にはGPSがなく、方位磁針も使えず、地球への通信には最大22分かかります。宇宙服の酸素には限りがあるので、迷うことは「不便」ではなく、命に関わる問題です。</span>
-          </p>
-          <p>
-            <span data-l="en">It has happened before. In 1971, the Apollo 14 crew walked the Moon with a map in hand and still could not find the crater rim they were looking for. They turned back about 30 m short.</span>
-            <span data-l="ja">実際に起きたことがあります。1971年、アポロ14号の飛行士は地図を手に月面を歩きましたが、目指していたクレーターの縁を見つけられず、約30 m手前で引き返しました。</span>
-          </p>
-          <p>
-            <span data-l="en">Robots on Mars already have an answer. NASA's Perseverance rover finds its own position by matching photos of the ground to maps made from orbit. But that only works where the ground looks unique. So we asked: <b>what if astronauts on foot had the same tool, and a map that shows in advance where it will work?</b></span>
-            <span data-l="ja">火星のロボットは、すでに答えを持っています。NASAの探査車パーサヴィアランスは、地面の写真を軌道からの地図と照合して、自分の位置を出しています。ただし、それが使えるのは見分けのつく地面だけです。そこで私たちは考えました。<b>歩く宇宙飛行士も同じ方法を使えて、しかも「どこならそれが使えるか」が事前に分かる地図があったら？</b></span>
-          </p>
-          <p>
-            <span data-l="en">AresSight is that map. Built from real NASA data of Gale Crater, it plans walks that stay on safe ground, where your position can always be checked, and always with enough oxygen to walk home.</span>
-            <span data-l="ja">それがAresSightです。ゲール・クレーターの本物のNASAデータから、安全な地面を通り、いつでも自分の位置を確かめられて、必ず歩いて帰れる酸素が残るルートを計画します。</span>
-          </p>
-        </div>
-      </section>
 
       <!-- ------------------------------------------------------------ problem -->
       <section id="problem">

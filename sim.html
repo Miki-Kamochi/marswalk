@@ -5,6 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>AresSight — Plan EVA route</title>
     <meta name="theme-color" content="#0d0b0a" />
+    <script>
+      // pick the language before anything is drawn, so no text switches after the page appears
+      try {
+        var l = localStorage.getItem("marswalk-lang");
+        document.documentElement.dataset.lang = l === "ja" || l === "en" ? l : navigator.language.toLowerCase().indexOf("ja") === 0 ? "ja" : "en";
+      } catch (e) {
+        document.documentElement.dataset.lang = "en";
+      }
+      // resolves when the page-change animation is over; heavy 3D work waits for it
+      window.__revealed = new Promise(function (done) {
+        addEventListener("pagereveal", function (e) {
+          if (e.viewTransition) e.viewTransition.finished.then(done, done);
+          else done();
+        }, { once: true });
+        setTimeout(done, 700);
+      });
+    </script>
     <link rel="stylesheet" href="/src/site/site.css" />
     <link rel="stylesheet" href="/src/sim/sim.css" />
   </head>

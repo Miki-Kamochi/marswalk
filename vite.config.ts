@@ -15,6 +15,7 @@ export default defineConfig({
         main: resolve(__dirname, "index.html"),
         sim: resolve(__dirname, "sim.html"),
         game: resolve(__dirname, "game.html"),
+        intro: resolve(__dirname, "intro.html"),
         how: resolve(__dirname, "how.html"),
         credits: resolve(__dirname, "credits.html"),
         dev: resolve(__dirname, "dev/index.html"),
