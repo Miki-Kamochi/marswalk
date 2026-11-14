@@ -38,7 +38,7 @@ export class Controls {
     addEventListener("blur", () => this.keys.clear());
 
     dom.addEventListener("click", () => {
-      if (this.enabled && !this.touch && document.pointerLockElement !== dom) dom.requestPointerLock?.();
+      if (this.enabled && !this.touch && document.pointerLockElement !== dom) this.capture();
     });
     addEventListener("mousemove", (e) => {
       if (!this.enabled || document.pointerLockElement !== dom) return;
@@ -117,6 +117,16 @@ export class Controls {
     const len = Math.hypot(x, y) || 1;
     this.moveX = x / len;
     this.moveY = y / len;
+  }
+
+  /** Capture the mouse for looking around (needs a click; a refusal is harmless). */
+  capture() {
+    try {
+      const p = this.dom.requestPointerLock?.() as unknown as Promise<void> | undefined;
+      p?.catch?.(() => {});
+    } catch {
+      /* not allowed right now: the next click will try again */
+    }
   }
 
   release() {

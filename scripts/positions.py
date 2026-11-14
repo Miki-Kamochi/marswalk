@@ -203,6 +203,30 @@ for i, (p, e, n, area) in enumerate(picked, 1):
         "summit of a mesa found in the HiRISE elevation model (height above local floor > 7 m)",
         heightAboveSurroundings=round(p, 1), footprintM2=area)
 
+# other distinct knobs and mesas across the play area (navigation landmarks near the route)
+others = []
+for i in range(1, cnt + 1):
+    m = lab == i
+    area = m.sum() * 4
+    if not 300 <= area <= 60000:
+        continue
+    r, c = np.unravel_index(np.argmax(np.where(m, prom, -1)), prom.shape)
+    e, n = EN2(r, c)
+    if PW + 80 < e < PE - 80 and PS + 80 < n < PN - 80 and n < -278450 and prom[r, c] > 9:
+        others.append((float(prom[r, c]), e, n, int(area)))
+others.sort(reverse=True)
+knobs = []
+for p, e, n, area in others:
+    if all(math.hypot(e - q[1], n - q[2]) > 350 for q in knobs):
+        knobs.append((p, e, n, area))
+    if len(knobs) == 7:
+        break
+knobs.sort(key=lambda b: (-b[2], b[1]))
+for i, (p, e, n, area) in enumerate(knobs, 1):
+    add(f"knob_{i}", f"Knob {chr(64 + i)}", "landmark", e, n,
+        "summit of a distinct knob or mesa found in the HiRISE elevation model (height above local floor > 9 m)",
+        heightAboveSurroundings=round(p, 1), footprintM2=area)
+
 # Vera Rubin Ridge crest: highest ground within 250 m of the hematite stop
 hstop = next(p for p in places if p["id"] == "stop_vera_rubin_ridge")
 r0, c0 = int((FN - hstop["northing"]) / 2), int((hstop["easting"] - FW) / 2)

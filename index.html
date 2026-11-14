@@ -5,11 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Marswalk</title>
     <link rel="stylesheet" href="/src/game/game.css" />
+    <link rel="stylesheet" href="/src/game/hud.css" />
   </head>
   <body>
     <div id="view"></div>
 
-    <div id="hud"></div>
+    <div id="hud" style="display: none">
+      <div id="topLeft" class="panel">
+        <div id="objective"></div>
+        <div id="clock"></div>
+        <div id="o2"><div id="o2fill"></div><span id="o2text"></span></div>
+      </div>
+
+      <div id="wayfinder">
+        <div class="tag">WAYFINDER</div>
+        <canvas id="tape"></canvas>
+        <div id="headline"></div>
+        <div id="distance"></div>
+        <div id="cues"></div>
+      </div>
+
+      <div id="alert"></div>
+      <div id="prompt"></div>
+
+      <div id="sources" class="panel">
+        <div class="title">Position sources</div>
+        <div id="srcDr" class="src"><b>Steps + gyro</b><span></span></div>
+        <div id="srcSun" class="src"><b>Sun compass</b><span></span></div>
+        <div id="srcLm" class="src"><b>Landmarks</b><span></span></div>
+        <div id="srcPos" class="src"><b>You are</b><span></span></div>
+      </div>
+
+      <canvas id="minimap"></canvas>
+      <button id="actionBtn" style="display: none">Collect sample</button>
+    </div>
     <pre id="debug"></pre>
 
     <div id="stick"><div id="knob"></div></div>
@@ -20,9 +49,31 @@
       <div class="card">
         <h1>MARSWALK</h1>
         <p class="lead">Gale Crater, Mars. There is no GPS here, and a compass does not work.</p>
+        <p class="help">
+          <b>EVA-1: The Lake Rocks.</b> Walk about 700 m from the rover to Vera Rubin Ridge and collect a hematite
+          sample. NASA's CRISM instrument saw hematite here from orbit; it often forms in water.
+        </p>
         <p id="startHelp" class="help"></p>
         <button id="startBtn">Begin EVA</button>
-        <p class="credit">Terrain and imagery: NASA/JPL-Caltech/UArizona/USGS (MRO HiRISE)</p>
+        <p class="credit">
+          Real terrain and imagery: NASA/JPL-Caltech/UArizona/USGS (MRO HiRISE). Minerals: MRO CRISM. Route: MSL Curiosity.
+        </p>
+      </div>
+    </div>
+
+    <div id="end" class="overlay" style="display: none">
+      <div class="card wide">
+        <h2 id="endTitle"></h2>
+        <p id="endLead" class="lead"></p>
+        <canvas id="revealMap"></canvas>
+        <div class="legend">
+          <span><i style="background: #fff"></i>Your path out</span>
+          <span><i style="background: #7fe3ff"></i>Your real path home</span>
+          <span><i style="background: #ff5a47"></i>Without Wayfinder</span>
+          <span><i style="background: #ffe066"></i>Where Wayfinder thought you were</span>
+        </div>
+        <ul id="endStats"></ul>
+        <button id="againBtn">Play again</button>
       </div>
     </div>
 
