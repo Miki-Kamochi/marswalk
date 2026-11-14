@@ -24,58 +24,14 @@ body.read::before {
   image-rendering: pixelated;
 }
 
-/* ---------------------------------------------------------------- top bar */
-.pbar {
+/* ---------------------------------------------------------------- top bar: the home screen's, kept on top while reading */
+.read .bar {
   position: sticky;
   top: 0;
   z-index: 5;
-  display: flex;
-  align-items: center;
-  height: 64px;
-  padding: 0 clamp(18px, 4vw, 48px);
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.82);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-}
-.pbar .logo {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--ui-text);
-  text-decoration: none;
-}
-.pbar nav {
-  display: flex;
-  align-items: center;
-  gap: clamp(14px, 2.4vw, 30px);
-  margin-left: auto;
-}
-.pbar nav a {
-  font-size: 14px;
-  color: rgba(236, 228, 218, 0.7);
-  text-decoration: none;
-}
-.pbar nav a:hover,
-.pbar nav a[aria-current="page"] {
-  color: #fff;
-}
-.pbar nav a.go {
-  padding: 7px 16px;
-  font-weight: 600;
-  color: #1a0b04;
-  background: var(--accent);
-  border-radius: 99px;
-}
-.pbar nav a.go:hover {
-  color: #1a0b04;
-  background: #ff8148;
-}
-.pbar .lang {
-  padding: 4px 12px;
-  font-size: 12.5px;
-  color: rgba(236, 228, 218, 0.75);
-  background: none;
-  border: 1px solid rgba(236, 228, 218, 0.22);
-  border-radius: 99px;
 }
 
 /* ---------------------------------------------------------------- page */
@@ -393,7 +349,7 @@ details.more ol {
 }
 
 @media (max-width: 640px) {
-  .pbar nav a:not(.go) {
+  .read .bar .links a {
     display: none;
   }
   .routes li {
@@ -429,4 +385,36 @@ details.more ol {
 }
 .plain section {
   margin-top: 44px;
+}
+
+/* introduction: read out in the presentation */
+.intro-big {
+  max-width: 760px;
+  margin: 0 0 22px;
+  font-size: clamp(20px, 2.4vw, 26px) !important;
+  line-height: 1.45 !important;
+  font-weight: 400;
+}
+.intro-big b {
+  font-weight: 600;
+  color: var(--accent);
+}
+.intro {
+  max-width: 720px;
+  padding-left: 20px;
+  border-left: 2px solid rgba(255, 107, 44, 0.5);
+}
+.intro p {
+  margin: 0 0 14px;
+  font-size: 16px;
+  line-height: 1.7;
+  color: rgba(236, 228, 218, 0.82);
+}
+.intro p:last-child {
+  margin-bottom: 0;
+  color: var(--ui-text);
+}
+.intro b {
+  font-weight: 600;
+  color: var(--ui-text);
 }

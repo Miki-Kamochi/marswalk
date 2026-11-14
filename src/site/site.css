@@ -506,3 +506,49 @@ button {
     transform: none;
   }
 }
+
+/* ---------------------------------------------------------------- the one top bar (home, How it works, Credits) */
+header.bar {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  height: 64px;
+  padding: 0 clamp(18px, 4vw, 48px);
+}
+.bar .logo {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ui-text);
+  text-decoration: none;
+}
+.bar .links {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 2.4vw, 34px);
+  margin-left: auto;
+}
+.bar .links a,
+.bar .lang {
+  padding: 4px 0;
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(236, 228, 218, 0.75);
+  text-decoration: none;
+  background: none;
+  border: none;
+  transition: color 0.15s;
+}
+.bar .links a:hover,
+.bar .links a[aria-current="page"],
+.bar .lang:hover {
+  color: #fff;
+}
+.bar .lang {
+  padding: 4px 12px;
+  border: 1px solid rgba(236, 228, 218, 0.22);
+  border-radius: 99px;
+  font-size: 12.5px;
+}

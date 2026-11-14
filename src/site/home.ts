@@ -5,7 +5,7 @@
 import { loadJson, type Place, type Positions } from "../data/loader";
 import { placeName, profileName } from "../sim/text";
 import { Globe } from "./globe";
-import { getLang, initLang, setLang, tr } from "./lang";
+import { getLang, initLang, tr } from "./lang";
 import { attachPlaceSearch, searchable } from "./placeSearch";
 import { ago, listProjects, removeProject, type Project } from "./projects";
 
@@ -86,11 +86,9 @@ function renderBelow(): void {
 
 function renderText(): void {
   ($("q") as HTMLInputElement).placeholder = tr("Search a place in Gale Crater", "ゲール・クレーターの場所を検索");
-  $("lang").textContent = getLang() === "ja" ? "EN" : "日本語";
   renderBelow();
 }
 
-$("lang").addEventListener("click", () => setLang(getLang() === "ja" ? "en" : "ja"));
 $("below").addEventListener("click", (e) => {
   const t = (e.target as HTMLElement).closest<HTMLElement>("[data-tab]");
   if (t) {
