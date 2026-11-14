@@ -23,8 +23,8 @@ $('view').appendChild(renderer.domElement);
 const camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.15, 400000);
 
 const COLLECTION_RADIUS = 7;
-/** Peak-storm unnoticed turn to the right: twice the former 0.5°/s value. */
-const RIGHT_VEER = Math.PI / 180;
+/** Peak-storm unnoticed turn to the right, restored to the original 0.5°/s scale. */
+const RIGHT_VEER = Math.PI / 360;
 
 async function main() {
   const world = await World.load(m => $('loading').textContent = m, low);
@@ -77,11 +77,10 @@ async function main() {
   }
   function toggleMap() {
     if (phase !== 'collect' || fixT >= 0) return;
-    hud.toggleMap(); controls.mapOpen = hud.mapOpen; controls.release();
-    if (!hud.mapOpen && !controls.touch) controls.capture();
+    hud.toggleMap(); controls.mapOpen = hud.mapOpen;
   }
   function scan() {
-    if (phase !== 'collect' || hud.mapOpen || scanT >= 0 || fixT >= 0) return;
+    if (phase !== 'collect' || scanT >= 0 || fixT >= 0) return;
     controls.update();
     if (Math.hypot(controls.moveX, controls.moveY) > 0.05) { say('スキャンするには立ち止まってください。'); return; }
     scanT = 0; pano.reset(); $('scanCapture').hidden = false;
@@ -100,7 +99,7 @@ async function main() {
     $('speedReadout').textContent = `${speed}×`;
   }
   controls.onMap = toggleMap; controls.onScan = scan;
-  $('mapBtn').addEventListener('click', toggleMap); $('closeMap').addEventListener('click', toggleMap);
+  $('mapBtn').addEventListener('click', toggleMap);
   $('scanBtn').addEventListener('click', scan);
   document.querySelectorAll<HTMLButtonElement>('[data-speed]').forEach(button => button.addEventListener('click', () => setSpeed(Number(button.dataset.speed))));
 
@@ -121,7 +120,7 @@ async function main() {
     }
   }
   function tick(dt: number) {
-    const active = phase === 'collect' && !hud.mapOpen && !document.hidden;
+    const active = phase === 'collect' && !document.hidden;
     if (active) {
       const cinematic = scanT >= 0 || fixT >= 0;
       elapsed += dt; missionS += dt * (cinematic ? 4 : speed);

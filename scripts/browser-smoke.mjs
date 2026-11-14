@@ -51,8 +51,10 @@ try {
     const saved=JSON.stringify(pin);
     while(g.state.fixT>=0)g.tick(.1);
     dispatchEvent(new KeyboardEvent('keydown',{code:'KeyM'}));
-    check(g.hud.mapOpen&&!document.getElementById('mapOverlay').hidden,'M opens map');
-    const time=g.state.missionS;g.tick(1);check(g.state.missionS===time,'map pauses mission clock');
+    check(g.hud.mapOpen&&document.getElementById('mapBox').classList.contains('expanded'),'M expands minimap');
+    g.setSpeed(8);const time=g.state.missionS,walk=g.player.walked;
+    dispatchEvent(new KeyboardEvent('keydown',{code:'KeyW'}));g.tick(1);dispatchEvent(new KeyboardEvent('keyup',{code:'KeyW'}));g.tick(0);
+    check(Math.abs(g.state.missionS-time-8)<.01&&g.player.walked>walk,'expanded map keeps movement and clock active');
     dispatchEvent(new KeyboardEvent('keyup',{code:'KeyM'}));
     return {initial,beforeScan,pin,match:g.nav.lastMatch,saved,walked:g.player.walked,triangles:g.renderer.info.render.triangles};
   })()`);
@@ -90,6 +92,6 @@ try {
     g.setSpeed(16);for(let i=0;i<Math.ceil(g.timeLimit/16)+1;i++)g.tick(1);
     check(g.state.phase==='done'&&document.getElementById('endTitle').textContent.includes('強制帰還'),'time-limit forced return');})()`);
   assert.deepEqual(errors,[],'Uncaught browser exceptions');
-  console.log(`PASS: collection start, speed controls, scan, map pause, fixed history, farthest-site completion, restart and forced return. Screenshots: ${profile}`);
+  console.log(`PASS: collection start, speed controls, scan, live expanding map, fixed history, farthest-site completion, restart and forced return. Screenshots: ${profile}`);
 } catch(error) { console.error(browserLog.slice(-3000));throw error; }
 finally {socket?.close();browser.kill();}

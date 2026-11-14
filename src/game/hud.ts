@@ -8,7 +8,6 @@ export class Hud {
   mapOpen = false;
   readonly imagery = new Image();
   private map = $('minimap') as HTMLCanvasElement;
-  private fullMap = $('fullMap') as HTMLCanvasElement;
   private fixMap = $('fixMap') as HTMLCanvasElement;
   private lastDraw = -1;
   constructor(private world: World, url: string) {
@@ -16,7 +15,11 @@ export class Hud {
     addEventListener('resize', () => this.resize());
   }
   show(on: boolean) { $('hud').style.display = on ? 'block' : 'none'; this.resize(); }
-  toggleMap(open = !this.mapOpen) { this.mapOpen = open; $('mapOverlay').hidden = !open; this.resize(); this.lastDraw = -1; }
+  toggleMap(open = !this.mapOpen) {
+    this.mapOpen = open; $('mapBox').classList.toggle('expanded', open);
+    requestAnimationFrame(() => this.resize()); setTimeout(() => this.resize(), 360);
+    this.lastDraw = -1;
+  }
   showLocalization(nav: Nav, targets: CollectionTarget[], from: Region, to: Region, progress = 0) {
     $('fixOverlay').hidden = false;
     const r = this.fixMap.getBoundingClientRect();
@@ -40,7 +43,7 @@ export class Hud {
   }
   hideLocalization() { $('fixOverlay').hidden = true; }
   private resize() {
-    for (const canvas of [this.map, this.fullMap]) {
+    for (const canvas of [this.map]) {
       const r = canvas.getBoundingClientRect(); canvas.width = Math.max(1, Math.round(r.width * Math.min(devicePixelRatio, 2))); canvas.height = Math.max(1, Math.round(r.height * Math.min(devicePixelRatio, 2)));
     }
     this.lastDraw = -1;
@@ -58,11 +61,8 @@ export class Hud {
     $('scanBtn').textContent = state.scan.startsWith('撮影') ? '撮影中…' : 'スキャン [右クリック / E]';
     $('targetList').innerHTML = targets.map((t, i) => `<span class="${t.collected ? 'done' : ''}">${t.collected ? '✓' : i + 1} ${t.name}</span>`).join('');
     if (state.time - this.lastDraw > 0.15 || this.lastDraw < 0) {
-      this.drawMap(this.map, nav, targets); if (this.mapOpen) this.drawMap(this.fullMap, nav, targets); this.lastDraw = state.time;
+      this.drawMap(this.map, nav, targets); this.lastDraw = state.time;
     }
-    const q = nav.lastMatch;
-    $('quality').textContent = q ? `撮影範囲 ${Math.round(q.coverage * 100)}% · 地表の濃淡 ${Math.round(q.contrast * 100)}% · 視認性 ${Math.round(q.clarity * 100)}% · 姿勢 ${Math.round(q.orientation * 100)}% · 照合の一意性 ${Math.round(q.uniqueness * 100)}%` : '静止し、周囲の地表が広く見える場所でスキャンしてください。';
-    $('scanLog').textContent = nav.region.pins.slice(-8).reverse().map(p => `#${p.id}  ${clock(p.time)}  半径 ${Math.ceil(p.radius)} m · ${p.improved ? '位置推定を更新' : '縮小なし'}`).join('\n');
   }
   drawMap(cv: HTMLCanvasElement, nav: Nav, targets: CollectionTarget[], current: Region = nav.region.current, view?: { west: number; east: number; south: number; north: number }) {
     const ctx = cv.getContext('2d')!, W = cv.width, H = cv.height, b = view ?? this.world.meta.frame.play;

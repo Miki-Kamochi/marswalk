@@ -38,14 +38,14 @@ export class Controls {
     addEventListener("blur", () => this.keys.clear());
 
     dom.addEventListener("click", () => {
-      if (this.enabled && !this.mapOpen && !this.touch && document.pointerLockElement !== dom) this.capture();
+      if (this.enabled && !this.touch && document.pointerLockElement !== dom) this.capture();
     });
     dom.addEventListener('contextmenu', e => e.preventDefault());
     dom.addEventListener('mousedown', e => {
-      if (e.button === 2 && this.enabled && !this.mapOpen) { e.preventDefault(); this.onScan(); }
+      if (e.button === 2 && this.enabled) { e.preventDefault(); this.onScan(); }
     });
     addEventListener("mousemove", (e) => {
-      if (!this.enabled || this.mapOpen || document.pointerLockElement !== dom) return;
+      if (!this.enabled || document.pointerLockElement !== dom) return;
       this.look(e.movementX * 0.0022, e.movementY * 0.0022);
     });
 
@@ -62,7 +62,7 @@ export class Controls {
 
   private touchStart(e: TouchEvent) {
     e.preventDefault();
-    if (!this.enabled || this.mapOpen) return;
+    if (!this.enabled) return;
     for (const t of Array.from(e.changedTouches)) {
       if (t.clientX < innerWidth * 0.45 && this.stickId === null) {
         this.stickId = t.identifier;
@@ -114,7 +114,7 @@ export class Controls {
 
   /** Read keyboard state into moveX / moveY (touch sets them directly). */
   update() {
-    if (!this.enabled || this.mapOpen) { this.moveX = this.moveY = 0; return; }
+    if (!this.enabled) { this.moveX = this.moveY = 0; return; }
     if (this.stickId !== null) return;
     const k = this.keys;
     const x = (k.has("KeyD") || k.has("ArrowRight") ? 1 : 0) - (k.has("KeyA") || k.has("ArrowLeft") ? 1 : 0);

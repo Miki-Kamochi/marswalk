@@ -1,46 +1,47 @@
 [hidden] { display: none !important; }
 
 #helmetHud {
-  position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0;
+  position: fixed; inset: 0; width: 100%; height: 100%; z-index: 8;
   pointer-events: none; opacity: .98;
 }
 #hud > :not(#helmetHud) { z-index: 2; }
 .panel {
   background: linear-gradient(135deg, rgba(3, 31, 45, .78), rgba(3, 18, 30, .46));
-  border: 1px solid rgba(100, 232, 255, .52); border-radius: 1px; padding: 13px;
-  color: #bff7ff; font: 12px/1.6 ui-monospace, "Cascadia Mono", Consolas, monospace;
+  border: 1px solid rgba(100, 232, 255, .52); border-radius: 1px; padding: 10px;
+  color: #bff7ff; font: 10.5px/1.5 ui-monospace, "Cascadia Mono", Consolas, monospace;
   box-shadow: inset 0 0 22px rgba(34, 185, 220, .07), 0 0 12px rgba(36, 205, 239, .1);
   clip-path: polygon(0 8px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
   backdrop-filter: blur(3px); text-shadow: 0 0 7px rgba(90, 235, 255, .42);
 }
 .tag { color: #72ecff; font-size: 10px; letter-spacing: .2em; margin-bottom: 6px; }
 .tag::before { content: "◫ "; color: #36cde7; }
-#mission { position:absolute;top:28px;left:7.5vw;width:286px; }
-#mission strong { color:#e3fcff;font-size:15px;letter-spacing:.04em; }
+#mission { position:absolute;top:72px;left:12vw;width:238px; }
+#mission strong { color:#e3fcff;font-size:13px;letter-spacing:.04em; }
 #clock { color:#84e9f9;margin-top:3px; }
 #o2 { position:relative;height:19px;background:rgba(16,104,128,.22);margin-top:9px;overflow:hidden;border:1px solid rgba(102,235,255,.25); }
 #o2fill { height:100%;background:linear-gradient(90deg,rgba(32,170,201,.55),rgba(106,239,255,.88));box-shadow:0 0 12px #4be7ff; }
 #o2text { position:absolute;inset:0;text-align:center;color:#e9fdff;font-weight:700;line-height:17px;text-shadow:0 1px 3px #001018; }
 #targetList { display:grid;margin-top:7px;gap:2px;color:#8ef3ff;font-size:11px; }
 #targetList span.done { color:#8dffcf;text-decoration:line-through;opacity:.8; }
-#heading { position:absolute;top:35px;left:50%;transform:translateX(-50%);padding:7px 18px;letter-spacing:.12em; }
-#weather { position:absolute;top:28px;right:7.5vw;color:#a9f5ff; }
-#speedControl { position:absolute;top:82px;right:7.5vw;display:flex;align-items:center;gap:8px;padding:7px 9px;pointer-events:auto; }
+#heading { position:absolute;top:72px;left:50%;transform:translateX(-50%);padding:5px 14px;letter-spacing:.12em; }
+#weather { position:absolute;top:72px;right:12vw;color:#a9f5ff; }
+#speedControl { position:absolute;top:112px;right:12vw;display:flex;align-items:center;gap:6px;padding:5px 7px;pointer-events:auto; }
 #speedControl>div { display:flex;gap:3px; }
-#speedControl button { min-width:36px;padding:5px 7px;border:1px solid rgba(103,235,255,.4);background:rgba(7,53,68,.55);color:#aef3ff;border-radius:0;font:700 11px ui-monospace,Consolas,monospace; }
+#speedControl button { min-width:31px;padding:4px 5px;border:1px solid rgba(103,235,255,.4);background:rgba(7,53,68,.55);color:#aef3ff;border-radius:0;font:700 9.5px ui-monospace,Consolas,monospace; }
 #speedControl button:hover { background:rgba(38,155,180,.45); }
 #speedControl button.active { background:#67eaff;color:#04202a;box-shadow:0 0 13px rgba(89,231,255,.7); }
 #speedReadout { color:#dffcff;min-width:31px;text-align:right; }
 #alert { position:absolute;top:22%;left:50%;transform:translateX(-50%);max-width:620px;width:80%;text-align:center;color:#d8fbff;text-shadow:0 0 10px #1cdfff,0 2px 4px #00131d;font:14px ui-monospace,Consolas,monospace; }
-#instruments { position:absolute;bottom:29px;left:7.5vw;width:335px; }
-#radius { font-size:16px;color:#bff8ff; }
+#instruments { position:absolute;bottom:12vh;left:12vw;width:282px; }
+#radius { font-size:13px;color:#bff8ff; }
 #scanStatus { margin:6px 0 10px;color:#75dff2; }
 #instruments .help { font-size:10px;margin:10px 0 0;color:#76cdda; }
 #scanBtn { pointer-events:auto;width:100%;font-size:12px;padding:9px; }
-#mapBox { position:absolute;bottom:29px;right:7.5vw;width:270px;padding:8px; }
-#mapBtn { pointer-events:auto;width:100%;font-size:11px;padding:6px;background:transparent;color:#aef5ff;text-align:left; }
-#minimap { width:252px;height:250px;display:block;border:1px solid rgba(94,229,255,.25);filter:saturate(.65) hue-rotate(145deg); }
-.mapLegend { font-size:9px;text-align:center;color:#82dbe7;margin-top:4px; }
+#mapBox { position:absolute;bottom:12vh;right:12vw;width:220px;padding:6px;transition:width .34s cubic-bezier(.2,.9,.2,1),bottom .34s,right .34s;transform-origin:bottom right; }
+#mapBox.expanded { width:min(62vw,760px);bottom:8vh;right:12vw;z-index:7; }
+#mapBtn { pointer-events:auto;width:100%;font-size:9.5px;padding:4px;background:transparent;color:#aef5ff;text-align:left; }
+#minimap { width:100%;height:205px;display:block;border:1px solid rgba(94,229,255,.25);filter:saturate(.65) hue-rotate(145deg);transition:height .34s cubic-bezier(.2,.9,.2,1); }
+#mapBox.expanded #minimap { height:min(68vh,610px); }
 
 #scanCapture {
   position:fixed;inset:5vh 3vw;z-index:9!important;padding:18px 20px;
@@ -62,33 +63,20 @@
 #fixReticle::after { width:1px;height:110px;left:35px;top:-20px; }
 @keyframes fixPulse { from{transform:translate(-50%,-50%) scale(.82);opacity:.65} to{transform:translate(-50%,-50%) scale(1.08);opacity:1} }
 
-#mapOverlay { position:fixed;inset:0;z-index:30;background:radial-gradient(circle at 50% 45%,rgba(5,47,64,.97),rgba(0,12,23,.99));padding:34px 5vw;display:flex;flex-direction:column;color:#bff7ff;font-family:ui-monospace,"Cascadia Mono",Consolas,monospace; }
-#mapOverlay::before { content:"";position:absolute;inset:12px;border:1px solid rgba(86,225,249,.32);pointer-events:none;clip-path:polygon(0 24px,24px 0,100% 0,100% calc(100% - 24px),calc(100% - 24px) 100%,0 100%); }
-#mapOverlay header { display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px;z-index:1; }
-#mapOverlay h2 { margin:0;font-size:20px;color:#d8fbff;letter-spacing:.08em; }
-#mapOverlay button { font-size:12px; }
-#mapLayout { display:flex;gap:28px;min-height:0;flex:1;z-index:1; }
-#fullMap { display:block;flex:1;min-width:0;width:calc(100% - 300px);height:100%;border:1px solid rgba(99,231,255,.36);filter:saturate(.72) hue-rotate(145deg); }
-#mapLayout aside { width:280px;overflow:auto;font-size:12px;line-height:1.8;color:#9ce5ef;touch-action:pan-y; }
-#mapLayout h3 { font-size:13px;color:#d1faff;margin:16px 0 6px;border-bottom:1px solid rgba(85,222,245,.3); }
-#mapLayout pre { font:11px/1.9 ui-monospace,Consolas,monospace;white-space:pre-wrap; }
-#mapLayout a { color:#78eeff; }
 .card { max-height:95vh;overflow:auto;touch-action:pan-y; }
 .card h1 { margin:10px 0 20px;font-size:42px; }
 
 @media(max-width:760px) {
-  #helmetHud{opacity:.65}
+  #helmetHud{opacity:.98}
   #mission{top:10px;left:10px;width:215px;padding:9px;font-size:9px} #mission strong{font-size:12px}
   #weather{top:10px;right:10px;font-size:9px;max-width:140px} #heading{top:106px;left:10px;transform:none;padding:5px;font-size:9px}
   #speedControl{top:61px;right:10px;padding:5px;gap:4px} #speedControl span,#speedReadout{display:none} #speedControl button{min-width:29px;padding:4px;font-size:9px}
   #instruments{left:10px;bottom:10px;width:calc(100vw - 180px);padding:8px} #radius{font-size:12px} #scanStatus{font-size:10px} #instruments .help{display:none}
-  #mapBox{right:10px;bottom:10px;width:160px;padding:5px} #minimap{width:148px;height:164px} .mapLegend{font-size:7px}
+  #mapBox{right:34px;bottom:28px;width:150px;padding:5px} #minimap{height:155px} #mapBox.expanded{width:calc(100vw - 68px);right:34px;bottom:5vh} #mapBox.expanded #minimap{height:68vh}
   #scanCapture{inset:2vh 2vw;padding:10px} #scanCapture .tag{top:9px;left:13px} #scanCapture::after{bottom:9px;right:13px;font-size:8px} #panorama canvas{min-height:55vh}
   #fixOverlay{inset:2vh 2vw}
-  #mapOverlay{padding:22px 15px} #mapOverlay h2{font-size:15px} #mapLayout{flex-direction:column;gap:10px} #fullMap{width:100%;height:65%;flex:1} #mapLayout aside{width:100%;height:27%;font-size:10px}
 }
 @media(max-height:500px) {
   #mission{top:8px;padding:7px} #mapBox{bottom:8px} #minimap{height:160px} #instruments{bottom:8px}
   #scanCapture{inset:2vh 2vw} #panorama canvas{min-height:60vh}
-  #mapLayout{flex-direction:row} #mapLayout aside{width:240px;height:100%} #fullMap{height:100%;width:65%}
 }

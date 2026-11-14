@@ -35,7 +35,7 @@ test('dead-reckoning estimate visibly drifts to the right of travel', () => {
   const region = new PositionRegion({ e: 0, n: 0 }, 7);
   const start = { ...region.current };
   region.move(1000, 0);
-  assert(region.current.e - start.e > 45, 'northbound travel should produce a pronounced east/right drift');
+  assert(region.current.e - start.e > 20, 'northbound travel should produce a visible east/right drift');
 });
 const terrain:Surface={
   intensity:(e,n)=>.5+.16*Math.sin(e*.43)+.12*Math.cos(n*.29)+.07*Math.sin((e+n)*.71),
