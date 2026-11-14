@@ -8,7 +8,7 @@ home. Built on real NASA data. Runs in a browser with no backend.
 
 | Page | What it is |
 |---|---|
-| `/` | Title screen and menu |
+| `/` | Title screen and menu (3D Gale Crater in the background) |
 | `/sim.html` | **Route simulator**: pick a destination on the 2D map or in 3D, compare four routes |
 | `/how.html` | How it works: the problem, the layers, the route rules, every assumption |
 | `/game.html` | The earlier first-person game prototype (see below) |
@@ -145,8 +145,8 @@ npm run data:process      # writes public/data/ and re-checks all positions
 - `scripts/download_data.py`: fetches the raw data. The two big USGS mosaics are never downloaded
   whole; only our window is read over HTTP.
 - `scripts/process_data.py`: raw data to web-ready terrain, imagery and layers.
-- `scripts/home_assets.ts` then `scripts/home_images.py`: the home page's example routes
-  (`public/data/home/`) and pictures (`public/img/home/`), made with the real planner. Run them
+- `scripts/home_assets.ts` then `scripts/home_images.py`: the routes drawn behind the menu
+  (`public/data/home/`, from the real planner) and the title screen's still image. Run them
   after `nav_layers.py`.
 - `scripts/nav_layers.py`: the route planner's 6 m grid (`public/data/nav/`): tilt, roughness, step,
   sand, hematite and the localizability score. Run it after `process_data.py`; takes about 2 minutes.

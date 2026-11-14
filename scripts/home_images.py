@@ -1,9 +1,9 @@
-"""Pictures for the home page, cut from the real HiRISE imagery with the planner's layers on top.
+"""Still image for the title screen, cut from the real HiRISE imagery.
 
-Usage:  node scripts/home_assets.ts  &&  .venv/Scripts/python scripts/home_images.py [--preview DIR]
+Usage:  .venv/Scripts/python scripts/home_images.py
 
 Reads only files that are already processed (public/data, data/interim) and writes
-public/img/home/*.jpg. Colours follow DESIGN.md: only what matters is coloured.
+public/img/home/surface.jpg. The layer helpers below are kept for pictures on the Learn page.
 """
 import json
 import sys
@@ -100,40 +100,9 @@ def save(name, rgb, size=None):
 
 
 def main():
-    preview = Path(sys.argv[sys.argv.index("--preview") + 1]) if "--preview" in sys.argv else None
-    places = {p["id"]: p for p in json.loads((DATA / "positions.json").read_text())["places"]}
-
-    # three layer cards, 640 m squares around the place that shows each layer best
-    cards = [
-        ("layer-safety.jpg", places["stop_murray_buttes"], safety_layer, (0, 120)),
-        ("layer-lost.jpg", places["bagnold_dunes"], lost_layer, (0, 0)),
-        ("layer-science.jpg", places["stop_vera_rubin_ridge"], science_layer, (-120, 60)),
-    ]
-    S = 640
-    out = []
-    for name, p, layer, (de, dn) in cards:
-        rows, cols = window(p["easting"] - S / 2 + de, p["northing"] + S / 2 + dn, S, S)
-        out.append(save(name, layer(base_image(rows, cols), rows, cols), (640, 640)))
-
-    # the route picture: the box precomputed by home_assets.ts, at 2.5 m per pixel
-    b = json.loads((DATA / "home" / "routes.json").read_text())["bounds"]
-    rows, cols = window(b["west"], b["north"], b["east"] - b["west"], b["north"] - b["south"])
-    rgb = lost_layer(base_image(rows, cols, dim=0.62), rows, cols, strength=0.3)
-    w = round((b["east"] - b["west"]) / 2.5)
-    h = round((b["north"] - b["south"]) / 2.5)
-    out.append(save("routes.jpg", rgb, (w, h)))
-
-    # hero texture for the planet: a wide, soft crop of the whole area
+    # still background of the title screen, shown while the 3D terrain loads or if WebGL is missing
     rows, cols = window(PLAY["west"], PLAY["north"], PLAY["east"] - PLAY["west"], PLAY["north"] - PLAY["south"])
     save("surface.jpg", base_image(rows, cols, dim=1.0), (1000, 1200))
-
-    if preview:
-        preview.mkdir(parents=True, exist_ok=True)
-        sheet = Image.new("RGB", (640 * 3 + 20, 640), (40, 40, 40))
-        for k, im in enumerate(out[:3]):
-            sheet.paste(im, (k * 650, 0))
-        sheet.save(preview / "home_cards.jpg", quality=80)
-        out[3].save(preview / "home_routes.jpg", quality=80)
 
 
 if __name__ == "__main__":

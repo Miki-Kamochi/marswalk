@@ -1,5 +1,5 @@
 /**
- * Precomputes what the home page shows, with the real planner, so the page itself stays light.
+ * Precomputes the routes drawn behind the menu, with the real planner, so the home page stays light.
  *
  * Usage:  node scripts/home_assets.ts      (then .venv/Scripts/python scripts/home_images.py)
  *
