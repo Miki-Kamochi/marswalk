@@ -559,22 +559,38 @@ header.bar {
 }
 
 /* ---------------------------------------------------------------- moving between pages
-   Cross-document view transitions: the old page fades out, the new one fades in with a
-   slight rise, and the shared top bar stays still. Browsers without them get a short fade-in. */
+   Cross-document view transitions, kept deliberately simple: the old page fades out, then the
+   new one fades in. The two never overlap (no doubled text, no brightness flicker), nothing
+   moves, and the top bar is swapped in place. Pages have no entrance animations of their own,
+   so what fades in is the finished page. Browsers without view transitions just load the page. */
 @view-transition {
   navigation: auto;
 }
 header.bar {
   view-transition-name: topbar;
 }
+::view-transition-image-pair(root) {
+  isolation: auto;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  mix-blend-mode: normal;
+  animation-timing-function: ease;
+}
 ::view-transition-old(root) {
-  animation: vt-out 0.16s ease-in both;
+  animation: vt-out 0.14s ease-in both;
 }
 ::view-transition-new(root) {
-  animation: vt-in 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) 0.04s both;
+  animation: vt-in 0.2s ease-out 0.14s both;
 }
 ::view-transition-group(topbar) {
-  animation-duration: 0.3s;
+  animation: none;
+}
+::view-transition-old(topbar) {
+  display: none;
+}
+::view-transition-new(topbar) {
+  animation: none;
 }
 @keyframes vt-out {
   to {
@@ -582,17 +598,6 @@ header.bar {
   }
 }
 @keyframes vt-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-}
-@supports not (view-transition-name: none) {
-  body {
-    animation: vt-fallback 0.35s ease-out both;
-  }
-}
-@keyframes vt-fallback {
   from {
     opacity: 0;
   }
@@ -603,4 +608,12 @@ header.bar {
   ::view-transition-new(*) {
     animation: none !important;
   }
+}
+
+/* ---------------------------------------------------------------- glass: dark, see-through panels used everywhere */
+:root {
+  --glass: rgba(16, 13, 11, 0.9);
+  --glass-strong: rgba(16, 13, 11, 0.94);
+  --glass-line: rgba(236, 228, 218, 0.12);
+  --glass-blur: blur(18px) saturate(1.15);
 }

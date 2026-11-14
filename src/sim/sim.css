@@ -38,8 +38,10 @@ button {
   width: var(--panel-w);
   display: flex;
   flex-direction: column;
-  background: var(--ui-surface);
-  border: 1px solid var(--ui-line);
+  background: var(--glass-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-line);
   border-radius: 22px;
   box-shadow: var(--ui-shadow);
   overflow: hidden;
@@ -95,7 +97,7 @@ button {
 }
 #planName:focus {
   border-color: var(--accent);
-  background: var(--ui-surface-2);
+  background: rgba(236, 228, 218, 0.05);
 }
 
 /* start / goal */
@@ -165,8 +167,8 @@ button {
   display: flex;
   align-items: center;
   height: 40px;
-  background: var(--ui-surface-2);
-  border: 1px solid var(--ui-line);
+  background: rgba(236, 228, 218, 0.05);
+  border: 1px solid var(--glass-line);
   border-radius: var(--ui-r);
   border-radius: 20px;
   padding-left: 4px;
@@ -224,8 +226,8 @@ button {
   margin: 0;
   padding: 4px 0;
   list-style: none;
-  background: var(--ui-surface-2);
-  border: 1px solid var(--ui-line);
+  background: rgba(236, 228, 218, 0.05);
+  border: 1px solid var(--glass-line);
   border-radius: var(--ui-r);
   box-shadow: var(--ui-shadow);
   border-radius: 16px;
@@ -305,8 +307,8 @@ button {
   font-weight: 600;
   text-align: left;
   color: var(--ui-text);
-  background: var(--ui-surface-2);
-  border: 1px solid var(--ui-line);
+  background: rgba(236, 228, 218, 0.05);
+  border: 1px solid var(--glass-line);
   border-radius: var(--ui-r);
   cursor: pointer;
   border-radius: 99px;
@@ -357,8 +359,8 @@ button {
   padding: 9px 12px 9px 36px;
   position: relative;
   text-align: left;
-  background: var(--ui-surface-2);
-  border: 1px solid var(--ui-line);
+  background: rgba(236, 228, 218, 0.05);
+  border: 1px solid var(--glass-line);
   border-radius: 14px;
   cursor: pointer;
 }
@@ -582,8 +584,10 @@ button {
   right: 12px;
   display: flex;
   flex-direction: column;
-  background: var(--ui-surface);
-  border: 1px solid var(--ui-line);
+  background: var(--glass-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-line);
   border-radius: var(--ui-r);
   box-shadow: var(--ui-shadow);
   border-radius: 22px;
@@ -641,8 +645,10 @@ button {
   right: 62px;
   width: 280px;
   padding: 12px 12px 8px;
-  background: var(--ui-surface);
-  border: 1px solid var(--ui-line);
+  background: var(--glass-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-line);
   border-radius: var(--ui-r);
   box-shadow: var(--ui-shadow);
   font-size: 13px;
@@ -758,8 +764,10 @@ button {
   left: calc(var(--panel-w) + 24px);
   bottom: 16px;
   width: min(760px, calc(100vw - var(--panel-w) - 230px));
-  background: var(--ui-surface);
-  border: 1px solid var(--ui-line);
+  background: var(--glass-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-line);
   border-radius: 18px;
   box-shadow: var(--ui-shadow);
   overflow: hidden;
@@ -858,8 +866,10 @@ button {
   font-size: 12.5px;
   white-space: nowrap;
   color: var(--ui-text);
-  background: rgba(27, 23, 20, 0.88);
-  border: 1px solid var(--ui-line);
+  background: var(--glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-line);
   border-radius: 99px;
   box-shadow: var(--ui-shadow);
   font-variant-numeric: tabular-nums;
@@ -905,8 +915,10 @@ dialog#info {
   max-width: min(500px, calc(100vw - 32px));
   padding: 20px 22px 14px;
   color: var(--ui-text);
-  background: var(--ui-surface);
-  border: 1px solid var(--ui-line);
+  background: var(--glass-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-line);
   border-radius: var(--ui-r);
   box-shadow: var(--ui-shadow);
   border-radius: 20px;
