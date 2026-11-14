@@ -146,8 +146,6 @@ async function start(): Promise<void> {
     const phone = innerWidth < 720;
     const top = phone ? document.querySelector(".title")!.getBoundingClientRect().bottom + 8 : document.querySelector(".bar")!.getBoundingClientRect().bottom - 16;
     let bottom = document.querySelector(".start")!.getBoundingClientRect().top;
-    // on narrow screens the dropdown button sits just above the search bar
-    if (innerWidth <= 1000) bottom = Math.min(bottom, $("ddBtn").getBoundingClientRect().top);
     return { top, bottom };
   };
   g.resize();

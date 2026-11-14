@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>AresSight — EVA planning</title>
     <meta name="description" content="Plan a walk on Mars that always gets you home. Real NASA data of Gale Crater." />
@@ -17,6 +18,7 @@
       // resolves when the page-change animation is over; heavy 3D work waits for it
       window.__revealed = new Promise(function (done) {
         addEventListener("pagereveal", function (e) {
+          window.__vt = !!e.viewTransition;
           if (e.viewTransition) e.viewTransition.finished.then(done, done);
           else done();
         }, { once: true });
@@ -37,21 +39,21 @@
         <a href="/intro.html"><span data-l="en">Introduction</span><span data-l="ja">初めに</span></a>
         <a href="/how.html"><span data-l="en">How it works</span><span data-l="ja">仕組み</span></a>
         <a href="/credits.html"><span data-l="en">Credits</span><span data-l="ja">クレジット</span></a>
-        <button class="lang" data-toggle-lang aria-label="Language"></button>
+        <div class="dd" id="dd">
+          <button class="dd-btn" id="ddBtn" aria-expanded="false" aria-controls="below">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h9" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" /></svg>
+            <span id="ddLabel"></span>
+            <span class="dd-count" id="ddCount"></span>
+            <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          </button>
+          <section class="below" id="below" hidden></section>
+        </div>
+        <button class="lang" data-toggle-lang aria-label="Language"><span data-l="en">日本語</span><span data-l="ja">EN</span></button>
       </nav>
     </header>
 
     <h1 class="title"><span class="w1">Ares</span><span class="w2">Sight</span></h1>
 
-    <div class="dd" id="dd">
-      <button class="dd-btn" id="ddBtn" aria-expanded="false" aria-controls="below">
-        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h9" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" /></svg>
-        <span id="ddLabel"></span>
-        <span class="dd-count" id="ddCount"></span>
-        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
-      </button>
-      <section class="below" id="below" hidden></section>
-    </div>
 
     <main class="start">
       <div class="search" id="search">

@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AresSight — Credits</title>
     <meta name="theme-color" content="#000000" />
@@ -16,6 +17,7 @@
       // resolves when the page-change animation is over; heavy 3D work waits for it
       window.__revealed = new Promise(function (done) {
         addEventListener("pagereveal", function (e) {
+          window.__vt = !!e.viewTransition;
           if (e.viewTransition) e.viewTransition.finished.then(done, done);
           else done();
         }, { once: true });
@@ -32,7 +34,7 @@
         <a href="/intro.html"><span data-l="en">Introduction</span><span data-l="ja">初めに</span></a>
         <a href="/how.html"><span data-l="en">How it works</span><span data-l="ja">仕組み</span></a>
         <a href="/credits.html" aria-current="page"><span data-l="en">Credits</span><span data-l="ja">クレジット</span></a>
-        <button class="lang" data-toggle-lang aria-label="Language"></button>
+        <button class="lang" data-toggle-lang aria-label="Language"><span data-l="en">日本語</span><span data-l="ja">EN</span></button>
       </nav>
     </header>
 

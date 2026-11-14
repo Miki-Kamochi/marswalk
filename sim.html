@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>AresSight — Plan EVA route</title>
     <meta name="theme-color" content="#0d0b0a" />
@@ -16,6 +17,7 @@
       // resolves when the page-change animation is over; heavy 3D work waits for it
       window.__revealed = new Promise(function (done) {
         addEventListener("pagereveal", function (e) {
+          window.__vt = !!e.viewTransition;
           if (e.viewTransition) e.viewTransition.finished.then(done, done);
           else done();
         }, { once: true });

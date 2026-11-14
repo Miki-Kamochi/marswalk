@@ -4,7 +4,6 @@
   --globe-x: 50vw;
   --globe-d: min(calc(100vh - 346px), 60vw);
   --globe-y: calc(32px + (100vh - 274px) / 2);
-  --gap: clamp(20px, 3vw, 48px);
 }
 body.home {
   position: fixed;
@@ -113,7 +112,7 @@ body.home::after {
   position: absolute;
   z-index: 3;
   left: var(--globe-x);
-  bottom: 48px;
+  bottom: calc(var(--edge) + 24px);
   transform: translateX(-50%);
   width: min(620px, calc(100vw - 32px));
 }
@@ -202,7 +201,7 @@ body.home::after {
   margin: 0;
   padding: 6px;
   list-style: none;
-  background: var(--glass-strong);
+  background: var(--glass-menu);
   border: 1px solid var(--glass-line);
   border-radius: 20px;
   backdrop-filter: var(--glass-blur);
@@ -249,20 +248,17 @@ body.home::after {
 }
 
 /* ---------------------------------------------------------------- cards below the search */
-/* recent plans / science targets: a dropdown at the bottom right, closed at first */
+/* recent plans / science targets: a dropdown in the top bar, closed at first */
 .dd {
-  position: absolute;
-  z-index: 4;
-  right: clamp(16px, 3vw, 44px);
-  bottom: 52px;
+  position: relative;
 }
 .dd-btn {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  height: 46px;
-  padding: 0 16px 0 15px;
-  font-size: 14px;
+  gap: 8px;
+  height: 34px;
+  padding: 0 12px 0 11px;
+  font-size: 13.5px;
   font-weight: 500;
   color: var(--ui-text);
   background: var(--glass);
@@ -270,7 +266,6 @@ body.home::after {
   border-radius: 99px;
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   transition:
     border-color 0.15s,
     background 0.15s;
@@ -281,16 +276,16 @@ body.home::after {
   background: rgba(32, 26, 22, 0.9);
 }
 .dd-btn .ico {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   color: var(--accent);
 }
 .dd-count {
-  min-width: 20px;
-  padding: 0 6px;
-  font-size: 11.5px;
+  min-width: 18px;
+  padding: 0 5px;
+  font-size: 11px;
   font-weight: 700;
-  line-height: 20px;
+  line-height: 18px;
   text-align: center;
   color: #1a0b04;
   background: var(--accent);
@@ -305,25 +300,25 @@ body.home::after {
   color: var(--ui-text-2);
   transition: transform 0.2s var(--ease);
 }
-.dd-btn[aria-expanded="true"] .chev {
+.dd-btn[aria-expanded="false"] .chev {
   transform: rotate(180deg);
 }
 .below {
   position: absolute;
   right: 0;
-  bottom: calc(100% + 10px);
-  width: 310px;
+  top: calc(100% + var(--gap));
+  width: 320px;
   max-height: min(62vh, 520px);
   overflow-y: auto;
   scrollbar-width: none;
   padding: 14px 12px 12px;
-  background: var(--glass-strong);
+  background: var(--glass-menu);
   border: 1px solid var(--glass-line);
   border-radius: 24px;
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
-  transform-origin: 100% 100%;
+  transform-origin: 100% 0;
   animation: dd-open 0.22s var(--ease) both;
 }
 .below::-webkit-scrollbar {
@@ -335,7 +330,7 @@ body.home::after {
 @keyframes dd-open {
   from {
     opacity: 0;
-    transform: translateY(8px) scale(0.97);
+    transform: translateY(-6px) scale(0.97);
   }
 }
 .below .cards {
@@ -481,7 +476,7 @@ body.home::after {
   position: absolute;
   z-index: 2;
   inset: auto 0 0;
-  padding: 0 16px 16px;
+  padding: 0 var(--edge) var(--gap);
   text-align: center;
   font-size: 11px;
   color: rgba(236, 228, 218, 0.38);
@@ -505,7 +500,7 @@ body.no-globe #globe::before {
 
 /* ---------------------------------------------------------------- small or short screens */
 @media (max-width: 720px) {
-  .bar .links a {
+  .bar .links > a {
     display: none;
   }
   .title {
@@ -538,13 +533,3 @@ body.no-globe #globe::before {
   }
 }
 
-@media (max-width: 1000px) {
-  /* the search bar takes the width: the dropdown sits just above its right end */
-  .dd {
-    right: 16px;
-    bottom: calc(48px + 56px + 12px);
-  }
-  .dd-btn {
-    height: 40px;
-  }
-}

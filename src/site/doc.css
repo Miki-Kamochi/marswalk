@@ -40,7 +40,7 @@ body.read::before {
   z-index: 1;
   max-width: 880px;
   margin: 0 auto;
-  padding: 48px clamp(16px, 4vw, 32px) 96px;
+  padding: 48px var(--edge) 96px;
 }
 .page h1 {
   margin: 0;
@@ -353,7 +353,7 @@ details.more ol {
 }
 
 @media (max-width: 640px) {
-  .read .bar .links a {
+  .read .bar .links > a {
     display: none;
   }
   .routes li {

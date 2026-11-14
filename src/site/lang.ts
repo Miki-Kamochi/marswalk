@@ -24,8 +24,6 @@ export function setLang(lang: Lang): void {
   for (const b of document.querySelectorAll<HTMLElement>("[data-set-lang]")) {
     b.setAttribute("aria-pressed", String(b.dataset.setLang === lang));
   }
-  // one-button switches show the language you would switch to
-  for (const b of document.querySelectorAll<HTMLElement>("[data-toggle-lang]")) b.textContent = lang === "ja" ? "EN" : "日本語";
   document.dispatchEvent(new CustomEvent("langchange"));
 }
 

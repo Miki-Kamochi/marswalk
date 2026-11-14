@@ -1,5 +1,5 @@
 /* Self-hosted fonts, loaded with the stylesheet so text never switches font after it appears. */
-@import "@fontsource-variable/space-grotesk/index.css";
+@import "./font-inline.css";
 @import "@fontsource/jetbrains-mono/400.css";
 @import "@fontsource/jetbrains-mono/600.css";
 
@@ -512,6 +512,16 @@ button {
   }
 }
 
+/* ---------------------------------------------------------------- spacing rule (every page)
+   --edge  distance from any screen edge: the top bar, panels, buttons, the search bar
+   --gap   space between floating things (a button and its dropdown, two panels)
+   --bar-h height of the top bar */
+:root {
+  --edge: clamp(16px, 2.2vw, 28px);
+  --gap: 12px;
+  --bar-h: 64px;
+}
+
 /* ---------------------------------------------------------------- the one top bar (home, How it works, Credits) */
 header.bar {
   position: absolute;
@@ -519,8 +529,8 @@ header.bar {
   z-index: 3;
   display: flex;
   align-items: center;
-  height: 64px;
-  padding: 0 clamp(18px, 4vw, 48px);
+  height: var(--bar-h);
+  padding: 0 var(--edge);
 }
 .bar .logo {
   font-size: 16px;
@@ -535,7 +545,7 @@ header.bar {
   gap: clamp(14px, 2.4vw, 34px);
   margin-left: auto;
 }
-.bar .links a,
+.bar .links > a,
 .bar .lang {
   padding: 4px 0;
   font-size: 14px;
@@ -546,8 +556,8 @@ header.bar {
   border: none;
   transition: color 0.15s;
 }
-.bar .links a:hover,
-.bar .links a[aria-current="page"],
+.bar .links > a:hover,
+.bar .links > a[aria-current="page"],
 .bar .lang:hover {
   color: #fff;
 }
@@ -578,11 +588,12 @@ header.bar {
   animation-timing-function: ease;
 }
 ::view-transition-old(root) {
-  animation: vt-out 0.14s ease-in both;
+  animation: vt-out 0.18s ease-in both;
 }
 ::view-transition-new(root) {
-  animation: vt-in 0.2s ease-out 0.14s both;
+  animation: vt-in 0.38s cubic-bezier(0.2, 0.7, 0.2, 1) 0.18s both;
 }
+/* the top bar stays put between pages that both have it ... */
 ::view-transition-group(topbar) {
   animation: none;
 }
@@ -592,14 +603,24 @@ header.bar {
 ::view-transition-new(topbar) {
   animation: none;
 }
+/* ... and fades with the page when only one side has it (planner, walk preview) */
+::view-transition-old(topbar):only-child {
+  display: block;
+  animation: vt-out 0.18s ease-in both;
+}
+::view-transition-new(topbar):only-child {
+  animation: vt-in 0.38s cubic-bezier(0.2, 0.7, 0.2, 1) 0.18s both;
+}
 @keyframes vt-out {
   to {
     opacity: 0;
+    transform: translateY(-6px);
   }
 }
 @keyframes vt-in {
   from {
     opacity: 0;
+    transform: translateY(14px);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -614,6 +635,9 @@ header.bar {
 :root {
   --glass: rgba(16, 13, 11, 0.7);
   --glass-strong: rgba(16, 13, 11, 0.78);
+  /* menus that open over text (dropdowns, suggestions) */
+  --glass-menu: rgba(16, 13, 11, 0.9);
   --glass-line: rgba(236, 228, 218, 0.14);
   --glass-blur: blur(12px) saturate(1.2);
 }
+/*DEBUG-VT*/ ::view-transition-old(*), ::view-transition-new(*), ::view-transition-group(*) { animation-duration: 3s !important; } ::view-transition-new(root), ::view-transition-new(topbar):only-child { animation-delay: 1.5s !important; }

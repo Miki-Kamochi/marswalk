@@ -32,9 +32,9 @@ button {
 .card {
   position: absolute;
   z-index: 5;
-  top: 12px;
-  left: 12px;
-  bottom: 12px;
+  top: var(--edge);
+  left: var(--edge);
+  bottom: var(--edge);
   width: var(--panel-w);
   display: flex;
   flex-direction: column;
@@ -580,8 +580,8 @@ button {
 .fabs {
   position: absolute;
   z-index: 4;
-  top: 12px;
-  right: 12px;
+  top: var(--edge);
+  right: var(--edge);
   display: flex;
   flex-direction: column;
   background: var(--glass-strong);
@@ -641,8 +641,8 @@ button {
 .pop {
   position: absolute;
   z-index: 6;
-  top: 12px;
-  right: 62px;
+  top: var(--edge);
+  right: calc(var(--edge) + 40px + var(--gap));
   width: 280px;
   padding: 12px 12px 8px;
   background: var(--glass-strong);
@@ -761,9 +761,9 @@ button {
 .strip {
   position: absolute;
   z-index: 3;
-  left: calc(var(--panel-w) + 24px);
-  bottom: 16px;
-  width: min(760px, calc(100vw - var(--panel-w) - 230px));
+  left: calc(var(--panel-w) + 2 * var(--edge));
+  bottom: var(--edge);
+  width: min(760px, calc(100vw - var(--panel-w) - 3 * var(--edge) - 190px));
   background: var(--glass-strong);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
@@ -822,8 +822,8 @@ button {
 .walk-fab {
   position: absolute;
   z-index: 4;
-  right: 12px;
-  bottom: 16px;
+  right: var(--edge);
+  bottom: var(--edge);
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -855,8 +855,8 @@ button {
 .status {
   position: absolute;
   z-index: 3;
-  top: 14px;
-  left: calc((100% + var(--panel-w) + 24px - 64px) / 2);
+  top: var(--edge);
+  left: calc((100% + var(--panel-w) + var(--edge) - 40px - var(--gap)) / 2);
   transform: translateX(-50%);
   display: flex;
   align-items: center;
@@ -976,6 +976,6 @@ dialog#info a {
     display: none;
   }
   .walk-fab {
-    bottom: calc(52vh + 12px);
+    bottom: calc(52vh + var(--gap));
   }
 }
