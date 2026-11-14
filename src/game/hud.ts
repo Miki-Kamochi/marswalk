@@ -1,6 +1,7 @@
-/** Helmet display: Wayfinder's compass, guidance, sources, the orbital map with the estimate. */
+/** Helmet display: Wayfinder's directions, what it is based on, and a fixed orbital map with its estimate. */
+import type { Bounds } from "../data/loader";
 import { DEG, wrap } from "../nav/rng";
-import type { Nav } from "./nav";
+import type { Nav, SnapshotResult } from "./nav";
 import type { World } from "./world";
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -10,47 +11,63 @@ export interface HudState {
   clock: string;
   o2Fraction: number;
   o2Minutes: number;
+  power: number; // 0..1
   alert: string;
   alertLevel: "info" | "warn" | "danger";
   prompt: string;
   dust: number;
-  /** live "where you would be without Wayfinder" path, drawn on the map */
-  ghost: [number, number][];
-}
-
-/** A landmark as it appears on the visor. */
-export interface Marker {
-  id: string;
-  name: string;
-  /** screen position in CSS pixels; if off-screen, side says which edge */
-  x: number;
-  y: number;
-  side: "" | "left" | "right";
-  state: "idle" | "aim" | "done";
+  linkOk: boolean;
+  scanning: boolean;
+  /** mission seconds since the last horizon fix */
+  sinceFix: number | null;
 }
 
 export class Hud {
   private tape = $<HTMLCanvasElement>("tape");
   private map = $<HTMLCanvasElement>("minimap");
+  private sky = $<HTMLCanvasElement>("skyGraph");
   private imagery = new Image();
-  private mapRange = 110; // metres from centre to edge of the map
-  private markerEls = new Map<string, HTMLElement>();
+  private base: HTMLCanvasElement | null = null;
   private coachUntil = 0;
   private coachSticky = false;
+  private skyUntil = 0;
+  private bounds: Bounds;
 
-  constructor(private world: World, imageryUrl: string) {
+  constructor(
+    private world: World,
+    imageryUrl: string,
+    /** map area: every place the EVA can go */
+    area: [number, number][],
+    private route: [number, number][],
+  ) {
+    let w = Infinity;
+    let e = -Infinity;
+    let s = Infinity;
+    let n = -Infinity;
+    for (const [x, y] of area) {
+      w = Math.min(w, x);
+      e = Math.max(e, x);
+      s = Math.min(s, y);
+      n = Math.max(n, y);
+    }
+    const half = Math.max(e - w, n - s) / 2 + 160;
+    const cx = (w + e) / 2;
+    const cy = (s + n) / 2;
+    this.bounds = { west: cx - half, east: cx + half, south: cy - half, north: cy + half };
     this.imagery.src = imageryUrl;
+    this.imagery.onload = () => (this.base = null);
     this.resize();
     addEventListener("resize", () => this.resize());
   }
 
   private resize() {
     const dpr = Math.min(devicePixelRatio, 2);
-    for (const cv of [this.tape, this.map]) {
+    for (const cv of [this.tape, this.map, this.sky]) {
       const r = cv.getBoundingClientRect();
       cv.width = Math.round(r.width * dpr);
       cv.height = Math.round(r.height * dpr);
     }
+    this.base = null;
   }
 
   show(on: boolean) {
@@ -58,13 +75,8 @@ export class Hud {
     if (on) this.resize(); // canvases have no size while hidden
   }
 
-  /** Hide everything Wayfinder provides (used when the player is asked to guess unaided). */
-  blind(on: boolean) {
-    $("hud").classList.toggle("blind", on);
-  }
-
   /** A short explanation card. sticky = stays until replaced or cleared. */
-  coach(title: string, text: string, now: number, seconds = 9, sticky = false) {
+  coach(title: string, text: string, now: number, seconds = 10, sticky = false) {
     $("coachTitle").textContent = title;
     $("coachText").textContent = text;
     $("coach").classList.add("on");
@@ -77,32 +89,63 @@ export class Hud {
     this.coachSticky = false;
   }
 
-  /** Landmark brackets on the visor and the aiming ring in the centre. */
-  markers(list: Marker[], aimProgress: number) {
-    const box = $("markers");
-    const seen = new Set<string>();
-    for (const m of list) {
-      seen.add(m.id);
-      let el = this.markerEls.get(m.id);
-      if (!el) {
-        el = document.createElement("div");
-        el.innerHTML = "<i></i><span></span>";
-        box.appendChild(el);
-        this.markerEls.set(m.id, el);
-      }
-      el.className = `marker ${m.state} ${m.side}`;
-      el.style.transform = `translate(${m.x}px, ${m.y}px)`;
-      el.querySelector("span")!.textContent = m.state === "done" ? `${m.name} ✓` : m.side ? m.name : m.name;
+  /** Show the skyline the camera saw against the best match from the elevation map. */
+  showSkyline(r: SnapshotResult, now: number) {
+    this.skyUntil = now + 7;
+    const cv = this.sky;
+    const ctx = cv.getContext("2d")!;
+    const W = cv.width;
+    const H = cv.height;
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = "rgba(18,10,6,0.75)";
+    ctx.fillRect(0, 0, W, H);
+    const k = W / 300;
+    const B = r.fix.observed.length;
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (const arr of [r.fix.observed, r.fix.matched])
+      for (const v of arr)
+        if (!Number.isNaN(v)) {
+          lo = Math.min(lo, v);
+          hi = Math.max(hi, v);
+        }
+    if (!Number.isFinite(lo)) {
+      lo = -2;
+      hi = 2;
     }
-    for (const [id, el] of this.markerEls) {
-      if (!seen.has(id)) {
-        el.remove();
-        this.markerEls.delete(id);
+    const pad = Math.max(0.5, (hi - lo) * 0.15);
+    lo -= pad;
+    hi += pad;
+    const top = 16 * k;
+    const X = (i: number) => (i / (B - 1)) * W;
+    const Y = (v: number) => top + (1 - (v - lo) / (hi - lo)) * (H - top - 4 * k);
+    const draw = (arr: Float32Array, color: string, width: number) => {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width * k;
+      ctx.beginPath();
+      let pen = false;
+      for (let i = 0; i < B; i++) {
+        if (Number.isNaN(arr[i])) {
+          pen = false;
+          continue;
+        }
+        if (pen) ctx.lineTo(X(i), Y(arr[i]));
+        else ctx.moveTo(X(i), Y(arr[i]));
+        pen = true;
       }
-    }
-    const ring = $("aim");
-    ring.style.opacity = aimProgress > 0 ? "1" : "0.35";
-    ring.style.setProperty("--p", `${Math.round(aimProgress * 360)}deg`);
+      ctx.stroke();
+    };
+    if (r.fix.ok) draw(r.fix.matched, "#7fe3ff", 3);
+    draw(r.fix.observed, "#ffffff", 1.5);
+    ctx.font = `600 ${10 * k}px system-ui, sans-serif`;
+    ctx.textBaseline = "top";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText("What the camera sees", 6 * k, 3 * k);
+    ctx.fillStyle = r.fix.ok ? "#7fe3ff" : "#ff8d7a";
+    ctx.textAlign = "right";
+    ctx.fillText(r.fix.ok ? "Matched to the NASA elevation map" : "Nothing to match: dust", W - 6 * k, 3 * k);
+    ctx.textAlign = "left";
+    $("skyBox").classList.add("on");
   }
 
   update(nav: Nav, s: HudState, now: number) {
@@ -111,21 +154,26 @@ export class Hud {
     const g = st.guidance;
 
     if (!this.coachSticky && now > this.coachUntil) $("coach").classList.remove("on");
+    if (now > this.skyUntil) $("skyBox").classList.remove("on");
 
     $("objective").textContent = s.objective;
     $("clock").textContent = s.clock;
-    $("o2fill").style.width = `${Math.max(0, s.o2Fraction) * 100}%`;
-    $("o2fill").className = s.o2Fraction < 0.2 ? "danger" : s.o2Fraction < 0.4 ? "warn" : "";
-    $("o2text").textContent = `O₂ ${Math.max(0, Math.ceil(s.o2Minutes))} min`;
+    const bar = (id: string, f: number, label: string) => {
+      const fill = $(`${id}fill`);
+      fill.style.width = `${Math.max(0, f) * 100}%`;
+      fill.className = f < 0.2 ? "danger" : f < 0.4 ? "warn" : "";
+      $(`${id}text`).textContent = label;
+    };
+    bar("o2", s.o2Fraction, `O₂ ${Math.max(0, Math.ceil(s.o2Minutes))} min`);
+    bar("pw", s.power, `Power ${Math.max(0, Math.round(s.power * 100))}%`);
 
-    let arrow = "";
     if (g) {
       const d = Math.abs(g.turn) / DEG;
-      arrow = d < 10 ? "▲ " : d > 150 ? "▼ " : g.turn < 0 ? "◀ " : "";
+      const arrow = d < 10 ? "▲ " : d > 150 ? "▼ " : g.turn < 0 ? "◀ " : "";
       $("headline").textContent = `${arrow}${g.headline}${d >= 10 && d <= 150 && g.turn > 0 ? " ▶" : ""}`;
     } else $("headline").textContent = "";
     $("distance").textContent = g ? `${Math.round(g.distance / 5) * 5} m ${nav.mode === "home" ? "to the rover" : "to the sample site"}` : "";
-    $("cues").textContent = g?.cues ? `Keep: ${g.cues}` : g ? "Nothing to steer by: using step count and gyro only" : "";
+    $("cues").textContent = g?.cues ? `Keep the ${g.cues}` : "";
 
     const alert = $("alert");
     alert.textContent = s.alert;
@@ -134,29 +182,32 @@ export class Hud {
     prompt.textContent = s.prompt;
     prompt.style.display = s.prompt ? "block" : "none";
 
-    // how Wayfinder knows where you are
+    // what Wayfinder's position is based on right now
     const row = (id: string, cls: string, text: string) => {
       const el = $(id);
       el.className = `src ${cls}`;
       el.querySelector("span")!.textContent = text;
     };
-    row("srcDr", "on", "always on, drifts");
-    row("srcSun", st.sunOk ? "on" : "off", st.sunOk ? "true direction" : s.dust > 0.4 ? "hidden by dust" : "not usable");
-    const n = st.inView.length;
-    row("srcLm", n ? "on" : "off", n ? `${n} visible: look at a ◇` : "none visible");
+    row("srcDr", "on", "always on · drifts");
+    row("srcSun", st.sunOk ? "on" : "off", st.sunOk ? "true north" : s.dust > 0.4 ? "hidden by dust" : "not usable");
+    const age = s.sinceFix === null ? "" : s.sinceFix < 60 ? "just now" : `${Math.round(s.sinceFix / 60)} min ago`;
+    row(
+      "srcHz",
+      s.scanning ? "mid" : st.visualRange >= 400 ? "on" : "off",
+      s.scanning ? "scanning…" : st.visualRange >= 400 ? `possible · last ${age || "never"}` : `blocked · last ${age || "never"}`,
+    );
+    row("srcLink", s.linkOk ? "on" : "bad", s.linkOk ? "connected" : "LOST");
     const pos = $("srcPos");
-    const cls = est.r95 > 40 ? "bad" : est.r95 > 18 ? "mid" : "on";
-    pos.className = `total ${cls}`;
-    pos.textContent = `Wayfinder knows your position to ±${Math.round(est.r95)} m`;
-    $("mapCaption").textContent = `Map from orbit · blue circle = Wayfinder's estimate (±${Math.round(est.r95)} m), not GPS`;
+    pos.className = `total ${est.r95 > 45 ? "bad" : est.r95 > 20 ? "mid" : "on"}`;
+    pos.textContent = `Position known to ±${Math.round(est.r95)} m`;
 
     if (this.map.width < 8 || this.tape.width < 8) this.resize();
     if (this.map.width < 8 || this.tape.width < 8) return;
     this.drawTape(nav, s);
-    this.drawMap(nav, s);
+    this.drawMap(nav);
   }
 
-  /** Compass strip: Wayfinder's heading, with the course to walk and what is in view. */
+  /** Compass strip: Wayfinder's heading, with the course to walk. */
   private drawTape(nav: Nav, s: HudState) {
     const cv = this.tape;
     const ctx = cv.getContext("2d")!;
@@ -165,12 +216,11 @@ export class Hud {
     const k = W / 420;
     const est = nav.wf.estimate;
     const st = nav.status;
-    const span = 110 * DEG; // field shown on the strip
+    const span = 110 * DEG;
     const x = (b: number) => W / 2 + (wrap(b - est.heading) / span) * W;
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = "rgba(18,10,6,0.55)";
     ctx.fillRect(0, 0, W, H);
-    // heading uncertainty band (2 sigma)
     const band = Math.max((2 * est.headingSigma) / span, 0.004) * W;
     ctx.fillStyle = "rgba(127,227,255,0.22)";
     ctx.fillRect(W / 2 - band, 0, band * 2, H);
@@ -206,116 +256,93 @@ export class Hud {
     };
     if (st.sunOk) mark(this.world.sun.azimuth * DEG, "#fff2a8", "SUN");
     if (st.guidance) mark(st.guidance.course, "#ffb86b", "", true);
-    // centre line = where Wayfinder thinks you are facing
     ctx.fillStyle = s.dust > 0.5 ? "#ff8d7a" : "#7fe3ff";
     ctx.fillRect(W / 2 - k, 0, 2 * k, H);
   }
 
-  /** North-up orbital map centred on Wayfinder's ESTIMATE, with the uncertainty circle. */
-  private drawMap(nav: Nav, s: HudState) {
+  /** Fixed north-up orbital map of the EVA area. It shows Wayfinder's ESTIMATE, never the truth. */
+  private drawMap(nav: Nav) {
     const cv = this.map;
     const ctx = cv.getContext("2d")!;
     const S = cv.width;
-    const est = nav.wf.estimate;
-    // zoom so the uncertainty circle is always easy to see
-    this.mapRange += (Math.max(110, Math.min(320, est.r95 * 3.2)) - this.mapRange) * 0.04;
-    const R = this.mapRange;
-    const scale = S / (2 * R); // px per metre
-    const X = (e: number) => S / 2 + (e - est.e) * scale;
-    const Y = (n: number) => S / 2 - (n - est.n) * scale;
-    ctx.save();
-    ctx.clearRect(0, 0, S, S);
-    ctx.beginPath();
-    ctx.arc(S / 2, S / 2, S / 2, 0, Math.PI * 2);
-    ctx.clip();
-    ctx.fillStyle = "#2a1a12";
-    ctx.fillRect(0, 0, S, S);
-    const b = this.world.meta.images.color.bounds;
-    if (this.imagery.complete && this.imagery.naturalWidth) {
-      const mpp = (b.east - b.west) / this.imagery.naturalWidth;
-      ctx.globalAlpha = 0.85;
-      ctx.drawImage(this.imagery, (est.e - R - b.west) / mpp, (b.north - (est.n + R)) / mpp, (2 * R) / mpp, (2 * R) / mpp, 0, 0, S, S);
-      ctx.globalAlpha = 1;
+    const b = this.bounds;
+    const scale = S / (b.east - b.west);
+    const X = (e: number) => (e - b.west) * scale;
+    const Y = (n: number) => (b.north - n) * scale;
+    if (!this.base) {
+      // orbital image + planned route, drawn once
+      const base = document.createElement("canvas");
+      base.width = base.height = S;
+      const bc = base.getContext("2d")!;
+      bc.fillStyle = "#2a1a12";
+      bc.fillRect(0, 0, S, S);
+      const ib = this.world.meta.images.color.bounds;
+      if (this.imagery.complete && this.imagery.naturalWidth) {
+        const mpp = (ib.east - ib.west) / this.imagery.naturalWidth;
+        bc.drawImage(this.imagery, (b.west - ib.west) / mpp, (ib.north - b.north) / mpp, (b.east - b.west) / mpp, (b.north - b.south) / mpp, 0, 0, S, S);
+      }
+      bc.strokeStyle = "rgba(255,184,107,0.85)";
+      bc.lineWidth = Math.max(1.5, S / 150);
+      bc.setLineDash([S / 50, S / 70]);
+      bc.beginPath();
+      this.route.forEach((p, i) => (i ? bc.lineTo(X(p[0]), Y(p[1])) : bc.moveTo(X(p[0]), Y(p[1]))));
+      bc.stroke();
+      this.base = base;
     }
-    const line = (pts: [number, number][], color: string, width: number, dash: number[]) => {
-      if (pts.length < 2) return;
-      ctx.strokeStyle = color;
-      ctx.lineWidth = width;
-      ctx.setLineDash(dash);
+    ctx.drawImage(this.base, 0, 0);
+    // recorded trail
+    const trail = nav.wf.breadcrumbs;
+    if (trail.length > 1) {
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = Math.max(1.5, S / 140);
       ctx.beginPath();
-      pts.forEach((p, i) => (i ? ctx.lineTo(X(p[0]), Y(p[1])) : ctx.moveTo(X(p[0]), Y(p[1]))));
+      trail.forEach((p, i) => (i ? ctx.lineTo(X(p[0]), Y(p[1])) : ctx.moveTo(X(p[0]), Y(p[1]))));
       ctx.stroke();
-      ctx.setLineDash([]);
-    };
-    // recorded trail, and where you would be without Wayfinder
-    line(nav.wf.breadcrumbs, "#ffffff", Math.max(1.5, S / 130), [S / 40, S / 50]);
-    line(s.ghost, "#ff5a47", Math.max(2, S / 100), [S / 60, S / 60]);
-    // landmarks
-    for (const l of nav.landmarks) {
-      const seen = nav.status.inView.includes(l);
-      const px = X(l.e);
-      const py = Y(l.n);
-      if (px < -5 || py < -5 || px > S + 5 || py > S + 5) continue;
-      ctx.fillStyle = seen ? "#ffffff" : "rgba(255,255,255,0.35)";
-      ctx.beginPath();
-      ctx.moveTo(px, py - S / 40);
-      ctx.lineTo(px - S / 50, py + S / 80);
-      ctx.lineTo(px + S / 50, py + S / 80);
-      ctx.fill();
     }
     const dot = (e: number, n: number, color: string, r: number) => {
-      // pin things that are off the map to its edge
-      let dx = X(e) - S / 2;
-      let dy = Y(n) - S / 2;
-      const d = Math.hypot(dx, dy);
-      const max = S / 2 - r - 2;
-      if (d > max) {
-        dx *= max / d;
-        dy *= max / d;
-      }
       ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.arc(S / 2 + dx, S / 2 + dy, r, 0, Math.PI * 2);
+      ctx.arc(X(e), Y(n), r, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = "#1a0f0a";
       ctx.lineWidth = 2;
       ctx.stroke();
     };
-    dot(nav.home.e, nav.home.n, "#7fe3ff", S / 28);
-    if (nav.mode === "site" && nav.site) dot(nav.site.e, nav.site.n, "#ffe066", S / 28);
-    if (s.ghost.length) dot(s.ghost[s.ghost.length - 1][0], s.ghost[s.ghost.length - 1][1], "#ff5a47", S / 36);
-    // where you might really be: the cloud of guesses and the circle that holds 95% of them
-    const color = est.r95 > 40 ? "#ff6b57" : est.r95 > 18 ? "#ffb86b" : "#7fe3ff";
+    dot(nav.home.e, nav.home.n, "#7fe3ff", S / 32);
+    if (nav.site) dot(nav.site.e, nav.site.n, "#ffe066", S / 32);
+    // Wayfinder's estimate: a dot and the circle you are inside 95% of the time
+    const est = nav.wf.estimate;
+    const color = est.r95 > 45 ? "#ff6b57" : est.r95 > 20 ? "#ffb86b" : "#7fe3ff";
+    const r = Math.max(est.r95 * scale, S / 70);
     ctx.fillStyle = color;
-    ctx.globalAlpha = 0.6;
-    for (const p of nav.wf.cloud(70)) ctx.fillRect(X(p[0]) - 1, Y(p[1]) - 1, 2, 2);
-    ctx.globalAlpha = 0.18;
+    ctx.globalAlpha = 0.25;
     ctx.beginPath();
-    ctx.arc(S / 2, S / 2, Math.max(est.r95 * scale, 4), 0, Math.PI * 2);
+    ctx.arc(X(est.e), Y(est.n), r, 0, Math.PI * 2);
     ctx.fill();
     ctx.globalAlpha = 1;
     ctx.strokeStyle = color;
-    ctx.lineWidth = Math.max(2, S / 90);
+    ctx.lineWidth = Math.max(2, S / 110);
     ctx.stroke();
-    // small heading tick (direction only: the position is the whole circle)
-    ctx.translate(S / 2, S / 2);
+    ctx.save();
+    ctx.translate(X(est.e), Y(est.n));
     ctx.rotate(est.heading);
     ctx.fillStyle = "#ffffff";
     ctx.beginPath();
-    ctx.moveTo(0, -S / 22);
-    ctx.lineTo(-S / 50, S / 60);
-    ctx.lineTo(S / 50, S / 60);
+    ctx.moveTo(0, -S / 26);
+    ctx.lineTo(-S / 60, S / 80);
+    ctx.lineTo(S / 60, S / 80);
     ctx.fill();
     ctx.restore();
-    // rim + north mark
-    ctx.strokeStyle = "rgba(255,184,107,0.6)";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(S / 2, S / 2, S / 2 - 1, 0, Math.PI * 2);
-    ctx.stroke();
     ctx.fillStyle = "#fff";
-    ctx.font = `${S / 12}px system-ui, sans-serif`;
+    ctx.font = `600 ${S / 16}px system-ui, sans-serif`;
     ctx.textAlign = "center";
-    ctx.fillText("N", S / 2, S / 9);
+    ctx.textBaseline = "top";
+    ctx.fillText("N ↑", S - S / 12, S / 40);
+    // 100 m scale bar
+    ctx.fillRect(S / 30, S - S / 18, 100 * scale, Math.max(2, S / 120));
+    ctx.font = `${S / 20}px system-ui, sans-serif`;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "bottom";
+    ctx.fillText("100 m", S / 30, S - S / 15);
   }
 }

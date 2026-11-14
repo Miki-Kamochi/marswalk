@@ -11,21 +11,24 @@ Data check pages are at `/dev.html`.
 ## How the game works
 
 You have an orbital map of Gale Crater but no "you are here": Mars has no GPS and no global
-magnetic field. **Wayfinder**, the suit's navigator, works the position out and always shows how
-unsure it is (the blue circle on the map).
+magnetic field. **Wayfinder**, the suit's navigator, puts a dot on the map and always shows how
+sure it is (the circle around the dot).
 
-1. **Walk out** from the rover to Vera Rubin Ridge. Short cards explain each source as it is used:
-   step counting + gyro (drifts), the sun compass (true direction), and landmark bearings (look at
-   a ◇ landmark and hold steady; two landmarks fix the position).
-2. **Collect** the hematite sample.
-3. **Storm.** Visibility drops to about 50 m. You are asked to point to where you think the rover
-   is, and shown how far off that is.
-4. **Walk home** on Wayfinder's recorded path. A red line on the map shows where your own guess
-   would have taken you. When the dust thins, sight a landmark to check the position.
-5. **Reveal**: your real path, Wayfinder's estimate and the path without Wayfinder.
+- **Always on:** it counts steps and turns (dead reckoning). Cheap, but it drifts, so the circle grows.
+- **Horizon scan (E / Scan button):** the suit's camera reads the skyline all around and matches it
+  with skylines computed from NASA's HiRISE elevation map. The dot snaps to the true position and
+  the circle shrinks. Each scan costs suit power, and it only works if you can see far enough.
+- **Sun compass:** automatic while the sun is visible; keeps the heading true.
 
-Wayfinder is a particle filter in `src/nav/` that only receives simulated sensor readings, never
-the true position. `npm test` checks its drift, sun compass, landmark fixes and line-of-sight maths.
+The mission: walk 700 m from the rover to Vera Rubin Ridge and collect hematite. A forecast dust
+front arrives on the way back: the rover link drops, the horizon disappears and scans fail.
+Wayfinder brings you home along your recorded path; when the dust thins, a scan corrects the drift.
+The end map compares your real path, Wayfinder's estimate and the path you would have walked
+without it.
+
+Wayfinder (`src/nav/`) is a particle filter that only receives simulated sensor readings, never the
+true position. Horizon matching is in `src/nav/horizon.ts`. `npm test` checks drift, the sun compass,
+horizon matching (position, heading, failure in dust) and the line-of-sight maths.
 
 ### What it is based on
 
@@ -33,7 +36,8 @@ the true position. `npm test` checks its drift, sun compass, landmark fixes and 
   unsure of their position.
 - The Apollo Lunar Roving Vehicle navigated by directional gyro, odometer and a sun-shadow device:
   dead reckoning plus a sun compass.
-- NASA Goddard is developing landmark/horizon-based positioning as backup navigation for the Moon.
+- NASA Goddard is developing horizon-based positioning (skyline vs. orbital elevation maps) as backup
+  navigation for explorers on the Moon.
 - Souman et al. (Current Biology, 2009): people walk in circles when they cannot see the sun.
 - The 2018 global dust storm ended Opportunity's mission; Curiosity recorded its thickest haze in Gale.
 - Sun position: NASA GISS Mars24 algorithm (Allison & McEwen 2000), tested against its published example.

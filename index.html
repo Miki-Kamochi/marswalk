@@ -11,16 +11,14 @@
     <div id="view"></div>
 
     <div id="hud" style="display: none">
-      <div id="markers"></div>
-      <div id="aim"></div>
-
       <div id="topLeft" class="panel">
         <div id="objective"></div>
         <div id="clock"></div>
-        <div id="o2"><div id="o2fill"></div><span id="o2text"></span></div>
+        <div class="bar"><div id="o2fill"></div><span id="o2text"></span></div>
+        <div class="bar"><div id="pwfill"></div><span id="pwtext"></span></div>
       </div>
 
-      <div id="wayfinder" class="wf">
+      <div id="wayfinder">
         <div class="tag">WAYFINDER</div>
         <canvas id="tape"></canvas>
         <div id="headline"></div>
@@ -31,24 +29,27 @@
       <div id="alert"></div>
       <div id="prompt"></div>
 
+      <div id="skyBox"><canvas id="skyGraph"></canvas></div>
+
       <div id="coach">
         <div id="coachTitle"></div>
         <div id="coachText"></div>
       </div>
 
-      <div id="sources" class="panel wf">
-        <div class="title">How Wayfinder knows where you are</div>
+      <div id="sources" class="panel">
+        <div class="title">Wayfinder's position is based on</div>
         <div id="srcDr" class="src"><b>Step count + gyro</b><span></span></div>
         <div id="srcSun" class="src"><b>Sun compass</b><span></span></div>
-        <div id="srcLm" class="src"><b>Landmark bearings</b><span></span></div>
+        <div id="srcHz" class="src"><b>Horizon scan</b><span></span></div>
+        <div id="srcLink" class="src"><b>Rover link</b><span></span></div>
         <div id="srcPos" class="total"></div>
       </div>
 
-      <div id="mapBox" class="wf">
+      <div id="mapBox">
         <canvas id="minimap"></canvas>
-        <div id="mapCaption"></div>
+        <div id="mapCaption">Orbital map (HiRISE). The dot is Wayfinder's estimate, not GPS.</div>
       </div>
-      <button id="actionBtn" style="display: none">Collect sample</button>
+      <button id="actionBtn" style="display: none">Scan horizon</button>
     </div>
     <pre id="debug"></pre>
 
@@ -63,28 +64,27 @@
           <p class="lead">On Earth, the blue dot on your phone's map comes from GPS satellites.</p>
           <p class="lead"><b>Mars has none.</b></p>
           <p class="help">
-            A compass does not work either: Mars has no global magnetic field. And you cannot call for directions,
-            because a radio signal takes up to 22 minutes to reach Earth.
+            A compass does not work either: Mars has no global magnetic field. In 1971, the Apollo 14 astronauts
+            had a good map of the Moon and still turned back about 30 m short of the crater they were looking for,
+            because they could not tell where they were.
           </p>
         </div>
         <div class="slide">
-          <p class="lead">You do have a map. Orbiters have photographed Mars in great detail.</p>
-          <p class="lead"><b>What you do not have is “you are here”.</b></p>
+          <p class="lead">Your suit has <b>Wayfinder</b>. It puts you on the map without GPS:</p>
           <p class="help">
-            In 1971 the Apollo 14 astronauts walked toward a crater rim with a good map in hand. They turned back
-            about 30 metres short of it, because they could not tell where they were.
+            <b>Always:</b> it counts your steps and turns. Cheap, but it slowly drifts.<br />
+            <b>When you can see far:</b> a horizon scan matches the skyline around you with NASA's orbital
+            elevation map, and corrects the drift.
           </p>
+          <p class="help">Normally the rover's radio link would be your backup. Today it may not be.</p>
         </div>
         <div class="slide">
-          <p class="lead"><b>Wayfinder</b> is the suit's navigator. It works out “you are here” without GPS:</p>
+          <p class="lead"><b>EVA-1: The Lake Rocks</b></p>
           <p class="help">
-            it counts your steps, reads the sun, and takes bearings on landmarks you look at. It always shows how
-            unsure it is.
+            Walk 700 m from the rover to Vera Rubin Ridge and collect a hematite sample. NASA's CRISM instrument saw
+            hematite here from orbit; it often forms in water.
           </p>
-          <p class="help">
-            <b>EVA-1: The Lake Rocks.</b> Walk 700 m from the rover to Vera Rubin Ridge and collect a hematite
-            sample. NASA's CRISM instrument saw hematite here from orbit; it often forms in water.
-          </p>
+          <p class="help warnText">Forecast: a dust front may reach Gale Crater this afternoon.</p>
           <p id="startHelp" class="help"></p>
         </div>
         <button id="startBtn">Next</button>
@@ -111,33 +111,28 @@
           <summary>Is this real?</summary>
           <ul>
             <li>
-              <b>Having a map is not enough.</b> Apollo 14's crew stopped about 30 m short of Cone Crater's rim,
-              unsure of their position.
-              <a href="https://en.wikipedia.org/wiki/Cone_(crater)" target="_blank" rel="noopener">Source</a>
-            </li>
-            <li>
-              <b>Steps + gyro + sun.</b> The Apollo Moon rovers navigated with a gyro, an odometer and a sun-shadow
-              device.
+              <b>Real methods.</b> Step-and-turn tracking is how the Apollo Moon rovers navigated (gyro and
+              odometer).
               <a href="https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo_lrv.html" target="_blank" rel="noopener">Source</a>
-            </li>
-            <li>
-              <b>Landmark bearings.</b> NASA Goddard is developing navigation that locates explorers from landmarks
-              on the horizon, as a backup when no signal is available.
+              Matching the skyline to orbital elevation maps is being developed at NASA Goddard as backup navigation
+              for explorers.
               <a href="https://www.nasa.gov/technology/ai-nav-using-landmarks-on-the-moon/" target="_blank" rel="noopener">Source</a>
             </li>
             <li>
-              <b>Curving when blind.</b> In experiments, people walked in circles when they could not see the sun
-              (Souman et al., Current Biology, 2009).
+              <b>Real data.</b> The terrain, the skylines you scan and the sun's position are computed from NASA data
+              of Gale Crater (MRO HiRISE elevation, MGS MOLA, Mars24 sun algorithm).
+            </li>
+            <li>
+              <b>Real hazard.</b> The 2018 global dust storm ended Opportunity's mission and gave Curiosity, here in
+              Gale Crater, the thickest haze it had recorded.
+              <a href="https://www.universetoday.com/139504/the-martian-dust-storm-has-covered-the-entire-planet/" target="_blank" rel="noopener">Source</a>
+              People walk in circles when they cannot see the sun (Souman et al. 2009).
               <a href="https://www.mpg.de/596269/pressRelease200908171" target="_blank" rel="noopener">Source</a>
             </li>
             <li>
-              <b>The storm.</b> The 2018 global dust storm ended Opportunity's mission and gave Curiosity, here in
-              Gale Crater, the thickest haze it had recorded.
-              <a href="https://www.universetoday.com/139504/the-martian-dust-storm-has-covered-the-entire-planet/" target="_blank" rel="noopener">Source</a>
-            </li>
-            <li>
-              <b>In this game:</b> the terrain, the landmarks, what is visible from where, and the sun's position are
-              computed from NASA data. Walking is sped up 4×. Sensor errors are simulated at realistic sizes.
+              <b>Dramatised.</b> Real storms build over days and would cancel the walk; real astronauts work in pairs
+              with a rover and a radio beacon nearby. Wayfinder is the backup for when those fail. Walking is sped up
+              4×, and suit power is a game resource.
             </li>
           </ul>
         </details>

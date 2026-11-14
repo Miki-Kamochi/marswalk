@@ -44,7 +44,7 @@ export interface Estimate {
 export interface Fix {
   /** mission time of the sighting, seconds */
   t: number;
-  kind: "sun" | "landmark";
+  kind: "sun" | "landmark" | "horizon";
   id?: string;
 }
 
@@ -161,6 +161,44 @@ export class Wayfinder {
     }
     this.lastFix = { t, kind: "sun" };
     this.resample();
+  }
+
+  /** An absolute heading measurement (radians from north), e.g. from a horizon match. */
+  headingFix(heading: number, sigma: number) {
+    const inv = 1 / (2 * sigma * sigma);
+    for (let i = 0; i < this.N; i++) {
+      const d = wrap(heading - (this.gyroHeading - this.ph[i]));
+      this.w[i] *= Math.exp(-d * d * inv) + 1e-12;
+    }
+    this.resample();
+  }
+
+  /**
+   * A position measurement (e.g. from a horizon match) with 1-sigma uncertainty in metres.
+   * If it lies outside every guess Wayfinder had (drift was worse than it allowed for), the
+   * guesses are rebuilt around the fix rather than ignoring it.
+   */
+  positionFix(e: number, n: number, sigma: number, t: number) {
+    const inv = 1 / (2 * sigma * sigma);
+    let best = 0;
+    const lik = new Float64Array(this.N);
+    for (let i = 0; i < this.N; i++) {
+      lik[i] = Math.exp(-((this.pe[i] - e) ** 2 + (this.pn[i] - n) ** 2) * inv);
+      best = Math.max(best, lik[i]);
+    }
+    if (best < 1e-4) {
+      for (let i = 0; i < this.N; i++) {
+        this.pe[i] = e + this.rng.gauss(sigma);
+        this.pn[i] = n + this.rng.gauss(sigma);
+      }
+      this.w.fill(1 / this.N);
+      this.refresh();
+    } else {
+      for (let i = 0; i < this.N; i++) this.w[i] *= lik[i] + 1e-12;
+      this.resample();
+    }
+    this.lastFix = { t, kind: "horizon" };
+    this.sinceFix = 0;
   }
 
   /** Bearings to recognised landmarks, each relative to the body (radians). */
