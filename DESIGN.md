@@ -7,7 +7,12 @@ How Marswalk should look and behave.
 Marswalk is **a planning display inside the crew's habitat**. It is one of the formats the challenge suggests. The crew uses it to prepare an EVA (spacewalk on foot) at Gale Crater. It is a working tool for astronauts, **not a game**. Every screen should look like it belongs on a mission console: calm and operational, with real data and one clear next action.
 
 - **First screen: home.** The title and menu sit over the real 3D Gale Crater terrain. Each item flies the camera to its own view, and the planner's view shows the planned walk. The wording is about crew tasks, not game modes.
-- **Planner:** choose a destination and compare routes. This is the core tool.
+- **Look of the tool screens (decided 2026-11-15):** a dark map app in the style of Google Earth and Maps, with neutral greys, rounded cards, a search box, and round icon buttons. The terrain is drawn as polygons (16 m facets), the same style as the walk preview. Map layers colour whole facets.
+- **Home:** search-first. "Where do you want to walk today?", a place search, and the three science targets as chips.
+- **Planner:** choose a destination and compare routes. This is the core tool. It works like map directions:
+  - **Card (left):** From / To, then the four route options. The recommended route comes first, and each option has a one-line reason. The selected option opens its safety checks and oxygen bar.
+  - **Map buttons (right):** layers, 2D (straight down) / 3D, fit route, north-up, zoom.
+  - **Bottom:** an elevation and position-uncertainty strip for the selected route, and a status bar with what is under the pointer.
 - **Walk preview:** the first-person view, reframed as a preview of what the ground looks like along the route (the challenge suggests point-of-view images). It must not use game wording.
 - **Conditions** come from Curiosity's REMS weather station and are shown for information only. Routes are planned from terrain, not weather.
 - **Balance:** a cinematic presentation (creativity and presentation are judged), but framed as mission software, with practical working screens.
@@ -268,7 +273,7 @@ Built (`index.html`).
 Each step ships something that works and is committed on its own.
 
 1. **Design tokens and fonts.** Rewrite `src/site/site.css` around the tokens above and add the fonts and icons. Every page picks up the new look.
-2. **Planner layout.** Full-bleed map, floating step panel, layer dock, 2D/3D pill. Remove the split view.
+2. **Planner layout.** Done as map-app directions (see section 0). The Leaflet 2D map and the split view are removed.
 3. **Planner flow.** Steps 1–3, the recommended route, route sentences, rule badges and the renamed words.
 4. **Overlays.** Highlight-only colouring, new route styles and pins.
 5. **Oxygen gauge, timeline and "What if…" chips.**

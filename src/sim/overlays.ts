@@ -1,4 +1,4 @@
-/** Map-layer colours: one pixel per planner cell, drawn over the imagery in 2D and in 3D. */
+/** Map-layer colours: one pixel per planner cell; the 3D view colours each facet from these. */
 import type { PlanConfig } from "../plan/config";
 import type { NavGrid } from "../plan/grid";
 
@@ -16,18 +16,20 @@ function ramp(stops: Stop[], t: number, out: Uint8ClampedArray, o: number): void
   for (let j = 0; j < 4; j++) out[o + j] = a[j + 1] + (b[j + 1] - a[j + 1]) * f;
 }
 
-export const NO_GO: Stop = [0, 105, 8, 44, 225];
+// only what matters is coloured; good ground keeps its own colour (DESIGN.md section 5)
+export const NO_GO: Stop = [0, 235, 64, 52, 215];
 export const SAFETY: Stop[] = [
-  [0, 238, 80, 40, 190],
-  [0.5, 250, 205, 70, 140],
-  [1, 70, 180, 110, 60],
+  [0, 255, 186, 60, 175],
+  [0.5, 255, 199, 90, 120],
+  [0.62, 255, 199, 90, 0],
+  [1, 255, 199, 90, 0],
 ];
 export function locStops(c: PlanConfig): Stop[] {
   return [
-    [0, 150, 10, 70, 185],
-    [c.locFix - 0.001, 245, 140, 50, 140],
-    [c.locFix, 200, 215, 100, 75],
-    [0.75, 60, 180, 125, 70],
+    [0, 140, 100, 255, 200],
+    [c.locFix - 0.001, 155, 123, 255, 140],
+    [c.locFix, 155, 123, 255, 0],
+    [1, 155, 123, 255, 0],
   ];
 }
 export const HEMATITE: Stop[] = [

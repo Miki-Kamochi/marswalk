@@ -1,20 +1,19 @@
 /**
- * Route simulator: pick a destination on the 2D map or in the 3D view and compare four routes
- * that all keep the astronaut safe, locatable and able to walk home.
+ * Planner: choose a destination (search, a science target, or a click on the map) and compare
+ * four routes, like directions in a map app. Every route stays on safe ground, keeps the
+ * position known, and leaves enough oxygen to walk home.
  */
 import { toLonLat } from "../data/frame";
-import { dataUrl, loadGrid, loadJson, loadMeta, type Place, type Positions, type Traverse } from "../data/loader";
+import { dataUrl, loadGrid, loadJson, loadMeta, type Place, type Positions } from "../data/loader";
 import { DEFAULTS, type PlanConfig } from "../plan/config";
 import { cellElevations, decodeNav, NavGrid } from "../plan/grid";
-import { Planner, PROFILES, type Profile, type Route } from "../plan/planner";
+import { Planner, type Profile, type Route } from "../plan/planner";
 import { initLang, tr } from "../site/lang";
-import { Map2D } from "./map2d";
-import { HEMATITE, locStops, makeCanvas, NO_GO, paintLimit, paintOverlay, SAFETY, css, type OverlayId } from "./overlays";
+import { attachPlaceSearch, searchable } from "../site/placeSearch";
+import { HEMATITE, makeCanvas, NO_GO, paintLimit, paintOverlay, SAFETY, css, locStops, type OverlayId } from "./overlays";
 import { drawProfile } from "./profile";
-import { ROUTE_COLORS, type SceneView, type ViewEvents } from "./scene";
-import { INFO, limiterName, placeName, profileName, profileWhat, t } from "./text";
-
-type ViewMode = "2d" | "split" | "3d";
+import { INFO, limiterName, placeName, profileName, t } from "./text";
+import { View3D } from "./view3d";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
@@ -29,7 +28,10 @@ const dur = (s: number) => {
   return h ? tr(`${h} h ${m % 60} min`, `${h}時間${m % 60}分`) : tr(`${m} min`, `${m}分`);
 };
 
-const O2_COLORS = { before: "#5a4a40", out: "#52c8ff", work: "#b28dff", back: "#ffb86b", left: "rgba(88, 201, 138, 0.55)" };
+const ACCENT = "#ff6b2c";
+const O2_COLORS = { before: "#3c4043", out: "#8ab4f8", work: "#c58af9", back: "#fdd663", left: "rgba(129, 201, 149, 0.6)" };
+/** recommended first, then the alternatives */
+const ORDER: Profile[] = ["mix", "short", "o2", "found"];
 
 async function main() {
   initLang();
@@ -37,14 +39,13 @@ async function main() {
   const cfg: PlanConfig = { ...DEFAULTS };
   const meta = await loadMeta();
   const nav = meta.nav.grid;
-  const [play, navBuf, positions, traverse] = await Promise.all([
+  const [play, navBuf, positions] = await Promise.all([
     loadGrid(meta.grids.play),
     fetch(dataUrl(nav.file)).then((r) => {
       if (!r.ok) throw new Error(`${nav.file}: HTTP ${r.status}`);
       return r.arrayBuffer();
     }),
     loadJson<Positions>("positions.json"),
-    loadJson<Traverse>("traverse.json"),
   ]);
   const grid = new NavGrid(nav, { ...decodeNav(nav, new Uint8Array(navBuf)), elev: cellElevations(meta.grids.play, play.data, nav) }, cfg);
   const planner = new Planner(grid, cfg);
@@ -55,15 +56,15 @@ async function main() {
   const targets = positions.places.filter((p) => p.kind === "stop");
 
   const state = {
-    view: "2d" as ViewMode,
-    overlay: "loc" as OverlayId,
+    overlay: "none" as OverlayId,
     showLimit: true,
-    showPlaces: true,
     showTraverse: false,
+    flat: false,
     home: -1,
-    /** the clicked cell, and the destination actually used */
+    /** the clicked cell (-2 = outside the map), and the destination actually used */
     target: -1,
     dest: -1,
+    destName: "",
     moved: false,
     problem: undefined as "outside" | "no-go" | "cut-off" | undefined,
     homeBad: false,
@@ -73,86 +74,41 @@ async function main() {
     busy: false,
     o2: 1,
     pickStart: false,
-    /** walkable cells beyond the walk-back limit */
     beyond: 0,
   };
   let token = 0;
+  let view: View3D | null = null;
 
-  // ---------------------------------------------------------------- views
+  // ---------------------------------------------------------------- map
   const overlayCv = makeCanvas(grid);
   const limitCv = makeCanvas(grid);
-  const ev: ViewEvents = {
-    onPick: (e, n) => {
-      const cell = grid.index(e, n);
-      if (state.pickStart) void setHome(cell);
-      else void setDest(cell);
-    },
-    onHover: (e, n) => renderReadout(e === null || n === null ? -1 : grid.index(e, n)),
-    onSelect: (p) => select(p),
-  };
-  const map2d = new Map2D($("map2d"), meta, grid, positions, traverse, ev, (p) => placeName(p.id, p.name));
-  const views: SceneView[] = [map2d];
-  let asked3d = false;
+  const narrow = () => innerWidth <= 760;
 
-  const pushOverlay = (to: SceneView[] = views) => {
+  const pushOverlay = () => {
     if (state.overlay !== "none") paintOverlay(overlayCv, grid, state.overlay, cfg);
-    for (const v of to) v.setOverlay(state.overlay === "none" ? null : overlayCv);
-    renderLegend();
+    view?.setOverlay(state.overlay === "none" ? null : overlayCv);
+    renderLayers();
   };
-  const pushLimit = (to: SceneView[] = views) => {
+  const pushLimit = () => {
     const within = planner.withinLimit(state.o2);
     let beyond = 0;
     for (let i = 0; i < grid.size; i++) if (!within[i] && planner.fromHome[i] < Infinity) beyond++;
     state.beyond = beyond;
-    if (state.showLimit) paintLimit(limitCv, grid, within);
-    for (const v of to) v.setLimit(state.showLimit ? limitCv : null);
-    renderLegend();
+    if (state.showLimit && beyond) paintLimit(limitCv, grid, within);
+    view?.setLimit(state.showLimit && beyond ? limitCv : null);
   };
-  const pushRoutes = (to: SceneView[] = views) => {
-    for (const v of to) {
-      v.setRoutes(state.routes, state.selected, state.back);
-      v.setEnds(state.home, state.dest);
-    }
+  const pushRoutes = () => {
+    view?.setRoutes(state.routes, state.selected, state.back);
+    view?.setEnds(state.home, state.dest);
   };
-  const pushExtras = (to: SceneView[] = views) => {
-    for (const v of to) v.setExtras(state.showPlaces, state.showTraverse);
+  const fit = () => {
+    const sel = state.routes.find((r) => r.profile === state.selected);
+    if (sel) view?.fitCells([...sel.cells, state.home]);
+    else if (state.dest >= 0) view?.fitCells([state.home, state.dest]);
   };
-
-  function ensure3d() {
-    if (asked3d) return;
-    asked3d = true;
-    const note = $("load3d");
-    note.textContent = t("load3d");
-    import("./view3d")
-      .then((m) => m.View3D.create($("view3d"), grid, ev, () => (note.textContent = t("load3d"))))
-      .then((v) => {
-        note.remove();
-        views.push(v);
-        pushOverlay([v]);
-        pushLimit([v]);
-        pushRoutes([v]);
-        pushExtras([v]);
-        v.resize();
-      })
-      .catch((err) => {
-        console.error(err);
-        note.textContent = `3D: ${err.message}`;
-      });
-  }
-
-  function setView(v: ViewMode) {
-    state.view = v;
-    $("app").dataset.view = v;
-    for (const b of $("viewSeg").querySelectorAll<HTMLElement>("button")) b.setAttribute("aria-pressed", String(b.dataset.view === v));
-    if (v !== "2d") ensure3d();
-    requestAnimationFrame(() => {
-      views.forEach((x) => x.resize());
-      map2d.fit();
-    });
-  }
 
   // ---------------------------------------------------------------- planning
-  async function replan() {
+  async function replan(fitAfter = true) {
     const my = ++token;
     state.routes = [];
     state.back = [];
@@ -167,24 +123,41 @@ async function main() {
       state.back = res.back;
     }
     state.busy = state.dest >= 0 && !state.problem;
-    renderTrip();
-    renderRoutes();
+    renderAll();
     pushRoutes();
     if (!state.busy) return;
-    for (const p of PROFILES) {
+    for (const p of ORDER) {
       await breathe();
       if (my !== token) return;
       const r = planner.route(state.dest, p, state.o2);
       if (r) state.routes.push(r);
-      if (p === PROFILES[PROFILES.length - 1]) state.busy = false;
+      if (p === ORDER[ORDER.length - 1]) state.busy = false;
       renderRoutes();
       pushRoutes();
+      if (p === state.selected && fitAfter) fit();
     }
+    renderStrip();
   }
 
-  async function setDest(cell: number) {
-    state.target = cell < 0 ? -2 : cell; // -2: a click outside the map
+  async function setDest(cell: number, name = "") {
+    state.target = cell < 0 ? -2 : cell;
+    state.destName = name;
     await replan();
+  }
+
+  function clearDest() {
+    token++;
+    state.target = -1;
+    state.dest = -1;
+    state.destName = "";
+    state.routes = [];
+    state.back = [];
+    state.problem = undefined;
+    state.moved = false;
+    state.busy = false;
+    $<HTMLInputElement>("to").value = "";
+    renderAll();
+    pushRoutes();
   }
 
   async function setHome(cell: number) {
@@ -192,16 +165,14 @@ async function main() {
     state.pickStart = false;
     state.homeBad = open < 0;
     if (open < 0) {
-      renderTrip();
-      renderRoutes();
+      renderAll();
       return;
     }
     token++;
     state.routes = [];
-    state.busy = true;
+    state.busy = state.target >= 0;
     state.home = open;
-    renderTrip();
-    renderRoutes();
+    renderAll();
     pushRoutes();
     await breathe();
     planner.setHome(open);
@@ -212,18 +183,18 @@ async function main() {
   function select(p: Profile) {
     state.selected = p;
     renderRoutes();
+    renderStrip();
     pushRoutes();
-    renderLegend();
   }
 
-  // ---------------------------------------------------------------- panel
+  // ---------------------------------------------------------------- names
   function nameOf(cell: number): string {
     const e = grid.east(cell);
     const n = grid.northOf(cell);
     let best: Place | null = null;
     let bestD = 45;
     for (const p of positions.places) {
-      if (p.kind === "backdrop" || p.kind === "landmark") continue;
+      if (p.kind === "backdrop") continue;
       const d = Math.hypot(p.easting - e, p.northing - n);
       if (d < bestD) {
         bestD = d;
@@ -235,70 +206,83 @@ async function main() {
     return `${Math.abs(g.lat).toFixed(4)}°${g.lat < 0 ? "S" : "N"} ${g.lon.toFixed(4)}°E`;
   }
 
-  function renderTrip() {
+  // ---------------------------------------------------------------- card
+  function renderTop() {
     $("homeName").textContent = state.home >= 0 ? nameOf(state.home) : "…";
-    $("destName").textContent = state.dest >= 0 ? nameOf(state.dest) : t("notChosen");
     $("changeStart").textContent = state.pickStart ? t("cancel") : t("change");
-    $("hint").textContent = state.pickStart ? t("hintStart") : state.dest < 0 ? t("hint") : "";
-    $("quick").innerHTML =
-      targets
-        .map((p) => `<button data-quick="${p.id}" aria-pressed="${cellOfPlace(p) === state.dest}">${esc(placeName(p.id, p.name))}</button>`)
-        .join("") + (state.home !== baseCell && state.home >= 0 ? `<button data-quick="home-base">↺ ${esc(t("baseCamp"))}</button>` : "");
-    document.body.classList.toggle("picking-start", state.pickStart);
+    const to = $<HTMLInputElement>("to");
+    to.placeholder = tr("Choose destination", "目的地を選択");
+    if (document.activeElement !== to) to.value = state.dest >= 0 ? state.destName || nameOf(state.dest) : "";
+    $("clearTo").hidden = state.dest < 0 && !to.value;
+    const showChips = state.dest < 0 && !state.problem && !state.pickStart;
+    $("hint").innerHTML = state.pickStart
+      ? esc(tr("Click the map where the walk starts and ends.", "地図をクリックして、出発・帰還地点を選んでください。"))
+      : showChips
+        ? esc(tr("Search, pick a science target, or click the map.", "検索するか、科学目標を選ぶか、地図をクリックしてください。")) +
+          `<span class="chiprow">${targets.map((p) => `<button data-quick="${p.id}"><span class="sq"></span>${esc(placeName(p.id, p.name))}</button>`).join("")}${
+            state.home !== baseCell && state.home >= 0 ? `<button data-quick="home-base">↺ ${esc(t("baseCamp"))}</button>` : ""
+          }</span>`
+        : "";
   }
 
-  function card(r: Route): string {
+  function why(r: Route): string {
     const s = r.stats;
-    const p = r.profile;
-    const on = p === state.selected;
+    if (!s.o2Ok) return tr("Not enough oxygen to walk home with the reserve.", "余裕を残して歩いて帰る酸素が足りません。");
+    if (!s.errorOk) return tr("Your position would become too uncertain on the way.", "途中で位置が分からなくなりすぎます。");
+    const blind = Math.round(s.blindDistance);
+    const sand = Math.round(s.sandDistance);
+    switch (r.profile) {
+      case "mix":
+        return tr(
+          `Balances oxygen and position checks: <b>${blind} m</b> without a check, <b>${sand} m</b> of sand.`,
+          `酸素と位置確認のバランスをとります。確認できない区間 <b>${blind} m</b>、砂地 <b>${sand} m</b>。`,
+        );
+      case "short":
+        return tr(`Shortest, but <b>${blind} m</b> where you can't check your position.`, `最短ですが、位置を確かめられない区間が <b>${blind} m</b> あります。`);
+      case "o2":
+        return tr(`Least oxygen: goes around climbs and soft sand (<b>${sand} m</b> of sand).`, `酸素が最少。登りとやわらかい砂を避けます（砂地 <b>${sand} m</b>）。`);
+      default:
+        return tr(`You can check your position almost all the way (<b>${blind} m</b> without).`, `ほぼ全行程で位置を確かめられます（確認できない区間 <b>${blind} m</b>）。`);
+    }
+  }
+
+  function option(r: Route): string {
+    const s = r.stats;
+    const on = r.profile === state.selected;
     const bad = !s.errorOk || !s.o2Ok;
-    const meta = [
-      `${dur(s.duration)} ${t("oneWay")}`,
-      `O₂ ${pc(s.o2Out)}`,
-      tr(`${s.photoCount} photo fixes`, `撮影${s.photoCount}回`),
-      tr(`${Math.round(s.blindDistance)} m without fix`, `撮影不可 ${Math.round(s.blindDistance)} m`),
-    ].join(" · ");
-    const html = `<button class="route" data-route="${p}" aria-pressed="${on}">
-      <span class="sw" style="background:${ROUTE_COLORS[p]}"></span>
-      <span class="name">${esc(profileName(p))}${p === "mix" ? `<em class="rec">${esc(t("recommended"))}</em>` : ""}${bad ? '<span class="flag">!</span>' : ""}</span>
-      <span class="big">${km(s.distance)}</span>
-      <span class="meta">${esc(meta)}</span>
-    </button>`;
-    return html;
+    const l2 = [km(s.distance), tr(`O₂ ${pc(s.o2Out)} out`, `行きの酸素 ${pc(s.o2Out)}`), tr(`${s.photoCount} position checks`, `位置確認 ${s.photoCount}回`)].join(" · ");
+    return `<button class="opt${bad ? " bad" : ""}" data-route="${r.profile}" aria-pressed="${on}">
+      <span class="ic" aria-hidden="true"></span>
+      <span class="l1"><span class="name">${esc(profileName(r.profile))}</span>${
+        r.profile === "mix" ? `<span class="rec">${esc(t("recommended"))}</span>` : ""
+      }<span class="time">${dur(s.duration)}</span></span>
+      <span class="l2">${esc(l2)}</span>
+      <span class="why">${why(r)}</span>
+    </button>${on ? detail(r) : ""}`;
   }
 
   function detail(r: Route): string {
     const s = r.stats;
-    const p = r.profile;
-    const rule = (ok: boolean, text: string) => `<li class="${ok ? "" : "bad"}"><span class="mark">${ok ? "✓" : "✕"}</span><span>${esc(text)}</span></li>`;
+    const check = (ok: boolean, text: string) => `<li class="${ok ? "" : "bad"}"><span class="m">${ok ? "✓" : "!"}</span><span>${esc(text)}</span></li>`;
     const seg = (w: number, c: string) => `<i style="width:${Math.max(0, w) * 100}%;background:${c}"></i>`;
     const key = (c: string, label: string, v: number) => `<span><i style="background:${c}"></i>${esc(label)} <b>${pc(v)}</b></span>`;
     return `<div class="detail">
-      <h3><span class="sw" style="background:${ROUTE_COLORS[p]}"></span>${esc(profileName(p))}</h3>
-      <p>${esc(profileWhat(p))}</p>
-      <ul class="rules">
-        ${rule(true, t("rule1"))}
-        ${rule(s.errorOk, t("rule2", { y: cfg.errorLimit, u: s.maxError.toFixed(1) }))}
-        ${rule(s.o2Ok, t("rule3", { r: pc(cfg.reserve) }))}
+      <ul class="checks">
+        ${check(true, tr("Stays on safe ground", "安全な地面だけを通る"))}
+        ${check(s.errorOk, tr(`Position known to within ${cfg.errorLimit} m (worst ${s.maxError.toFixed(0)} m)`, `位置の誤差は${cfg.errorLimit} m以内（最大 ${s.maxError.toFixed(0)} m）`))}
+        ${check(s.o2Ok, tr(`Can walk home from any point with ${pc(cfg.reserve)} oxygen left`, `どこからでも酸素を${pc(cfg.reserve)}残して歩いて帰れる`))}
       </ul>
-      <dl class="facts">
-        <dt>${esc(t("climb"))}</dt><dd>${Math.round(s.ascent)} m</dd>
-        <dt>${esc(t("sand"))}</dt><dd>${Math.round(s.sandDistance)} m</dd>
-        <dt>${esc(t("caution"))}</dt><dd>${Math.round(s.cautionDistance)} m</dd>
-        <dt>${esc(t("longest"))}</dt><dd>${Math.round(s.longestBlind)} m</dd>
-      </dl>
-      <div class="lbl">${esc(t("o2Title"))}</div>
-      <div class="o2bar">
-        ${seg(1 - state.o2, O2_COLORS.before)}${seg(s.o2Out, O2_COLORS.out)}${seg(s.o2Work, O2_COLORS.work)}${seg(s.o2Back, O2_COLORS.back)}${seg(s.o2Left, O2_COLORS.left)}
-        <span class="reserve" style="width:${cfg.reserve * 100}%"></span>
-      </div>
-      <div class="o2key">
-        ${key(O2_COLORS.out, t("o2Out"), s.o2Out)}${key(O2_COLORS.work, t("o2Work"), s.o2Work)}${key(O2_COLORS.back, t("o2Back"), s.o2Back)}${key(O2_COLORS.left, t("o2Left"), Math.max(0, s.o2Left))}
-      </div>
-      <canvas class="profile"></canvas>
-      <div class="chartkey">
-        <span><i style="width:9px;height:9px;border-radius:50%;background:#fff"></i>${esc(t("chartFix"))}</span>
-        <span><i style="width:12px;height:9px;background:rgba(255,107,87,0.35)"></i>${esc(t("chartNoFix"))}</span>
+      <div class="o2">
+        <div class="lbl"><span>${esc(t("o2Title"))}</span><span>${esc(tr(`climb ${Math.round(s.ascent)} m`, `登り ${Math.round(s.ascent)} m`))}</span></div>
+        <div class="o2bar">${seg(1 - state.o2, O2_COLORS.before)}${seg(s.o2Out, O2_COLORS.out)}${seg(s.o2Work, O2_COLORS.work)}${seg(s.o2Back, O2_COLORS.back)}${seg(
+          s.o2Left,
+          O2_COLORS.left,
+        )}<span class="reserve" style="width:${cfg.reserve * 100}%"></span></div>
+        <div class="o2key">${key(O2_COLORS.out, t("o2Out"), s.o2Out)}${key(O2_COLORS.work, t("o2Work"), s.o2Work)}${key(O2_COLORS.back, t("o2Back"), s.o2Back)}${key(
+          O2_COLORS.left,
+          t("o2Left"),
+          Math.max(0, s.o2Left),
+        )}</div>
       </div>
     </div>`;
   }
@@ -308,78 +292,81 @@ async function main() {
     if (state.homeBad) notes.push(`<p class="bad">${esc(t("homeBad"))}</p>`);
     if (state.problem) notes.push(`<p class="bad">${esc(t(state.problem === "outside" ? "outside" : state.problem === "no-go" ? "noGo" : "cutOff"))}</p>`);
     if (state.moved) notes.push(`<p>${esc(t("moved"))}</p>`);
-    if (state.routes.some((r) => !r.stats.errorOk)) notes.push(`<p class="bad">${esc(t("errorFlag"))}</p>`);
-    if (state.routes.length && state.routes.every((r) => !r.stats.o2Ok)) notes.push(`<p class="bad">${esc(t("o2Flag"))}</p>`);
     $("notice").innerHTML = notes.join("");
     let html = "";
-    for (const p of PROFILES) {
+    for (const p of ORDER) {
       const r = state.routes.find((r) => r.profile === p);
-      if (r) html += card(r);
+      if (r) html += option(r);
     }
-    if (state.busy) html += `<div class="busy">${esc(t("calculating"))}</div>`;
-    const sel = state.routes.find((r) => r.profile === state.selected);
-    if (sel) html += detail(sel);
+    if (state.busy) html += `<p class="busy">${esc(t("calculating"))}</p>`;
     $("routes").innerHTML = html;
-    drawChart();
   }
 
-  function drawChart() {
-    const cv = $("routes").querySelector<HTMLCanvasElement>("canvas.profile");
+  function renderStrip() {
     const r = state.routes.find((r) => r.profile === state.selected);
-    if (cv && r) {
-      drawProfile(cv, r, grid, cfg, ROUTE_COLORS[r.profile], { elev: t("chartElev"), err: t("chartErr"), limit: t("chartLimit") });
+    const strip = $("strip");
+    strip.hidden = !r || narrow();
+    if (r && !strip.hidden) {
+      drawProfile($<HTMLCanvasElement>("profile"), r, grid, cfg, ACCENT, {
+        elev: t("chartElev"),
+        err: tr("How sure we are of your position (m)", "位置の不確かさ (m)"),
+        limit: t("chartLimit"),
+      });
     }
   }
 
-  function renderLegend() {
-    const parts: string[] = [];
-    const bar = (gradient: string, a: string, b: string, mid = "") =>
-      `<div class="bar" style="background:${gradient}"></div><div class="ends"><span>${esc(a)}</span>${mid ? `<span>${esc(mid)}</span>` : ""}<span>${esc(b)}</span></div>`;
-    if (state.overlay === "safety") {
-      parts.push(
-        bar(
-          `linear-gradient(90deg, ${css(NO_GO)} 0 14%, ${css(SAFETY[0])} 14%, ${css(SAFETY[1])} 57%, ${css(SAFETY[2])} 100%)`,
-          t("legNoGo"),
-          t("legSafe"),
-          t("legCaution"),
-        ),
-      );
-    } else if (state.overlay === "loc") {
-      const stops = locStops(cfg);
-      const top = stops[stops.length - 1][0];
-      parts.push(bar(`linear-gradient(90deg, ${stops.map((s) => `${css(s)} ${(s[0] / top) * 100}%`).join(", ")})`, t("legFails"), t("legWorks")));
-    } else if (state.overlay === "hematite") {
-      parts.push(bar(`linear-gradient(90deg, rgba(255,130,225,0.08), ${css(HEMATITE[1])} 30%, ${css(HEMATITE[2])})`, t("legLess"), t("legMore")));
-    }
-    const keys: string[] = [];
-    if (state.routes.some((r) => r.profile === state.selected)) {
-      keys.push(`<span><i style="width:9px;height:9px;border-radius:50%;background:#fff;border:1px solid #1a0f0a"></i>${esc(t("legFix"))}</span>`);
-      keys.push(`<span><i style="width:18px;border-top:2px dashed #fff"></i>${esc(t("legBack"))}</span>`);
-    }
-    if (state.showLimit && state.beyond > 0) keys.push(`<span>${esc(t("legLimit"))}</span>`);
-    if (keys.length) parts.push(`<div class="keys">${keys.join("")}</div>`);
-    $("legend").innerHTML = parts.join("");
+  function renderLayers() {
+    for (const b of document.querySelectorAll<HTMLElement>(".tile")) b.setAttribute("aria-checked", String(b.dataset.layer === state.overlay));
+    const sw = (c: string, label: string) => `<span><i style="background:${c}"></i>${esc(label)}</span>`;
+    const legend: Record<OverlayId, string> = {
+      none: esc(tr("Real HiRISE colours. Yellow squares are science targets.", "HiRISEの実際の色。黄色の四角は科学目標です。")),
+      safety: sw(css(NO_GO), tr("No-go", "通行不可")) + sw(css(SAFETY[0]), tr("Careful", "注意")),
+      loc: sw(css(locStops(cfg)[0]), tr("A photo can't fix your position here", "写真で位置を確かめられない場所")),
+      hematite: sw(css(HEMATITE[2]), tr("More hematite", "ヘマタイトが多い")),
+    };
+    $("layerLegend").innerHTML = legend[state.overlay];
+    $("layerInfo").hidden = state.overlay === "none";
   }
 
-  function renderReadout(cell: number) {
-    const box = $("readout");
-    box.hidden = cell < 0;
-    if (cell < 0) return;
+  function renderSliders() {
+    $("o2Val").textContent = pc(state.o2);
+    $("errVal").textContent = `${cfg.errorLimit} m`;
+  }
+
+  function renderAll() {
+    renderTop();
+    renderRoutes();
+    renderStrip();
+  }
+
+  // ---------------------------------------------------------------- status bar
+  function renderStatus(cell: number) {
+    const box = $("status");
+    if (cell < 0) {
+      box.textContent = "";
+      return;
+    }
     const L = grid.layers;
     const g = toLonLat(grid.east(cell), grid.northOf(cell));
     const good = grid.good[cell];
     const cls = grid.blocked[cell] ? "bad" : good < 0.5 ? "warn" : "good";
-    const word = grid.blocked[cell] ? t("noGoWord") : good < 0.5 ? t("cautionWord") : t("ok");
-    const why = good < 0.999 ? ` (${limiterName(grid.limiter(cell, cfg))})` : "";
+    const word = grid.blocked[cell] ? tr("No-go", "通行不可") : good < 0.5 ? tr("Careful", "注意") : tr("Safe", "安全");
+    const reason = good < 0.999 ? ` (${limiterName(grid.limiter(cell, cfg))})` : "";
     const fix = grid.fixable[cell];
     const hem = L.hematite[cell];
-    box.innerHTML =
-      `${Math.abs(g.lat).toFixed(4)}°S ${g.lon.toFixed(4)}°E · ${Math.round(L.elev[cell])} m · ` +
-      `${esc(t("slope"))} ${L.tilt[cell].toFixed(0)}° · ${esc(t("safety"))} <b class="${cls}">${esc(word + why)}</b> · ` +
-      `${esc(t("photoFix"))} <b class="${fix ? "good" : "bad"}">${esc(fix ? t("works") : t("fails"))}</b> (${L.loc[cell].toFixed(2)}) · ` +
-      `${esc(t("hematite"))} ${Number.isNaN(hem) ? esc(t("notSeen")) : hem.toFixed(2)}`;
+    box.innerHTML = [
+      `${Math.abs(g.lat).toFixed(4)}°S ${g.lon.toFixed(4)}°E`,
+      `${Math.round(L.elev[cell]).toLocaleString("en-US")} m`,
+      `${tr("slope", "傾斜")} ${L.tilt[cell].toFixed(0)}°`,
+      `<b class="${cls}">${esc(word + reason)}</b>`,
+      `${tr("position check", "位置確認")} <b class="${fix ? "good" : "vio"}">${esc(fix ? tr("possible", "できる") : tr("not possible", "できない"))}</b>`,
+      Number.isNaN(hem) ? "" : `${tr("hematite", "ヘマタイト")} ${hem.toFixed(2)}`,
+    ]
+      .filter(Boolean)
+      .join("<span>·</span>");
   }
 
+  // ---------------------------------------------------------------- info dialog
   function showInfo(id: string) {
     const info = INFO[id];
     if (!info) return;
@@ -392,52 +379,66 @@ async function main() {
     $<HTMLDialogElement>("info").showModal();
   }
 
-  function renderSliders() {
-    $("o2Val").textContent = pc(state.o2);
-    $("errVal").textContent = `${cfg.errorLimit} m`;
-  }
-
   // ---------------------------------------------------------------- events
-  $("panel").addEventListener("click", (e) => {
+  $("card").addEventListener("click", (e) => {
     const el = (e.target as HTMLElement).closest<HTMLElement>("[data-route], [data-quick]");
     if (!el) return;
     if (el.dataset.route) select(el.dataset.route as Profile);
     else if (el.dataset.quick === "home-base") void setHome(baseCell);
     else {
       const p = positions.places.find((p) => p.id === el.dataset.quick);
-      if (p) void setDest(cellOfPlace(p));
+      if (p) void setDest(cellOfPlace(p), placeName(p.id, p.name));
     }
-  });
-  document.addEventListener("click", (e) => {
-    const b = (e.target as HTMLElement).closest<HTMLElement>("button.info");
-    if (!b) return;
-    e.preventDefault();
-    showInfo(b.dataset.info!);
   });
   $("changeStart").addEventListener("click", () => {
     state.pickStart = !state.pickStart;
-    renderTrip();
+    renderTop();
   });
-  for (const r of document.querySelectorAll<HTMLInputElement>('input[name="overlay"]')) {
-    r.checked = r.value === state.overlay;
-    r.addEventListener("change", () => {
-      state.overlay = r.value as OverlayId;
+  $("clearTo").addEventListener("click", clearDest);
+  attachPlaceSearch($<HTMLInputElement>("to"), $("toList"), searchable(positions.places), (p) => void setDest(cellOfPlace(p), placeName(p.id, p.name)));
+  $("to").addEventListener("input", () => {
+    $("clearTo").hidden = !$<HTMLInputElement>("to").value && state.dest < 0;
+  });
+
+  // map buttons
+  const pop = $("layers");
+  const layersBtn = $("layersBtn");
+  const setPop = (open: boolean) => {
+    pop.hidden = !open;
+    layersBtn.setAttribute("aria-expanded", String(open));
+  };
+  layersBtn.addEventListener("click", () => setPop(pop.hidden === true));
+  document.addEventListener("pointerdown", (e) => {
+    if (!pop.hidden && !pop.contains(e.target as Node) && !layersBtn.contains(e.target as Node)) setPop(false);
+  });
+  addEventListener("keydown", (e) => {
+    if (e.key === "Escape") setPop(false);
+  });
+  for (const b of document.querySelectorAll<HTMLElement>(".tile")) {
+    b.addEventListener("click", () => {
+      state.overlay = b.dataset.layer as OverlayId;
       pushOverlay();
     });
   }
-  const check = (id: string, set: (on: boolean) => void) => $<HTMLInputElement>(id).addEventListener("change", (e) => set((e.target as HTMLInputElement).checked));
-  check("showLimit", (on) => {
-    state.showLimit = on;
+  $("layerInfo").addEventListener("click", () => showInfo(state.overlay === "none" ? "routes" : state.overlay));
+  $<HTMLInputElement>("showLimit").addEventListener("change", (e) => {
+    state.showLimit = (e.target as HTMLInputElement).checked;
     pushLimit();
   });
-  check("showPlaces", (on) => {
-    state.showPlaces = on;
-    pushExtras();
+  $<HTMLInputElement>("showTraverse").addEventListener("change", (e) => {
+    state.showTraverse = (e.target as HTMLInputElement).checked;
+    view?.setExtras(true, state.showTraverse);
   });
-  check("showTraverse", (on) => {
-    state.showTraverse = on;
-    pushExtras();
+  $("flatBtn").addEventListener("click", () => {
+    state.flat = !state.flat;
+    view?.setFlat(state.flat);
   });
+  $("fitBtn").addEventListener("click", fit);
+  $("northBtn").addEventListener("click", () => view?.northUp());
+  $("zoomIn").addEventListener("click", () => view?.zoom(0.6));
+  $("zoomOut").addEventListener("click", () => view?.zoom(1.6));
+
+  // what if
   let o2Queued = false;
   $<HTMLInputElement>("o2").addEventListener("input", (e) => {
     state.o2 = Number((e.target as HTMLInputElement).value) / 100;
@@ -458,12 +459,10 @@ async function main() {
     renderSliders();
   });
   err.addEventListener("change", () => void setHome(state.home));
-  for (const b of $("viewSeg").querySelectorAll<HTMLElement>("button")) b.addEventListener("click", () => setView(b.dataset.view as ViewMode));
+
   document.addEventListener("langchange", () => {
-    map2d.relabel();
-    renderTrip();
-    renderRoutes();
-    renderLegend();
+    renderAll();
+    renderLayers();
     renderSliders();
   });
   let resizeQueued = false;
@@ -472,25 +471,41 @@ async function main() {
     resizeQueued = true;
     requestAnimationFrame(() => {
       resizeQueued = false;
-      views.forEach((v) => v.resize());
-      drawChart();
+      view?.resize();
+      renderStrip();
     });
   });
 
   // ---------------------------------------------------------------- start
-  if (innerWidth <= 860) $<HTMLDetailsElement>("layers").open = false;
-  const wanted = params.get("view");
-  setView(wanted === "2d" || wanted === "3d" || wanted === "split" ? wanted : innerWidth >= 1180 ? "split" : "2d");
   renderSliders();
-  renderTrip();
-  pushOverlay();
-  pushExtras();
+  renderLayers();
+  renderTop();
+  const needle = $("needle");
+  try {
+    view = await View3D.create($("map"), grid, {
+      onPick: (e, n) => {
+        const cell = grid.index(e, n);
+        if (state.pickStart) void setHome(cell);
+        else void setDest(cell);
+      },
+      onHover: (e, n) => renderStatus(e === null || n === null ? -1 : grid.index(e, n)),
+      onCamera: (heading, flat) => {
+        needle.style.transform = `rotate(${(-heading * 180) / Math.PI}deg)`;
+        $("flatBtn").textContent = flat ? "3D" : "2D";
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    $("boot").textContent = `3D: ${(err as Error).message}`;
+    return;
+  }
   $("boot").remove();
+  pushOverlay();
   await setHome(baseCell);
-  // the briefing screen can ask for a destination: sim.html?dest=<place id>
-  const first = positions.places.find((p) => p.id === (params.get("dest") ?? "stop_vera_rubin_ridge"));
-  if (first) await setDest(cellOfPlace(first));
-  if (params.has("debug")) Object.assign(window, { __sim: { state, grid, planner, cfg, setDest, setHome, select, setView } });
+  // the home screen can ask for a destination: sim.html?dest=<place id>
+  const wanted = positions.places.find((p) => p.id === params.get("dest"));
+  if (wanted) await setDest(cellOfPlace(wanted), placeName(wanted.id, wanted.name));
+  if (params.has("debug")) Object.assign(window, { __sim: { state, grid, planner, cfg, setDest, setHome, select, view } });
 }
 
 main().catch((err) => {

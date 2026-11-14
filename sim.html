@@ -2,139 +2,138 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Marswalk — Route simulator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Marswalk — Plan EVA route</title>
+    <meta name="theme-color" content="#17181a" />
     <link rel="stylesheet" href="/src/site/site.css" />
     <link rel="stylesheet" href="/src/sim/sim.css" />
   </head>
-  <body class="sim">
-    <header class="topbar">
-      <a class="brand" href="/">MARSWALK</a>
-      <span class="where"><span data-l="en">Route simulator</span><span data-l="ja">ルート・シミュレーター</span></span>
-      <span class="spacer"></span>
-      <div class="seg" id="viewSeg" role="group" aria-label="View">
-        <button data-view="2d">2D</button>
-        <button data-view="split">2D + 3D</button>
-        <button data-view="3d">3D</button>
+  <body class="planner">
+    <div id="map" aria-label="3D map of Gale Crater. Click the ground to choose a destination."></div>
+
+    <!-- ============================================================ directions card -->
+    <aside class="card" id="card">
+      <div class="card-top">
+        <a class="back" href="/" aria-label="Home">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        </a>
+        <span class="logo"><span class="dot" aria-hidden="true"></span>MARSWALK</span>
+        <div class="seg" role="group" aria-label="Language">
+          <button data-set-lang="en">EN</button>
+          <button data-set-lang="ja">日本語</button>
+        </div>
       </div>
-      <a class="link" href="/how.html"><span data-l="en">How it works</span><span data-l="ja">仕組み</span></a>
-      <div class="seg" role="group" aria-label="Language">
-        <button data-set-lang="en">EN</button>
-        <button data-set-lang="ja">日本語</button>
+
+      <div class="od">
+        <div class="od-row">
+          <span class="mk start" aria-hidden="true"></span>
+          <div class="od-text">
+            <span class="od-label"><span data-l="en">From</span><span data-l="ja">出発</span></span>
+            <span id="homeName"></span>
+          </div>
+          <button class="txt" id="changeStart"></button>
+        </div>
+        <div class="od-line" aria-hidden="true"></div>
+        <div class="od-row">
+          <span class="mk pin" aria-hidden="true"></span>
+          <div class="field">
+            <input id="to" type="search" autocomplete="off" spellcheck="false" aria-label="Destination" aria-controls="toList" />
+            <button class="clear" id="clearTo" aria-label="Clear destination" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+            </button>
+            <ul class="suggest" id="toList" hidden></ul>
+          </div>
+        </div>
       </div>
-    </header>
 
-    <main id="app" data-view="2d">
-      <aside id="panel">
-        <section class="block" id="trip">
-          <div class="end">
-            <span class="dot home"></span>
-            <div class="grow">
-              <div class="lbl"><span data-l="en">Start and return</span><span data-l="ja">出発・帰還地点</span></div>
-              <div id="homeName" class="val"></div>
-            </div>
-            <button id="changeStart" class="btn small ghost"></button>
-          </div>
-          <div class="end">
-            <span class="dot dest"></span>
-            <div class="grow">
-              <div class="lbl"><span data-l="en">Destination</span><span data-l="ja">目的地</span></div>
-              <div id="destName" class="val"></div>
-            </div>
-          </div>
-          <p id="hint" class="hint"></p>
-          <div class="lbl"><span data-l="en">Science targets</span><span data-l="ja">科学目標</span></div>
-          <div id="quick" class="chips"></div>
-        </section>
+      <div class="card-body" id="body">
+        <p class="hint" id="hint"></p>
+        <div id="notice"></div>
+        <div id="routes"></div>
 
-        <section class="block">
-          <h2>
-            <span data-l="en">Routes</span><span data-l="ja">ルート</span>
-            <button class="info" data-info="routes" aria-label="About the routes">i</button>
-          </h2>
-          <div id="notice"></div>
-          <div id="routes"></div>
-        </section>
-
-        <section class="block" id="settings">
-          <h2><span data-l="en">Assumptions you can change</span><span data-l="ja">変えられる前提</span></h2>
+        <details class="whatif">
+          <summary><span data-l="en">What if…</span><span data-l="ja">もしも…</span></summary>
           <label class="slider">
             <span class="top">
-              <span><span data-l="en">Oxygen in the tank at the start</span><span data-l="ja">出発時の酸素残量</span></span>
+              <span><span data-l="en">Oxygen at the start</span><span data-l="ja">出発時の酸素</span></span>
               <output id="o2Val"></output>
             </span>
             <input type="range" id="o2" min="30" max="100" step="2" value="100" />
           </label>
           <label class="slider">
             <span class="top">
-              <span><span data-l="en">Largest position error allowed</span><span data-l="ja">許容する位置誤差の上限</span></span>
+              <span><span data-l="en">Position must stay within</span><span data-l="ja">位置の誤差の上限</span></span>
               <output id="errVal"></output>
             </span>
             <input type="range" id="err" min="6" max="40" step="1" value="20" />
           </label>
           <p class="fine">
-            <span data-l="en">
-              Times, oxygen and limits are estimates from published walking models and our own assumptions, not NASA
-              values. <a href="/how.html#assumptions">See every assumption</a>.
-            </span>
-            <span data-l="ja">
-              時間・酸素・閾値は、公開されている歩行モデルと私たちの仮定から出した推定で、NASAの公式値ではありません。
-              <a href="/how.html#assumptions">すべての仮定を見る</a>
-            </span>
+            <span data-l="en">All numbers are estimates from our assumptions, not NASA values.</span>
+            <span data-l="ja">数値はすべて私たちの仮定にもとづく推定で、NASAの公式値ではありません。</span>
+            <a href="/how.html#assumptions"><span data-l="en">See assumptions</span><span data-l="ja">仮定を見る</span></a>
           </p>
-        </section>
-      </aside>
-
-      <div id="stage">
-        <div id="map2d" class="pane"></div>
-        <div id="view3d" class="pane">
-          <div id="load3d"></div>
-          <div class="hint3d">
-            <span data-l="en">Drag: move · Right-drag: rotate · Wheel: zoom · Click: destination</span>
-            <span data-l="ja">ドラッグ：移動　右ドラッグ：回転　ホイール：拡大縮小　クリック：目的地</span>
-          </div>
-        </div>
-
-        <details id="layers" class="float" open>
-          <summary><span data-l="en">Map layers</span><span data-l="ja">地図レイヤー</span></summary>
-          <div class="rows">
-            <label><input type="radio" name="overlay" value="none" /><span data-l="en">Imagery only</span><span data-l="ja">画像のみ</span></label>
-            <label>
-              <input type="radio" name="overlay" value="hematite" /><span data-l="en">Destination: hematite</span
-              ><span data-l="ja">目的地：ヘマタイト</span>
-              <button class="info" data-info="hematite" aria-label="About this layer">i</button>
-            </label>
-            <label>
-              <input type="radio" name="overlay" value="safety" /><span data-l="en">Safety</span><span data-l="ja">安全</span>
-              <button class="info" data-info="safety" aria-label="About this layer">i</button>
-            </label>
-            <label>
-              <input type="radio" name="overlay" value="loc" /><span data-l="en">Localizability</span><span data-l="ja">迷いにくさ</span>
-              <button class="info" data-info="loc" aria-label="About this layer">i</button>
-            </label>
-            <hr />
-            <label>
-              <input type="checkbox" id="showLimit" checked /><span data-l="en">Walk-back limit</span><span data-l="ja">ウォークバック限界</span>
-              <button class="info" data-info="limit" aria-label="About this layer">i</button>
-            </label>
-            <label><input type="checkbox" id="showPlaces" checked /><span data-l="en">Places</span><span data-l="ja">地点</span></label>
-            <label>
-              <input type="checkbox" id="showTraverse" /><span data-l="en">Curiosity's path</span><span data-l="ja">キュリオシティの走行ルート</span>
-            </label>
-          </div>
         </details>
-        <div id="legend" class="float"></div>
-        <div id="readout" class="float" hidden></div>
-        <div id="boot" class="boot"><span data-l="en">Loading Gale Crater…</span><span data-l="ja">ゲール・クレーターを読み込み中…</span></div>
       </div>
-    </main>
+    </aside>
+
+    <!-- ============================================================ map buttons -->
+    <div class="fabs" role="toolbar" aria-label="Map">
+      <button class="fab" id="layersBtn" aria-haspopup="true" aria-expanded="false" title="Layers">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /></svg>
+      </button>
+      <button class="fab label" id="flatBtn" title="2D / 3D">2D</button>
+      <button class="fab" id="fitBtn" title="Show the whole route">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></svg>
+      </button>
+      <button class="fab" id="northBtn" title="North up">
+        <svg id="needle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l4 9h-8z" fill="#ea4335" /><path d="M12 21l-4-9h8z" fill="currentColor" /></svg>
+      </button>
+      <div class="zoom">
+        <button class="fab" id="zoomIn" title="Zoom in">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+        </button>
+        <button class="fab" id="zoomOut" title="Zoom out">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="pop" id="layers" hidden>
+      <p class="pop-title"><span data-l="en">Map layer</span><span data-l="ja">地図レイヤー</span></p>
+      <div class="tiles" role="radiogroup">
+        <button class="tile" data-layer="none" role="radio">
+          <span class="sw terrain"></span><span data-l="en">Terrain</span><span data-l="ja">地形</span>
+        </button>
+        <button class="tile" data-layer="safety" role="radio">
+          <span class="sw safety"></span><span data-l="en">Safe ground</span><span data-l="ja">安全な地面</span>
+        </button>
+        <button class="tile" data-layer="loc" role="radio">
+          <span class="sw loc"></span><span data-l="en">Position checks</span><span data-l="ja">位置確認</span>
+        </button>
+        <button class="tile" data-layer="hematite" role="radio">
+          <span class="sw hem"></span><span data-l="en">Hematite</span><span data-l="ja">ヘマタイト</span>
+        </button>
+      </div>
+      <p class="pop-legend" id="layerLegend"></p>
+      <label class="tog"><input type="checkbox" id="showLimit" checked /><span data-l="en">Walk-back limit</span><span data-l="ja">歩いて帰れる範囲</span></label>
+      <label class="tog"><input type="checkbox" id="showTraverse" /><span data-l="en">Curiosity's path</span><span data-l="ja">キュリオシティの走行ルート</span></label>
+      <button class="txt more" id="layerInfo"><span data-l="en">About this layer</span><span data-l="ja">このレイヤーについて</span></button>
+    </div>
+
+    <!-- ============================================================ route profile -->
+    <section class="strip" id="strip" hidden aria-label="Route profile">
+      <canvas class="profile" id="profile"></canvas>
+    </section>
+
+    <footer class="status" id="status" aria-live="off"></footer>
+    <div class="boot" id="boot"><span data-l="en">Loading Gale Crater…</span><span data-l="ja">ゲール・クレーターを読み込み中…</span></div>
 
     <dialog id="info">
       <h3 id="infoTitle"></h3>
       <div id="infoBody"></div>
       <div class="foot">
         <a id="infoMore" href="/how.html"></a>
-        <form method="dialog"><button class="btn small" id="infoClose"></button></form>
+        <form method="dialog"><button class="okbtn" id="infoClose"></button></form>
       </div>
     </dialog>
 

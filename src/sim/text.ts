@@ -145,7 +145,7 @@ export const INFO: Record<string, Info> = {
     anchor: "layers",
   },
   safety: {
-    title: ["Safety layer", "安全レイヤー"],
+    title: ["Safe ground", "安全な地面"],
     body: [
       [
         "Built like the hazard check of NASA's Mars rovers (GESTALT). A flat plane is fitted to each 6 m patch of the HiRISE elevation data. Three things are measured: the tilt of the plane, how rough the ground is around it, and the biggest step.",
@@ -163,7 +163,7 @@ export const INFO: Record<string, Info> = {
     anchor: "layers",
   },
   loc: {
-    title: ["Localizability layer", "迷いにくさレイヤー"],
+    title: ["Position checks", "位置確認"],
     body: [
       [
         "Shows where a photo fix is expected to work. NASA's Perseverance rover finds its position by matching photos of the ground around it to the orbital image. We assume a suit camera does the same.",

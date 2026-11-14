@@ -1,7 +1,7 @@
 /**
- * The 3D view of the route simulator: the same faceted Gale Crater terrain as the game, seen
- * from above with map-style controls. Map layers are mixed into the terrain colour in the
- * shader, so the relief stays visible under them.
+ * The planner's map: the polygon Gale Crater terrain (the same faceted mesh as the home screen
+ * and the walk preview) with map-app controls. Layers colour whole facets: the shader looks up
+ * the layer at each triangle's centre. "2D" is the same map seen straight from above.
  */
 import * as THREE from "three";
 import { MapControls } from "three/addons/controls/MapControls.js";
@@ -9,13 +9,26 @@ import { Line2 } from "three/addons/lines/Line2.js";
 import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { LineMaterial } from "three/addons/lines/LineMaterial.js";
 import { toLonLat } from "../data/frame";
-import { World } from "../world/world";
 import { nextLocalTime } from "../nav/sun";
 import type { NavGrid } from "../plan/grid";
 import type { Profile, Route } from "../plan/planner";
-import { ROUTE_COLORS, type SceneView, type ViewEvents } from "./scene";
+import { World } from "../world/world";
 
-const LIFT = 2; // routes float this far above the ground, metres
+/** routes float this far above the ground, metres (the facets are 16 m wide) */
+const LIFT = 4;
+/** grid step of the drawn terrain (2 m samples): 16 m triangles */
+const FACET = 8;
+const ACCENT = "#ff6b2c";
+const ALT = "#c3c7cc";
+const TILT_3D = 0.95; // radians from straight down
+
+export interface ViewEvents {
+  /** the user clicked the ground at this map position */
+  onPick(easting: number, northing: number): void;
+  onHover(easting: number | null, northing: number | null): void;
+  /** the camera turned: heading in radians (0 = north up), and whether the view is 2D */
+  onCamera(heading: number, flat: boolean): void;
+}
 
 function cellTexture(): THREE.CanvasTexture {
   const cv = document.createElement("canvas");
@@ -24,12 +37,12 @@ function cellTexture(): THREE.CanvasTexture {
   t.colorSpace = THREE.SRGBColorSpace;
   t.flipY = false; // row 0 of the canvas is the northern edge
   t.magFilter = THREE.NearestFilter;
-  t.minFilter = THREE.LinearFilter;
+  t.minFilter = THREE.NearestFilter;
   t.generateMipmaps = false;
   return t;
 }
 
-function iconSprite(draw: (ctx: CanvasRenderingContext2D) => void, size: number, anchorY: number): THREE.Sprite {
+function sprite(draw: (c: CanvasRenderingContext2D) => void, size: number, anchorY = 0.5): THREE.Sprite {
   const cv = document.createElement("canvas");
   cv.width = cv.height = 64;
   draw(cv.getContext("2d")!);
@@ -42,53 +55,57 @@ function iconSprite(draw: (ctx: CanvasRenderingContext2D) => void, size: number,
   return s;
 }
 
-const drawHome = (c: CanvasRenderingContext2D) => {
-  c.fillStyle = "#0d2a33";
-  c.strokeStyle = "#7fe3ff";
-  c.lineWidth = 5;
+/** start: a blue dot with a white ring, like "you are here" in a map app */
+const drawStart = (c: CanvasRenderingContext2D) => {
+  c.fillStyle = "rgba(138, 180, 248, 0.25)";
   c.beginPath();
-  c.arc(32, 32, 27, 0, Math.PI * 2);
+  c.arc(32, 32, 30, 0, Math.PI * 2);
   c.fill();
-  c.stroke();
-  c.lineWidth = 4.5;
-  c.lineJoin = c.lineCap = "round";
+  c.fillStyle = "#ffffff";
   c.beginPath();
-  c.moveTo(17, 33);
-  c.lineTo(32, 19);
-  c.lineTo(47, 33);
-  c.moveTo(22, 30);
-  c.lineTo(22, 45);
-  c.lineTo(42, 45);
-  c.lineTo(42, 30);
-  c.stroke();
+  c.arc(32, 32, 17, 0, Math.PI * 2);
+  c.fill();
+  c.fillStyle = "#4285f4";
+  c.beginPath();
+  c.arc(32, 32, 12, 0, Math.PI * 2);
+  c.fill();
 };
-const drawDest = (c: CanvasRenderingContext2D) => {
-  c.fillStyle = "#ffe14d";
-  c.strokeStyle = "#3a2600";
-  c.lineWidth = 3.5;
+/** destination: a pin */
+const drawPin = (c: CanvasRenderingContext2D) => {
+  c.fillStyle = ACCENT;
+  c.strokeStyle = "#5a1a03";
+  c.lineWidth = 2.5;
   c.beginPath();
   c.moveTo(32, 62);
-  c.bezierCurveTo(32, 62, 52, 40, 52, 24);
-  c.arc(32, 24, 20, 0, Math.PI, true);
-  c.bezierCurveTo(12, 40, 32, 62, 32, 62);
+  c.bezierCurveTo(30, 52, 12, 40, 12, 24);
+  c.arc(32, 24, 20, Math.PI, 0);
+  c.bezierCurveTo(52, 40, 34, 52, 32, 62);
   c.fill();
   c.stroke();
-  c.fillStyle = "#3a2600";
+  c.fillStyle = "#5a1a03";
   c.beginPath();
-  c.arc(32, 24, 7.5, 0, Math.PI * 2);
+  c.arc(32, 24, 7, 0, Math.PI * 2);
   c.fill();
 };
-const drawDot = (fill: string) => (c: CanvasRenderingContext2D) => {
-  c.fillStyle = fill;
-  c.strokeStyle = "#1a0f0a";
-  c.lineWidth = 7;
+const drawCheck = (c: CanvasRenderingContext2D) => {
+  c.fillStyle = "#ffffff";
+  c.strokeStyle = "#202124";
+  c.lineWidth = 8;
   c.beginPath();
-  c.arc(32, 32, 20, 0, Math.PI * 2);
-  c.fill();
+  c.arc(32, 32, 18, 0, Math.PI * 2);
   c.stroke();
+  c.fill();
+};
+const drawStop = (c: CanvasRenderingContext2D) => {
+  c.fillStyle = "#202124";
+  c.fillRect(14, 14, 36, 36);
+  c.fillStyle = "#ffd166";
+  c.fillRect(20, 20, 24, 24);
 };
 
-export class View3D implements SceneView {
+const ease = (t: number) => 1 - (1 - t) ** 3;
+
+export class View3D {
   private renderer: THREE.WebGLRenderer;
   private camera: THREE.PerspectiveCamera;
   private controls: MapControls;
@@ -108,10 +125,13 @@ export class View3D implements SceneView {
   private el: HTMLElement;
   private world: World;
   private grid: NavGrid;
+  private ev: ViewEvents;
+  private flat = false;
+  private tween: { t0: number; pos0: THREE.Vector3; tgt0: THREE.Vector3; pos1: THREE.Vector3; tgt1: THREE.Vector3 } | null = null;
 
-  static async create(el: HTMLElement, grid: NavGrid, ev: ViewEvents, onProgress: (msg: string) => void): Promise<View3D> {
+  static async create(el: HTMLElement, grid: NavGrid, ev: ViewEvents): Promise<View3D> {
     const low = matchMedia("(pointer: coarse)").matches;
-    const world = await World.load(onProgress, low);
+    const world = await World.load(() => {}, low, FACET);
     return new View3D(el, world, grid, ev, low);
   }
 
@@ -119,13 +139,13 @@ export class View3D implements SceneView {
     this.el = el;
     this.world = world;
     this.grid = grid;
+    this.ev = ev;
     const renderer = (this.renderer = new THREE.WebGLRenderer({ antialias: !low, logarithmicDepthBuffer: true }));
     renderer.setPixelRatio(Math.min(devicePixelRatio, low ? 1.5 : 2));
     el.appendChild(renderer.domElement);
-    this.camera = new THREE.PerspectiveCamera(45, 1, 2, 400000);
-    this.camera.position.set(-1100, 1350, -3700);
+    this.camera = new THREE.PerspectiveCamera(40, 1, 2, 400000);
 
-    // mix the layer and the walk-back shading into the terrain colour, by map position
+    // layers: look up the layer at the triangle's centre, so each facet gets one colour
     const play = world.meta.frame.play;
     const f = world.frame;
     this.uniforms.uBounds.value.set(f.toWorldX(play.west), f.toWorldZ(play.north), play.east - play.west, play.north - play.south);
@@ -133,11 +153,8 @@ export class View3D implements SceneView {
     mat.onBeforeCompile = (sh) => {
       Object.assign(sh.uniforms, this.uniforms);
       sh.vertexShader = sh.vertexShader
-        .replace("#include <common>", "#include <common>\nuniform vec4 uBounds;\nvarying vec2 vCell;")
-        .replace(
-          "#include <begin_vertex>",
-          "#include <begin_vertex>\nvec4 mwPos = modelMatrix * vec4(transformed, 1.0);\nvCell = (mwPos.xz - uBounds.xy) / uBounds.zw;",
-        );
+        .replace("#include <common>", "#include <common>\nattribute vec2 center;\nuniform vec4 uBounds;\nvarying vec2 vCell;")
+        .replace("#include <begin_vertex>", "#include <begin_vertex>\nvCell = (center - uBounds.xy) / uBounds.zw;");
       sh.fragmentShader = sh.fragmentShader
         .replace(
           "#include <common>",
@@ -147,7 +164,7 @@ export class View3D implements SceneView {
           "#include <color_fragment>",
           `#include <color_fragment>
           if (vCell.x >= 0.0 && vCell.x <= 1.0 && vCell.y >= 0.0 && vCell.y <= 1.0) {
-            if (uOverlayOn > 0.5) { vec4 o = texture2D(uOverlay, vCell); diffuseColor.rgb = mix(diffuseColor.rgb, o.rgb, o.a * 0.8); }
+            if (uOverlayOn > 0.5) { vec4 o = texture2D(uOverlay, vCell); diffuseColor.rgb = mix(diffuseColor.rgb, o.rgb, o.a); }
             if (uLimitOn > 0.5) { vec4 m = texture2D(uLimit, vCell); diffuseColor.rgb = mix(diffuseColor.rgb, m.rgb, m.a); }
           }`,
         );
@@ -158,9 +175,9 @@ export class View3D implements SceneView {
     world.scene.add(this.routes, this.ends, this.places, this.traverse);
 
     for (const p of world.positions.places) {
-      if (p.kind !== "stop" && p.kind !== "camp") continue;
-      const s = iconSprite(drawDot("#ffe14d"), 0.018, 0.5);
-      s.position.copy(world.worldPos(p.easting, p.northing, 3));
+      if (p.kind !== "stop") continue;
+      const s = sprite(drawStop, 0.024);
+      s.position.copy(world.worldPos(p.easting, p.northing, LIFT));
       this.places.add(s);
     }
     const fb = world.meta.frame.fetch;
@@ -168,24 +185,31 @@ export class View3D implements SceneView {
     if (path.length > 1) {
       this.traverse.add(this.line(path.map((w) => world.worldPos(w[1], w[2], LIFT)), "#ffffff", 1.5, { opacity: 0.7, dashed: true }));
     }
+    this.traverse.visible = false;
 
     const base = world.place("base");
     this.utc = nextLocalTime(Date.UTC(2041, 0, 1), toLonLat(base.easting, base.northing).lon, 14);
 
     const controls = (this.controls = new MapControls(this.camera, renderer.domElement));
-    controls.target.copy(world.worldPos(base.easting + 700, base.northing - 1900, 0));
     controls.enableDamping = true;
     controls.dampingFactor = 0.14;
-    controls.maxPolarAngle = 1.46;
+    controls.maxPolarAngle = 1.35;
     controls.minDistance = 80;
     controls.maxDistance = 11000;
     controls.zoomToCursor = true;
     controls.addEventListener("change", () => this.request());
+    // start north-up over the middle of the map
+    const c = world.worldPos(base.easting + 600, base.northing - 1300, 0);
+    controls.target.copy(c);
+    this.camera.position.copy(this.offset(c, 3600, TILT_3D, 0));
 
     // a click that is not a drag picks the ground under the pointer
     let down: { x: number; y: number } | null = null;
     const dom = renderer.domElement;
-    dom.addEventListener("pointerdown", (e) => (down = e.button === 0 ? { x: e.clientX, y: e.clientY } : null));
+    dom.addEventListener("pointerdown", (e) => {
+      down = e.button === 0 ? { x: e.clientX, y: e.clientY } : null;
+      this.tween = null;
+    });
     dom.addEventListener("pointerup", (e) => {
       if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 6) {
         const hit = this.pick(e.clientX, e.clientY);
@@ -207,6 +231,75 @@ export class View3D implements SceneView {
     this.resize();
   }
 
+  // ------------------------------------------------------------ camera
+  /** Camera position at `dist` from target, tilted `tilt` from straight down, heading `heading` (0 = north up). */
+  private offset(target: THREE.Vector3, dist: number, tilt: number, heading: number): THREE.Vector3 {
+    const t = Math.max(tilt, 0.0005);
+    return new THREE.Vector3(
+      target.x - Math.sin(heading) * Math.sin(t) * dist,
+      target.y + Math.cos(t) * dist,
+      target.z + Math.cos(heading) * Math.sin(t) * dist,
+    );
+  }
+
+  private heading(): number {
+    const d = new THREE.Vector3().subVectors(this.camera.position, this.controls.target);
+    return Math.atan2(-d.x, d.z);
+  }
+
+  private flyTo(target: THREE.Vector3, dist: number, tilt: number, heading: number): void {
+    this.tween = {
+      t0: performance.now(),
+      pos0: this.camera.position.clone(),
+      tgt0: this.controls.target.clone(),
+      pos1: this.offset(target, dist, tilt, heading),
+      tgt1: target.clone(),
+    };
+    this.request();
+  }
+
+  /** Frame a set of cells (a route) so all of it is in view. */
+  fitCells(cells: number[], padding = 1.35): void {
+    if (!cells.length) return;
+    const g = this.grid;
+    let w = Infinity;
+    let e = -Infinity;
+    let s = Infinity;
+    let n = -Infinity;
+    for (const c of cells) {
+      w = Math.min(w, g.east(c));
+      e = Math.max(e, g.east(c));
+      s = Math.min(s, g.northOf(c));
+      n = Math.max(n, g.northOf(c));
+    }
+    const size = Math.max(e - w, (n - s) * this.camera.aspect, 300) * padding;
+    const dist = size / 2 / Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2)) / Math.max(this.camera.aspect, 1);
+    const target = this.world.worldPos((w + e) / 2, (s + n) / 2, 0);
+    this.flyTo(target, Math.min(dist * 1.15, this.controls.maxDistance), this.flat ? 0 : TILT_3D, this.flat ? 0 : this.heading());
+  }
+
+  /** Straight from above (true) or tilted (false). */
+  setFlat(flat: boolean): void {
+    this.flat = flat;
+    this.controls.enableRotate = !flat;
+    this.controls.maxPolarAngle = flat ? 0.0005 : 1.35;
+    const dist = this.camera.position.distanceTo(this.controls.target);
+    this.flyTo(this.controls.target.clone(), dist, flat ? 0 : TILT_3D, flat ? 0 : this.heading());
+  }
+
+  /** Turn so north is up. */
+  northUp(): void {
+    const dist = this.camera.position.distanceTo(this.controls.target);
+    const tilt = this.flat ? 0 : this.controls.getPolarAngle();
+    this.flyTo(this.controls.target.clone(), dist, tilt, 0);
+  }
+
+  zoom(factor: number): void {
+    const dist = THREE.MathUtils.clamp(this.camera.position.distanceTo(this.controls.target) * factor, this.controls.minDistance, this.controls.maxDistance);
+    this.flyTo(this.controls.target.clone(), dist, this.flat ? 0 : this.controls.getPolarAngle(), this.flat ? this.heading() : this.heading());
+  }
+
+  // ------------------------------------------------------------ picking
   /** Map position of the ground under a screen point, by walking along the view ray. */
   private pick(clientX: number, clientY: number): [number, number] | null {
     const r = this.renderer.domElement.getBoundingClientRect();
@@ -242,7 +335,8 @@ export class View3D implements SceneView {
     return null;
   }
 
-  private line(points: THREE.Vector3[], color: string, width: number, o: { opacity?: number; dashed?: boolean; xray?: boolean } = {}): Line2 {
+  // ------------------------------------------------------------ drawing helpers
+  private line(points: THREE.Vector3[], color: string, width: number, o: { opacity?: number; dashed?: boolean; xray?: boolean; order?: number } = {}): Line2 {
     const flat = new Float32Array(points.length * 3);
     points.forEach((p, i) => p.toArray(flat, i * 3));
     const geo = new LineGeometry();
@@ -260,7 +354,7 @@ export class View3D implements SceneView {
     });
     const l = new Line2(geo, mat);
     if (o.dashed) l.computeLineDistances();
-    l.renderOrder = o.xray ? 4 : 5;
+    l.renderOrder = o.order ?? (o.xray ? 4 : 5);
     return l;
   }
 
@@ -301,6 +395,7 @@ export class View3D implements SceneView {
     this.request();
   }
 
+  // ------------------------------------------------------------ content
   setOverlay(cv: HTMLCanvasElement | null): void {
     this.setTexture(this.uniforms.uOverlay, this.uniforms.uOverlayOn, cv);
   }
@@ -309,21 +404,22 @@ export class View3D implements SceneView {
     this.setTexture(this.uniforms.uLimit, this.uniforms.uLimitOn, cv);
   }
 
+  /** Routes like a map app: the selected one in the accent colour with a dark casing, the others grey. */
   setRoutes(routes: Route[], selected: Profile | null, back: number[]): void {
     this.clear(this.routes);
     const sel = routes.find((r) => r.profile === selected);
-    if (sel && back.length > 1) this.routes.add(this.line(this.pathPoints(back), "#ffffff", 2, { opacity: 0.75, dashed: true }));
     for (const r of routes) {
       if (r === sel) continue;
-      this.routes.add(this.line(this.pathPoints(r.cells), ROUTE_COLORS[r.profile], 2.5, { opacity: 0.9 }));
+      this.routes.add(this.line(this.pathPoints(r.cells), ALT, 3, { opacity: 0.75 }));
     }
     if (sel) {
+      if (back.length > 1) this.routes.add(this.line(this.pathPoints(back), "#ffffff", 2, { opacity: 0.7, dashed: true }));
       const pts = this.pathPoints(sel.cells);
-      // a faint copy that shows through hills, then the route itself
-      this.routes.add(this.line(pts, ROUTE_COLORS[sel.profile], 3, { opacity: 0.28, xray: true }));
-      this.routes.add(this.line(pts, ROUTE_COLORS[sel.profile], 5));
+      this.routes.add(this.line(pts, ACCENT, 3, { opacity: 0.3, xray: true }));
+      this.routes.add(this.line(pts, "#3a1204", 8, { order: 6 }));
+      this.routes.add(this.line(pts, ACCENT, 5, { order: 7 }));
       for (const i of sel.photos) {
-        const s = iconSprite(drawDot("#ffffff"), 0.013, 0.5);
+        const s = sprite(drawCheck, 0.014);
         s.position.copy(this.world.worldPos(this.grid.east(sel.cells[i]), this.grid.northOf(sel.cells[i]), LIFT));
         this.routes.add(s);
       }
@@ -337,8 +433,8 @@ export class View3D implements SceneView {
       s.position.copy(this.world.worldPos(this.grid.east(cell), this.grid.northOf(cell), LIFT));
       this.ends.add(s);
     };
-    if (home >= 0) at(home, iconSprite(drawHome, 0.04, 0.5));
-    if (dest >= 0) at(dest, iconSprite(drawDest, 0.05, 0.03));
+    if (home >= 0) at(home, sprite(drawStart, 0.034));
+    if (dest >= 0) at(dest, sprite(drawPin, 0.05, 0.03));
     this.request();
   }
 
@@ -369,6 +465,15 @@ export class View3D implements SceneView {
 
   private draw(): void {
     if (!this.el.clientWidth) return;
+    let busy = false;
+    if (this.tween) {
+      const k = Math.min(1, (performance.now() - this.tween.t0) / 700);
+      const e = ease(k);
+      this.camera.position.lerpVectors(this.tween.pos0, this.tween.pos1, e);
+      this.controls.target.lerpVectors(this.tween.tgt0, this.tween.tgt1, e);
+      if (k >= 1) this.tween = null;
+      busy = true;
+    }
     const moving = this.controls.update();
     // stay above the ground
     const cam = this.camera.position;
@@ -377,6 +482,7 @@ export class View3D implements SceneView {
     if (!Number.isNaN(g)) cam.y = Math.max(cam.y, f.toWorldY(g) + 12);
     this.world.setSky(this.utc, f.toEasting(cam.x), f.toNorthing(cam.z), 0, this.camera);
     this.renderer.render(this.world.scene, this.camera);
-    if (moving) this.request();
+    this.ev.onCamera(this.heading(), this.flat);
+    if (moving || busy) this.request();
   }
 }
