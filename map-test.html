@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Marswalk — map layer check</title>
+    <link rel="stylesheet" href="/src/test/test.css" />
+    <style>
+      #map {
+        position: fixed;
+        inset: 0;
+        background: #1a0f0a;
+      }
+      #bar {
+        position: fixed;
+        left: 8px;
+        bottom: 28px;
+        z-index: 1000;
+        padding: 6px 10px;
+        background: rgba(26, 15, 10, 0.86);
+        border-radius: 6px;
+      }
+      .leaflet-control-layers {
+        color: #222;
+      }
+      .leaflet-tooltip.place {
+        background: rgba(26, 15, 10, 0.8);
+        border: none;
+        color: #fff;
+        box-shadow: none;
+      }
+      .leaflet-tooltip.place::before {
+        display: none;
+      }
+    </style>
+  </head>
+  <body class="fullscreen">
+    <div id="map"></div>
+    <div id="bar"><a href="/">← back</a> &nbsp; <span id="readout">move the mouse over the map</span></div>
+    <script type="module" src="/src/test/map-test.ts"></script>
+  </body>
+</html>

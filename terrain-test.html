@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Marswalk — terrain data check</title>
+    <link rel="stylesheet" href="/src/test/test.css" />
+  </head>
+  <body class="fullscreen">
+    <div class="panel">
+      <a href="/">← back</a>
+      <h1>Terrain data check</h1>
+      <p class="muted">Gale Crater, foot of Mount Sharp. Real elevation and imagery. Not the game.</p>
+      <label>View
+        <select id="view"><option value="">Overview (drag to orbit)</option></select>
+      </label>
+      <label>Colour the ground by
+        <select id="layer">
+          <option value="color">colour imagery — HiRISE</option>
+          <option value="ortho">grey imagery — HiRISE</option>
+        </select>
+      </label>
+      <label>Triangle size
+        <select id="detail">
+          <option value="2">4 m (heavy)</option>
+          <option value="4" selected>8 m</option>
+          <option value="8">16 m (phone)</option>
+          <option value="16">32 m</option>
+        </select>
+      </label>
+      <label class="row"><input type="checkbox" id="backdrop" checked /> Mount Sharp + crater rim backdrop</label>
+      <label class="row"><input type="checkbox" id="markers" checked /> Places, Curiosity's path (white), EVA route (yellow)</label>
+      <label class="row"><input type="checkbox" id="haze" checked /> Haze</label>
+      <label class="row"><input type="checkbox" id="curvature" checked /> Planet curvature</label>
+      <p id="layerInfo" class="muted"></p>
+      <h2>Checks</h2>
+      <pre id="checks"></pre>
+      <h2>Clicked point</h2>
+      <pre id="readout">click the ground</pre>
+      <p id="status" class="muted">starting…</p>
+      <p id="fps" class="muted"></p>
+    </div>
+    <script type="module" src="/src/test/terrain-test.ts"></script>
+  </body>
+</html>
