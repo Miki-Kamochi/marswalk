@@ -210,8 +210,8 @@ export const INFO: Record<string, Info> = {
         "4つのルートの違いは、何を小さくするかだけです。距離、酸素、位置の誤差、そして酸素と誤差の両方です。",
       ],
       [
-        "While walking, step counting tracks the position but drifts by about 3 % of the distance. White dots are the places where a photo fix resets that error.",
-        "歩いている間は歩数で位置を追いますが、歩いた距離の約3%ずつずれていきます。白い点は、写真を撮ってそのずれをリセットする場所です。",
+        "While walking, step counting tracks the position but drifts by about 3 % of the distance. The small diamonds are the places where a photo fix resets that error.",
+        "歩いている間は歩数で位置を追いますが、歩いた距離の約3%ずつずれていきます。小さなひし形は、写真を撮ってそのずれをリセットする場所です。",
       ],
     ],
     anchor: "routes",

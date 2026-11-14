@@ -10,6 +10,7 @@ import { cellElevations, decodeNav, NavGrid } from "../plan/grid";
 import { Planner, type Profile, type Route } from "../plan/planner";
 import { initLang, tr } from "../site/lang";
 import { attachPlaceSearch, searchable } from "../site/placeSearch";
+import { getProject, newProjectId, saveProject, type Project } from "../site/projects";
 import { HEMATITE, makeCanvas, NO_GO, paintLimit, paintOverlay, SAFETY, css, locStops, type OverlayId } from "./overlays";
 import { drawProfile } from "./profile";
 import { INFO, limiterName, placeName, profileName, t } from "./text";
@@ -79,6 +80,41 @@ async function main() {
   let token = 0;
   let view: View3D | null = null;
 
+  // ---------------------------------------------------------------- saved plan
+  /** the plan being edited; created on the first destination, then saved on every change */
+  let project: Project | null = getProject(params.get("project") ?? "") ?? null;
+  let restoring = false;
+  const nameInput = $<HTMLInputElement>("planName");
+  const defaultName = () =>
+    state.dest >= 0 ? tr(`To ${state.destName || nameOf(state.dest)}`, `${state.destName || nameOf(state.dest)}へ`) : tr("New plan", "新しい計画");
+  function renderName() {
+    if (document.activeElement !== nameInput) nameInput.value = project?.custom ? project.name : defaultName();
+  }
+  function save(force = false) {
+    if (restoring) return;
+    if (!project) {
+      if (state.target < 0 && !force) return;
+      const now = Date.now();
+      project = { id: newProjectId(), name: "", home: -1, target: -1, destName: "", selected: "mix", o2: 1, errorLimit: cfg.errorLimit, created: now, updated: now };
+      history.replaceState(null, "", `?project=${project.id}`);
+    }
+    const sel = state.routes.find((r) => r.profile === state.selected);
+    Object.assign(project, {
+      home: state.home,
+      target: state.target >= 0 ? state.target : -1,
+      destName: state.destName,
+      destE: state.dest >= 0 ? grid.east(state.dest) : undefined,
+      destN: state.dest >= 0 ? grid.northOf(state.dest) : undefined,
+      selected: state.selected,
+      o2: state.o2,
+      errorLimit: cfg.errorLimit,
+      summary: sel ? { profile: sel.profile, duration: sel.stats.duration, distance: sel.stats.distance, ok: sel.stats.errorOk && sel.stats.o2Ok } : undefined,
+    });
+    if (!project.custom) project.name = defaultName();
+    saveProject(project);
+    renderName();
+  }
+
   // ---------------------------------------------------------------- map
   const overlayCv = makeCanvas(grid);
   const limitCv = makeCanvas(grid);
@@ -125,7 +161,10 @@ async function main() {
     state.busy = state.dest >= 0 && !state.problem;
     renderAll();
     pushRoutes();
-    if (!state.busy) return;
+    if (!state.busy) {
+      save();
+      return;
+    }
     for (const p of ORDER) {
       await breathe();
       if (my !== token) return;
@@ -137,6 +176,7 @@ async function main() {
       if (p === state.selected && fitAfter) fit();
     }
     renderStrip();
+    save();
   }
 
   async function setDest(cell: number, name = "") {
@@ -158,6 +198,7 @@ async function main() {
     $<HTMLInputElement>("to").value = "";
     renderAll();
     pushRoutes();
+    save();
   }
 
   async function setHome(cell: number) {
@@ -185,6 +226,7 @@ async function main() {
     renderRoutes();
     renderStrip();
     pushRoutes();
+    save();
   }
 
   // ---------------------------------------------------------------- names
@@ -208,6 +250,7 @@ async function main() {
 
   // ---------------------------------------------------------------- card
   function renderTop() {
+    renderName();
     $("homeName").textContent = state.home >= 0 ? nameOf(state.home) : "…";
     $("changeStart").textContent = state.pickStart ? t("cancel") : t("change");
     const to = $<HTMLInputElement>("to");
@@ -395,6 +438,17 @@ async function main() {
     renderTop();
   });
   $("clearTo").addEventListener("click", clearDest);
+  nameInput.addEventListener("change", () => {
+    const v = nameInput.value.trim();
+    save(true);
+    project!.custom = v !== "";
+    project!.name = v || defaultName();
+    saveProject(project!);
+    renderName();
+  });
+  nameInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") nameInput.blur();
+  });
   attachPlaceSearch($<HTMLInputElement>("to"), $("toList"), searchable(positions.places), (p) => void setDest(cellOfPlace(p), placeName(p.id, p.name)));
   $("to").addEventListener("input", () => {
     $("clearTo").hidden = !$<HTMLInputElement>("to").value && state.dest < 0;
@@ -450,6 +504,7 @@ async function main() {
       state.routes = state.routes.map((r) => planner.evaluate(r.cells, r.profile, state.o2));
       pushLimit();
       renderRoutes();
+      save();
     });
   });
   const err = $<HTMLInputElement>("err");
@@ -501,10 +556,27 @@ async function main() {
   }
   $("boot").remove();
   pushOverlay();
-  await setHome(baseCell);
-  // the home screen can ask for a destination: sim.html?dest=<place id>
-  const wanted = positions.places.find((p) => p.id === params.get("dest"));
-  if (wanted) await setDest(cellOfPlace(wanted), placeName(wanted.id, wanted.name));
+  if (project) {
+    // reopen a saved plan with its settings
+    const p = project;
+    restoring = true;
+    cfg.errorLimit = p.errorLimit;
+    cfg.photoTrigger = Math.min(DEFAULTS.photoTrigger, cfg.errorLimit / 2);
+    err.value = String(p.errorLimit);
+    state.o2 = p.o2;
+    $<HTMLInputElement>("o2").value = String(Math.round(p.o2 * 100));
+    state.selected = p.selected;
+    renderSliders();
+    await setHome(p.home >= 0 ? p.home : baseCell);
+    restoring = false;
+    if (p.target >= 0) await setDest(p.target, p.destName);
+  } else {
+    if (params.has("project")) history.replaceState(null, "", location.pathname);
+    await setHome(baseCell);
+    // the home screen can ask for a destination: sim.html?dest=<place id>
+    const wanted = positions.places.find((p) => p.id === params.get("dest"));
+    if (wanted) await setDest(cellOfPlace(wanted), placeName(wanted.id, wanted.name));
+  }
   if (params.has("debug")) Object.assign(window, { __sim: { state, grid, planner, cfg, setDest, setHome, select, view } });
 }
 

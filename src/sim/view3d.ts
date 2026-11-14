@@ -19,7 +19,7 @@ const LIFT = 4;
 /** grid step of the drawn terrain (2 m samples): 16 m triangles */
 const FACET = 8;
 const ACCENT = "#ff6b2c";
-const ALT = "#c3c7cc";
+const ALT = "#cdbfae";
 const TILT_3D = 0.95; // radians from straight down
 
 export interface ViewEvents {
@@ -55,49 +55,56 @@ function sprite(draw: (c: CanvasRenderingContext2D) => void, size: number, ancho
   return s;
 }
 
-/** start: a blue dot with a white ring, like "you are here" in a map app */
+/** start: the habitat, a square in the base colour */
 const drawStart = (c: CanvasRenderingContext2D) => {
-  c.fillStyle = "rgba(138, 180, 248, 0.25)";
-  c.beginPath();
-  c.arc(32, 32, 30, 0, Math.PI * 2);
-  c.fill();
-  c.fillStyle = "#ffffff";
-  c.beginPath();
-  c.arc(32, 32, 17, 0, Math.PI * 2);
-  c.fill();
-  c.fillStyle = "#4285f4";
-  c.beginPath();
-  c.arc(32, 32, 12, 0, Math.PI * 2);
-  c.fill();
+  c.fillStyle = "#14110f";
+  c.fillRect(10, 10, 44, 44);
+  c.fillStyle = "#7cc8ff";
+  c.fillRect(17, 17, 30, 30);
+  c.fillStyle = "#14110f";
+  c.fillRect(27, 27, 10, 10);
 };
-/** destination: a pin */
+/** destination: a survey flag on a stake (anchored at the foot of the stake) */
 const drawPin = (c: CanvasRenderingContext2D) => {
-  c.fillStyle = ACCENT;
-  c.strokeStyle = "#5a1a03";
-  c.lineWidth = 2.5;
+  c.fillStyle = "#14110f";
+  c.fillRect(27, 4, 8, 60);
   c.beginPath();
-  c.moveTo(32, 62);
-  c.bezierCurveTo(30, 52, 12, 40, 12, 24);
-  c.arc(32, 24, 20, Math.PI, 0);
-  c.bezierCurveTo(52, 40, 34, 52, 32, 62);
+  c.moveTo(31, 2);
+  c.lineTo(60, 14);
+  c.lineTo(31, 28);
+  c.closePath();
   c.fill();
-  c.stroke();
-  c.fillStyle = "#5a1a03";
+  c.fillStyle = "#ece4da";
+  c.fillRect(29, 6, 4, 58);
+  c.fillStyle = ACCENT;
   c.beginPath();
-  c.arc(32, 24, 7, 0, Math.PI * 2);
+  c.moveTo(33, 7);
+  c.lineTo(53, 15);
+  c.lineTo(33, 23);
+  c.closePath();
   c.fill();
 };
+/** photo check: a small diamond */
 const drawCheck = (c: CanvasRenderingContext2D) => {
-  c.fillStyle = "#ffffff";
-  c.strokeStyle = "#202124";
-  c.lineWidth = 8;
+  c.fillStyle = "#14110f";
   c.beginPath();
-  c.arc(32, 32, 18, 0, Math.PI * 2);
-  c.stroke();
+  c.moveTo(32, 6);
+  c.lineTo(58, 32);
+  c.lineTo(32, 58);
+  c.lineTo(6, 32);
+  c.closePath();
+  c.fill();
+  c.fillStyle = "#ece4da";
+  c.beginPath();
+  c.moveTo(32, 16);
+  c.lineTo(48, 32);
+  c.lineTo(32, 48);
+  c.lineTo(16, 32);
+  c.closePath();
   c.fill();
 };
 const drawStop = (c: CanvasRenderingContext2D) => {
-  c.fillStyle = "#202124";
+  c.fillStyle = "#14110f";
   c.fillRect(14, 14, 36, 36);
   c.fillStyle = "#ffd166";
   c.fillRect(20, 20, 24, 24);
@@ -433,8 +440,8 @@ export class View3D {
       s.position.copy(this.world.worldPos(this.grid.east(cell), this.grid.northOf(cell), LIFT));
       this.ends.add(s);
     };
-    if (home >= 0) at(home, sprite(drawStart, 0.034));
-    if (dest >= 0) at(dest, sprite(drawPin, 0.05, 0.03));
+    if (home >= 0) at(home, sprite(drawStart, 0.028));
+    if (dest >= 0) at(dest, sprite(drawPin, 0.05, 0.0));
     this.request();
   }
 

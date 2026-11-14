@@ -6,12 +6,12 @@ How Marswalk should look and behave.
 
 Marswalk is **a planning display inside the crew's habitat**. It is one of the formats the challenge suggests. The crew uses it to prepare an EVA (spacewalk on foot) at Gale Crater. It is a working tool for astronauts, **not a game**. Every screen should look like it belongs on a mission console: calm and operational, with real data and one clear next action.
 
-- **First screen: home.** The title and menu sit over the real 3D Gale Crater terrain. Each item flies the camera to its own view, and the planner's view shows the planned walk. The wording is about crew tasks, not game modes.
-- **Look of the tool screens (decided 2026-11-15):** a dark map app in the style of Google Earth and Maps, with neutral greys, rounded cards, a search box, and round icon buttons. The terrain is drawn as polygons (16 m facets), the same style as the walk preview. Map layers colour whole facets.
-- **Home:** search-first. "Where do you want to walk today?", a place search, and the three science targets as chips.
+- **Look of the tool screens (decided 2026-11-15, revised the same day):** our own planning-console look, deliberately **not** a copy of Google Maps or Earth (no blue "you are here" dot, teardrop pin, round floating buttons or pill search). Warm near-black panels, hairline borders, small 4 px corners, mono figures, one orange accent. The terrain is drawn as polygons (16 m facets), the same style as the walk preview. Map layers colour whole facets. Markers are survey-style: a square habitat, a flag on a stake for the goal, diamonds for photo checks.
+- **Home:** "MARSWALK" in the centre, one line of purpose, a place search next to a **New plan** button, and the plans saved in this browser (continue or delete). With no plans yet it suggests the three science targets.
+- **Plans (projects):** every planner session is a plan, saved automatically in the browser (localStorage, no backend) once a destination is chosen. The name follows the destination until the user renames it in the panel header. `sim.html?project=<id>` reopens one.
 - **Planner:** choose a destination and compare routes. This is the core tool. It works like map directions:
-  - **Card (left):** From / To, then the four route options. The recommended route comes first, and each option has a one-line reason. The selected option opens its safety checks and oxygen bar.
-  - **Map buttons (right):** layers, 2D (straight down) / 3D, fit route, north-up, zoom.
+  - **Panel (docked left):** plan name, Start / Goal, then the four route options. The recommended route comes first, and each option has a one-line reason. The selected option opens its safety checks and oxygen bar.
+  - **Tool rail (top right, one joined column):** layers, 2D (straight down) / 3D, fit route, north-up, zoom.
   - **Bottom:** an elevation and position-uncertainty strip for the selected route, and a status bar with what is under the pointer.
 - **Walk preview:** the first-person view, reframed as a preview of what the ground looks like along the route (the challenge suggests point-of-view images). It must not use game wording.
 - **Conditions** come from Curiosity's REMS weather station and are shown for information only. Routes are planned from terrain, not weather.
@@ -229,23 +229,13 @@ Japanese gets the same treatment: plain words first (迷いやすさ, 位置確�
 
 ## 6. Home (first screen)
 
-Built (`index.html`).
+Built (`index.html`, `src/site/home.ts`, saved plans in `src/site/projects.ts`).
 
-- **Background:** the real Gale Crater terrain in 3D, with a slowly drifting camera that follows the pointer a little, blowing dust and light film grain.
-- **Left:** the "MARSWALK" title, a one-line purpose, and four tasks:
-  1. Plan EVA route;
-  2. Walk preview;
-  3. How it works;
-  4. Data & credits.
-
-  The selected task has an orange bar, and a short description sits below the list.
-- **Camera views:** each task flies the camera to its own view. "Plan EVA route" shows the planned routes, Base Camp and the science stops.
-- **Corners:**
-  - the site name;
-  - the language switch;
-  - what the view shows and where it is looking (position, elevation, local solar time).
-- **Keys:** ↑↓ to select, Enter to open, L to switch language.
-- **Possible additions:** the EVA-1 objectives and Curiosity's latest weather report were built on a briefing panel (commit `4ed029f`) and can be brought back in.
+- **Background:** the real Gale Crater terrain in 3D (polygon facets) with the planned walk, Base Camp and the science stops; a slowly drifting camera.
+- **Centre:** a small "GALE CRATER · MARS" line, the "MARSWALK" title, one line of purpose, then the search box and **New plan** side by side.
+- **Below:** "Your plans", newest first, each with its route type, time, distance and when it was last changed. Pointing at a plan or place flies the camera to its destination.
+- **Corners:** page links and the language switch top right; image credit and position / elevation / local solar time along the bottom.
+- The earlier cinematic menu (title + four tasks) is in git history (commit `4b3a02e`).
 
 ## 7. Learn page (today's "How it works")
 
@@ -273,7 +263,7 @@ Built (`index.html`).
 Each step ships something that works and is committed on its own.
 
 1. **Design tokens and fonts.** Rewrite `src/site/site.css` around the tokens above and add the fonts and icons. Every page picks up the new look.
-2. **Planner layout.** Done as map-app directions (see section 0). The Leaflet 2D map and the split view are removed.
+2. **Planner layout.** Done as a docked plan panel with route options (see section 0). The Leaflet 2D map and the split view are removed.
 3. **Planner flow.** Steps 1–3, the recommended route, route sentences, rule badges and the renamed words.
 4. **Overlays.** Highlight-only colouring, new route styles and pins.
 5. **Oxygen gauge, timeline and "What if…" chips.**

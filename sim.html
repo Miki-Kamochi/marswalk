@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Marswalk — Plan EVA route</title>
-    <meta name="theme-color" content="#17181a" />
+    <meta name="theme-color" content="#14110f" />
     <link rel="stylesheet" href="/src/site/site.css" />
     <link rel="stylesheet" href="/src/sim/sim.css" />
   </head>
@@ -17,7 +17,10 @@
         <a class="back" href="/" aria-label="Home">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
         </a>
-        <span class="logo"><span class="dot" aria-hidden="true"></span>MARSWALK</span>
+        <div class="title">
+          <span class="kicker">MARSWALK · <span data-l="en">PLAN</span><span data-l="ja">計画</span></span>
+          <input id="planName" type="text" maxlength="60" spellcheck="false" aria-label="Plan name" />
+        </div>
         <div class="seg" role="group" aria-label="Language">
           <button data-set-lang="en">EN</button>
           <button data-set-lang="ja">日本語</button>
@@ -26,16 +29,12 @@
 
       <div class="od">
         <div class="od-row">
-          <span class="mk start" aria-hidden="true"></span>
-          <div class="od-text">
-            <span class="od-label"><span data-l="en">From</span><span data-l="ja">出発</span></span>
-            <span id="homeName"></span>
-          </div>
+          <span class="tag"><span class="mk start" aria-hidden="true"></span><span data-l="en">START</span><span data-l="ja">出発</span></span>
+          <span id="homeName"></span>
           <button class="txt" id="changeStart"></button>
         </div>
-        <div class="od-line" aria-hidden="true"></div>
         <div class="od-row">
-          <span class="mk pin" aria-hidden="true"></span>
+          <span class="tag"><span class="mk pin" aria-hidden="true"></span><span data-l="en">GOAL</span><span data-l="ja">目的地</span></span>
           <div class="field">
             <input id="to" type="search" autocomplete="off" spellcheck="false" aria-label="Destination" aria-controls="toList" />
             <button class="clear" id="clearTo" aria-label="Clear destination" hidden>
