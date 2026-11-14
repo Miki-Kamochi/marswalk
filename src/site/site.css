@@ -633,10 +633,10 @@ header.bar {
 
 /* ---------------------------------------------------------------- glass: dark, see-through panels used everywhere */
 :root {
-  --glass: rgba(16, 13, 11, 0.88);
-  --glass-strong: rgba(16, 13, 11, 0.92);
-  /* menus that open over text (dropdowns, suggestions) */
-  --glass-menu: rgba(16, 13, 11, 0.94);
+  /* one value for every panel, button, bar and menu */
+  --glass: rgba(16, 13, 11, 0.93);
+  --glass-strong: var(--glass);
+  --glass-menu: var(--glass);
   --glass-line: rgba(236, 228, 218, 0.14);
   --glass-blur: blur(12px) saturate(1.2);
 }
