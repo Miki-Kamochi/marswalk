@@ -9,8 +9,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host",
     "typecheck": "tsc --noEmit",
-    "data:download": ".venvScriptspython scripts/download_data.py",
-    "data:process": ".venvScriptspython scripts/process_data.py && .venvScriptspython scripts/positions.py",
+    "data:download": ".venv/Scripts/python scripts/download_data.py",
+    "data:process": ".venv/Scripts/python scripts/process_data.py && .venv/Scripts/python scripts/positions.py",
     "test": "node --test \"src/**/*.test.ts\""
   },
   "dependencies": {

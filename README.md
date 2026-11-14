@@ -10,14 +10,15 @@ home. Built on real NASA data. Runs in a browser with no backend.
 
 | Page | What it is |
 |---|---|
-| `/` | Home: a faceted pixel Mars between "Ares" and "Sight", one search bar with New plan, and cards for recent plans or science targets |
+| `/` | Home: a faceted pixel Mars between "Ares" and "Sight", one search bar with New plan, and a History menu (saved plans, science targets) |
+| `/intro.html` | Introduction: why we built it (used in the presentation) |
 | `/sim.html` | **Route simulator**: pick a destination on the 2D map or in 3D, compare four routes |
 | `/how.html` | How it works: the problem, the layers, the route rules, every assumption |
 | `/game.html` | Walk preview: the earlier first-person prototype (see below), opened from the planner |
 | `/credits.html` | Data, methods and software |
 | `/dev/` | Data check pages for developers |
 
-The new pages are in English and Japanese. The original project vision is in [CLAUDE.md](CLAUDE.md);
+Every page except the walk preview is in English and Japanese. The original project vision is in [CLAUDE.md](CLAUDE.md);
 the simulator is where the idea went after that.
 
 ## How the route simulator works
@@ -147,9 +148,10 @@ npm run data:process      # writes public/data/ and re-checks all positions
 - `scripts/download_data.py`: fetches the raw data. The two big USGS mosaics are never downloaded
   whole; only our window is read over HTTP.
 - `scripts/process_data.py`: raw data to web-ready terrain, imagery and layers.
-- `scripts/home_assets.ts` then `scripts/home_images.py`: the routes drawn behind the menu
-  (`public/data/home/`, from the real planner) and the title screen's still image. Run them
-  after `nav_layers.py`.
+- `scripts/home_images.py`: the natural-colour map swatch in the planner's layer menu
+  (`public/img/home/surface.jpg`).
+- `scripts/globe.py`: the home screen's Mars globe texture (`public/img/home/mars.jpg`) from the
+  Viking MDIM 2.1 colour mosaic, read remotely.
 - `scripts/nav_layers.py`: the route planner's 6 m grid (`public/data/nav/`): tilt, roughness, step,
   sand, hematite and the localizability score. Run it after `process_data.py`; takes about 2 minutes.
 - `scripts/positions.py`: picks the base, stops and landmarks from the data and verifies each one
@@ -161,12 +163,12 @@ Datasets and credits are listed in [DATA_SOURCES.md](DATA_SOURCES.md).
 ## Layout
 
 ```
-index.html, sim.html, how.html, game.html, credits.html   the pages (Vite multi-page)
+index.html, intro.html, how.html, credits.html, sim.html, game.html   the pages (Vite multi-page)
 dev/                      data check pages
 src/data/                 frame.ts (coordinates), loader.ts (typed loaders for public/data)
 src/plan/                 route planner: config, grid, energy model, search (no browser code)
 src/sim/                  route simulator: 2D map, 3D view, panel, text in two languages
-src/site/                 shared styles, language switch, home and "how it works" scripts
+src/site/                 shared styles, top bar, language switch, home globe, saved plans, reading pages
 src/world/                the 3D Gale Crater terrain, shared by the simulator and the game
 src/game/, src/nav/       the game prototype and its navigator
 src/dev/                  scripts of the data check pages
