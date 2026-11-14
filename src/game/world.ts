@@ -15,6 +15,7 @@ import {
 } from "../data/loader";
 import { sunPosition } from "../nav/sun";
 import { buildTerrain, elevationTint, facetHeight, rasterColor } from "./terrainMesh";
+import { loadBackdrop } from './backdrop';
 
 export const HAZE = new THREE.Color(0xd4a076);
 const CLEAR_FOG = 0.00002;
@@ -87,26 +88,14 @@ export class World {
       buildTerrain(mid, frame, {
         step: 2 * k,
         color: elevationTint,
-        skip: (e, n) => inside(fetchB, e, n, 150),
+        skip: (e, n) => inside(fetchB, e, n, 150) || Math.hypot(frame.toWorldX(e), frame.toWorldZ(n)) > 7000,
         lift: -3,
         curvature: true,
         chunkCells: 96,
       }),
-      buildTerrain(far, frame, {
-        step: 2 * k,
-        color: elevationTint,
-        // leave out a MOLA cell only where the finer grid really covers all of it
-        skip: (e, n, half) => {
-          const r = half + 400;
-          for (const [de, dn] of [[0, 0], [-r, -r], [r, -r], [-r, r], [r, r], [-r, 0], [r, 0], [0, -r], [0, r]]) {
-            if (Number.isNaN(mid.sample(e + de, n + dn))) return false;
-          }
-          return true;
-        },
-        lift: -30,
-        curvature: true,
-      }),
     );
+    onProgress('Loading Mars_view.stl…');
+    w.scene.add(await loadBackdrop());
     return w;
   }
 
@@ -158,12 +147,12 @@ export class World {
     this.sunLight.position.copy(camera.position).addScaledVector(dir, 1000);
     this.sunLight.target.position.copy(camera.position);
     const day = THREE.MathUtils.clamp((s.elevation + 4) / 20, 0, 1);
-    this.sunLight.intensity = 2.6 * day * (1 - 0.9 * dust);
-    this.skyLight.intensity = (0.35 + 0.65 * day) * (1 - 0.35 * dust);
+    this.sunLight.intensity = 2.6 * day * (1 - 0.45 * dust);
+    this.skyLight.intensity = (0.65 + 0.65 * day) * (1 - 0.15 * dust);
     this.sunDisc.position.copy(camera.position).addScaledVector(dir, 5000);
     (this.sunDisc.material as THREE.SpriteMaterial).opacity = day * Math.max(0, 1 - dust * 1.6);
-    // haze: clear-day view of tens of km down to a few tens of metres in the storm
-    this.fog.density = CLEAR_FOG * Math.pow(0.045 / CLEAR_FOG, dust);
+    // Near terrain stays legible. Haze mostly obscures the distant skyline (3–5 km).
+    this.fog.density = 0.00008 + 0.0005 * dust;
     const sky = HAZE.clone().multiplyScalar(0.35 + 0.65 * day).lerp(new THREE.Color(0x8a5a36), dust * 0.75);
     (this.scene.background as THREE.Color).copy(sky);
     this.fog.color.copy(sky);
