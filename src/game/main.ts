@@ -11,6 +11,7 @@ import { Nav } from './nav';
 import { Panorama } from './panorama';
 import { EYE_HEIGHT, Player } from './player';
 import { makeSampleSite, setSampleCollected } from './props';
+import { scanFeedback } from './scan-feedback';
 import { World } from './world';
 
 const $ = (id: string) => document.getElementById(id)!;
@@ -149,9 +150,13 @@ async function main() {
       if (scanT > 3.9) scanStatus = '軌道画像・地形を照合中…';
       if (scanT > 4.5) {
         const before = { ...nav.region.current };
-        const { pin, match } = nav.scan(player, dust, missionS);
+        const { pin, match, observation, repeated } = nav.scan(player, dust, missionS);
         scanStatus = `#${pin.id} ${pin.improved ? '位置推定を更新' : '円の縮小なし'} · 照合品質 ${Math.round(match.quality * 100)}%`;
-        say(pin.improved ? `存在可能性円を半径 ${Math.ceil(pin.radius)} m に更新。` : '十分な新しい情報が得られませんでした。');
+        say(pin.improved ? `存在可能性円を半径 ${Math.ceil(pin.radius)} m に更新。` : scanFeedback({
+          sampleCount: observation.samples.length, repeated, accepted: match.accepted, improved: pin.improved,
+          coverage: match.coverage, contrast: match.contrast, clarity: match.clarity,
+          orientation: match.orientation, uniqueness: match.uniqueness, quality: match.quality,
+        }));
         scanT = -1; $('scanCapture').hidden = true;
         if (pin.improved && pin.radius <= 40) {
           fixT = 0; fixFrom = before; fixTo = { ...pin };

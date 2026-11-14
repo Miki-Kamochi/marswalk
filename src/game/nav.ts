@@ -46,11 +46,13 @@ export class Nav {
   scan(player: Player, dust: number, time: number) {
     const observation = this.observe(player, dust);
     let match = matchTerrain(observation, this.surface, this.region.current);
-    if (this.lastScan && Math.hypot(player.e - this.lastScan.e, player.n - this.lastScan.n) < 8)
-      match = { ...this.lastScan.match, accepted: false };
+    const priorScan = this.lastScan;
+    const repeated = !!priorScan && Math.hypot(player.e - priorScan.e, player.n - priorScan.n) < 8;
+    if (repeated && priorScan)
+      match = { ...priorScan.match, accepted: false };
     else this.lastScan = { e: player.e, n: player.n, match };
     this.lastMatch = match;
     const pin = this.region.record(player, match, time);
-    return { match, pin, observation };
+    return { match, pin, observation, repeated };
   }
 }
