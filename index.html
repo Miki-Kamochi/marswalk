@@ -2,92 +2,335 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Marswalk</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Marswalk — Never get lost on Mars</title>
     <meta
       name="description"
-      content="A layered map of Gale Crater that plans walks for Mars astronauts: safe, easy to locate, and always able to walk home."
+      content="A map of Gale Crater that plans walks for astronauts on Mars: safe ground, places where you can check your position, and enough oxygen to always walk home. Built on real NASA data."
     />
+    <meta name="theme-color" content="#0b0908" />
     <link rel="stylesheet" href="/src/site/site.css" />
+    <link rel="stylesheet" href="/src/site/home.css" />
   </head>
-  <body>
-    <div class="hero">
-      <div class="backdrop"></div>
-      <div class="langbar">
-        <div class="seg" role="group" aria-label="Language">
-          <button data-set-lang="en">EN</button>
-          <button data-set-lang="ja">日本語</button>
+  <body class="home">
+    <header class="site-nav" id="nav">
+      <a class="wordmark" href="/" aria-label="Marswalk home">
+        <svg class="mark" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="6.2" fill="#ff6b2c" />
+          <ellipse cx="12" cy="12" rx="11" ry="4" fill="none" stroke="#f4ede6" stroke-width="1.2" transform="rotate(-20 12 12)" />
+        </svg>
+        <span class="text">MARSWALK</span>
+      </a>
+      <nav class="links" aria-label="Main">
+        <a href="/sim.html"><span data-l="en">Planner</span><span data-l="ja">プランナー</span></a>
+        <a href="/how.html"><span data-l="en">Learn</span><span data-l="ja">仕組み</span></a>
+        <a href="/credits.html" class="hide-sm"><span data-l="en">Credits</span><span data-l="ja">クレジット</span></a>
+      </nav>
+      <div class="seg" role="group" aria-label="Language">
+        <button data-set-lang="en">EN</button>
+        <button data-set-lang="ja">日本語</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- ============================================================ hero -->
+      <section class="hero" aria-labelledby="heroTitle">
+        <canvas class="stars" aria-hidden="true"></canvas>
+        <div class="glow" aria-hidden="true"></div>
+        <svg class="orbits" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <ellipse cx="800" cy="520" rx="720" ry="190" transform="rotate(-9 800 520)" />
+          <ellipse class="warm" cx="800" cy="500" rx="560" ry="330" transform="rotate(14 800 500)" />
+        </svg>
+        <div class="moon m1" aria-hidden="true"></div>
+        <div class="moon m2" aria-hidden="true"></div>
+        <div class="planet" aria-hidden="true"></div>
+
+        <div class="hero-copy">
+          <p class="label kicker">
+            <span data-l="en">NASA Space Apps 2026 · Gale Crater, Mars</span>
+            <span data-l="ja">NASA Space Apps 2026 · 火星 ゲール・クレーター</span>
+          </p>
+          <h1 id="heroTitle">
+            <span data-l="en">Never get lost<br />on Mars.</span>
+            <span data-l="ja">火星で、<br />迷わない。</span>
+          </h1>
+          <p class="sub">
+            <span data-l="en">
+              Mars has no GPS. Marswalk plans walks that stay on safe ground, keep your position known, and always
+              leave enough oxygen to come home.
+            </span>
+            <span data-l="ja">
+              火星にはGPSがありません。Marswalkは、安全な地面を通り、自分の位置を見失わず、必ず帰れる酸素を残すルートを計画します。
+            </span>
+          </p>
+          <div class="ctas">
+            <a class="pill" href="/sim.html">
+              <span data-l="en">Plan a Marswalk</span><span data-l="ja">ルートを計画する</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+            </a>
+            <a class="pill quiet" href="#how"><span data-l="en">How it works</span><span data-l="ja">仕組みを見る</span></a>
+          </div>
+        </div>
+        <a class="scroll-cue" href="#problem" aria-label="Scroll down"><span></span></a>
+      </section>
+
+      <!-- ============================================================ problem -->
+      <section class="band" id="problem" aria-labelledby="problemTitle">
+        <div class="wrap">
+          <p class="label reveal"><span data-l="en">The problem</span><span data-l="ja">問題</span></p>
+          <h2 id="problemTitle" class="reveal">
+            <span data-l="en">On Mars, nobody can tell you where you are.</span>
+            <span data-l="ja">火星では、誰も「今どこにいるか」を教えてくれない。</span>
+          </h2>
+          <div class="stats">
+            <article class="stat reveal">
+              <div class="big num">0</div>
+              <h3><span data-l="en">GPS satellites</span><span data-l="ja">GPS衛星の数</span></h3>
+              <p>
+                <span data-l="en">No GPS, and no magnetic field, so a compass doesn't work either.</span>
+                <span data-l="ja">GPSはなく、磁場もないので、方位磁針も使えません。</span>
+              </p>
+            </article>
+            <article class="stat reveal">
+              <div class="big num">3–22<small><span data-l="en">min</span><span data-l="ja">分</span></small></div>
+              <h3><span data-l="en">Signal delay to Earth</span><span data-l="ja">地球との通信の遅れ（片道）</span></h3>
+              <p>
+                <span data-l="en">Help from mission control always arrives too late.</span>
+                <span data-l="ja">地球からの助けは、いつも間に合いません。</span>
+              </p>
+            </article>
+            <article class="stat reveal">
+              <div class="big num">~30<small>m</small></div>
+              <h3><span data-l="en">Apollo 14, 1971</span><span data-l="ja">アポロ14号（1971年）</span></h3>
+              <p>
+                <span data-l="en">How close the crew got to their target crater before turning back, map in hand.</span>
+                <span data-l="ja">地図を持っていた飛行士が、目的のクレーターまであと約30 mで引き返しました。</span>
+              </p>
+            </article>
+          </div>
+          <div class="insight reveal">
+            <div class="ring" aria-hidden="true"></div>
+            <p>
+              <span data-l="en">
+                NASA's <b>Perseverance</b> rover already finds its position by matching photos of the ground to orbital
+                maps. But that only works where the ground looks <b>unique</b>. On smooth sand, a photo can't tell you
+                where you are. An astronaut's oxygen won't wait.
+              </span>
+              <span data-l="ja">
+                NASAの探査車<b>パーサヴィアランス</b>は、地面の写真を軌道からの地図と照合して、自分の位置を出しています。でもそれは、地面が<b>周りと見分けられる</b>場所だけの話です。なめらかな砂の上では、写真から位置は分かりません。そして宇宙飛行士の酸素は待ってくれません。
+              </span>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ layers -->
+      <section class="band" id="how" aria-labelledby="howTitle">
+        <div class="wrap">
+          <p class="label reveal"><span data-l="en">How it works</span><span data-l="ja">仕組み</span></p>
+          <h2 id="howTitle" class="reveal">
+            <span data-l="en">Three layers of NASA data, read like a map.</span>
+            <span data-l="ja">NASAの3種類のデータを、1枚の地図に。</span>
+          </h2>
+          <p class="lede reveal">
+            <span data-l="en">Each layer answers one question an astronaut asks before stepping outside.</span>
+            <span data-l="ja">それぞれのレイヤーが、外へ出る前の宇宙飛行士の問いに1つずつ答えます。</span>
+          </p>
+          <div class="layers">
+            <article class="layer reveal" style="--tone: var(--pink)">
+              <div class="pic"><img src="/img/home/layer-science.jpg" alt="Vera Rubin Ridge from orbit, hematite shown in pink" loading="lazy" width="640" height="640" /></div>
+              <div class="body">
+                <p class="label"><span class="dot"></span>MRO CRISM · <span data-l="en">spectral</span><span data-l="ja">スペクトル</span></p>
+                <h3><span data-l="en">Where is it worth going?</span><span data-l="ja">どこへ行く価値がある？</span></h3>
+                <p>
+                  <span data-l="en">
+                    Light split into hundreds of colours reveals minerals from orbit. Pink is hematite, an iron mineral
+                    that often forms in water.
+                  </span>
+                  <span data-l="ja">光を数百の色に分けると、軌道から鉱物が分かります。ピンクはヘマタイト。水のある環境でできやすい鉄の鉱物です。</span>
+                </p>
+              </div>
+            </article>
+            <article class="layer reveal" style="--tone: var(--danger)">
+              <div class="pic"><img src="/img/home/layer-safety.jpg" alt="Murray Buttes from orbit, no-go cliffs hatched in red" loading="lazy" width="640" height="640" /></div>
+              <div class="body">
+                <p class="label"><span class="dot"></span>MRO HiRISE · <span data-l="en">topographic</span><span data-l="ja">地形</span></p>
+                <h3><span data-l="en">Where can I walk?</span><span data-l="ja">どこを歩ける？</span></h3>
+                <p>
+                  <span data-l="en">
+                    1 m elevation data checked like a Mars rover's hazard map: slope, roughness and steps. Red is no-go,
+                    amber is careful.
+                  </span>
+                  <span data-l="ja">1 m間隔の標高データを、火星探査車の危険判定と同じ方法で調べます。傾き・でこぼこ・段差。赤は通行不可、黄色は注意。</span>
+                </p>
+              </div>
+            </article>
+            <article class="layer reveal" style="--tone: var(--violet)">
+              <div class="pic"><img src="/img/home/layer-lost.jpg" alt="Bagnold Dunes from orbit, places where a photo can't fix your position shown in violet" loading="lazy" width="640" height="640" /></div>
+              <div class="body">
+                <p class="label"><span class="dot"></span>MRO HiRISE · <span data-l="en">optical</span><span data-l="ja">光学</span></p>
+                <h3><span data-l="en">Where could I get lost?</span><span data-l="ja">どこで迷いやすい？</span></h3>
+                <p>
+                  <span data-l="en">
+                    We predict where a photo of the ground would be too plain or too repetitive to match the orbital map.
+                    Violet means: no position check here.
+                  </span>
+                  <span data-l="ja">地面の写真が、のっぺりしすぎていたり繰り返し模様だったりして、地図と照合できない場所を予測します。紫は「ここでは位置を確かめられない」場所です。</span>
+                </p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ routes -->
+      <section class="band routes-band" aria-labelledby="routesTitle">
+        <div class="wrap routes-grid">
+          <div class="routes-copy">
+            <p class="label reveal"><span data-l="en">The plan</span><span data-l="ja">計画</span></p>
+            <h2 id="routesTitle" class="reveal">
+              <span data-l="en">Four routes.<br />Three promises.</span>
+              <span data-l="ja">4つのルート。<br />3つの約束。</span>
+            </h2>
+            <p class="lede reveal">
+              <span data-l="en">A real walk from Base Camp to Vera Rubin Ridge, planned on Gale Crater's terrain.</span>
+              <span data-l="ja">ベースキャンプからヴェラ・ルービン・リッジまで。ゲール・クレーターの実際の地形で計画しました。</span>
+            </p>
+            <div class="route-head reveal">
+              <span></span><span class="label"><span data-l="en">Route</span><span data-l="ja">ルート</span></span>
+              <span class="label time"><span data-l="en">Distance</span><span data-l="ja">距離</span></span>
+              <span class="label"><span data-l="en">Can't check position</span><span data-l="ja">位置を確かめられない区間</span></span>
+            </div>
+            <ul class="route-list reveal" id="routeList"></ul>
+            <p class="route-note reveal" id="routeNote"></p>
+            <ul class="promises reveal">
+              <li>
+                <span class="tick" aria-hidden="true">✓</span>
+                <span data-l="en">Never on no-go ground</span><span data-l="ja">通行不可の場所を通らない</span>
+              </li>
+              <li>
+                <span class="tick" aria-hidden="true">✓</span>
+                <span data-l="en">Position always known to within 20 m</span><span data-l="ja">位置の誤差はいつも20 m以内</span>
+              </li>
+              <li>
+                <span class="tick" aria-hidden="true">✓</span>
+                <span data-l="en">Enough oxygen to walk home from anywhere</span><span data-l="ja">どこからでも歩いて帰れる酸素</span>
+              </li>
+            </ul>
+          </div>
+          <figure class="route-map reveal">
+            <svg id="routeSvg" role="img" aria-labelledby="routeMapTitle">
+              <title id="routeMapTitle">Four routes from Base Camp to Vera Rubin Ridge over the HiRISE image</title>
+            </svg>
+            <figcaption>
+              <span class="key"><i class="sw violet"></i><span data-l="en">No position check possible</span><span data-l="ja">位置を確かめられない場所</span></span>
+              <span class="key"><i class="sw ring"></i><span data-l="en">Position check</span><span data-l="ja">位置確認の地点</span></span>
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ============================================================ data -->
+      <section class="band" aria-labelledby="dataTitle">
+        <div class="wrap">
+          <p class="label reveal"><span data-l="en">Real data</span><span data-l="ja">本物のデータ</span></p>
+          <h2 id="dataTitle" class="reveal">
+            <span data-l="en">Built from four NASA missions.</span>
+            <span data-l="ja">4つのNASAミッションのデータで作りました。</span>
+          </h2>
+          <div class="missions">
+            <div class="mission reveal">
+              <p class="label">Mars Reconnaissance Orbiter</p>
+              <h3>HiRISE</h3>
+              <p><span data-l="en">1 m elevation and 25 cm images: the terrain, safe ground and the getting-lost map.</span><span data-l="ja">1 mの標高と25 cmの画像。地形、安全な地面、迷いやすさの地図に。</span></p>
+            </div>
+            <div class="mission reveal">
+              <p class="label">Mars Reconnaissance Orbiter</p>
+              <h3>CRISM</h3>
+              <p><span data-l="en">Mineral fingerprints in reflected light: where the hematite is.</span><span data-l="ja">反射光に表れる鉱物の指紋。ヘマタイトの場所に。</span></p>
+            </div>
+            <div class="mission reveal">
+              <p class="label">Mars Global Surveyor</p>
+              <h3>MOLA</h3>
+              <p><span data-l="en">Laser altimetry of the whole crater: the rim and Mount Sharp in 3D.</span><span data-l="ja">クレーター全体のレーザー測高。3Dの縁とシャープ山に。</span></p>
+            </div>
+            <div class="mission reveal">
+              <p class="label">Mars Science Laboratory</p>
+              <h3>Curiosity</h3>
+              <p><span data-l="en">The path the rover really drove here, and our science targets.</span><span data-l="ja">探査車が実際に走った道と、科学目標の位置に。</span></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ closing -->
+      <section class="closing" aria-labelledby="closingTitle">
+        <div class="glow" aria-hidden="true"></div>
+        <svg class="orbits" viewBox="0 0 1600 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <ellipse cx="800" cy="360" rx="520" ry="150" transform="rotate(-8 800 360)" />
+        </svg>
+        <div class="closing-copy reveal">
+          <h2 id="closingTitle">
+            <span data-l="en">Plan your first Marswalk.</span>
+            <span data-l="ja">最初のMarswalkを計画しよう。</span>
+          </h2>
+          <p>
+            <span data-l="en">Pick a place on Gale Crater and compare four routes, in 2D or 3D.</span>
+            <span data-l="ja">ゲール・クレーターで行き先を選び、4つのルートを2Dか3Dで比べられます。</span>
+          </p>
+          <a class="pill" href="/sim.html">
+            <span data-l="en">Open the planner</span><span data-l="ja">プランナーを開く</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-foot">
+      <div class="cols">
+        <div>
+          <a class="wordmark" href="/">
+            <svg class="mark" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="6.2" fill="#ff6b2c" />
+              <ellipse cx="12" cy="12" rx="11" ry="4" fill="none" stroke="#f4ede6" stroke-width="1.2" transform="rotate(-20 12 12)" />
+            </svg>
+            <span>MARSWALK</span>
+          </a>
+          <p>
+            <span data-l="en">NASA Space Apps Challenge 2026<br />Interplanetary Survival Guide: Martian Map</span>
+            <span data-l="ja">NASA Space Apps Challenge 2026<br />Interplanetary Survival Guide: Martian Map</span>
+          </p>
+        </div>
+        <div>
+          <h4 class="label"><span data-l="en">Explore</span><span data-l="ja">見る</span></h4>
+          <ul>
+            <li><a href="/sim.html"><span data-l="en">Planner</span><span data-l="ja">プランナー</span></a></li>
+            <li><a href="/how.html"><span data-l="en">How it works</span><span data-l="ja">仕組み</span></a></li>
+            <li><a href="/credits.html"><span data-l="en">Credits</span><span data-l="ja">クレジット</span></a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="label"><span data-l="en">More</span><span data-l="ja">その他</span></h4>
+          <ul>
+            <li><a href="/game.html"><span data-l="en">Game prototype</span><span data-l="ja">ゲーム（試作）</span></a></li>
+            <li><a href="/dev/"><span data-l="en">Data checks</span><span data-l="ja">データ確認ページ</span></a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="label"><span data-l="en">Data</span><span data-l="ja">データ</span></h4>
+          <ul>
+            <li>MRO HiRISE · CRISM</li>
+            <li>MGS MOLA</li>
+            <li>MSL Curiosity</li>
+          </ul>
         </div>
       </div>
+      <p class="fine">
+        <span data-l="en">Imagery: NASA/JPL-Caltech/University of Arizona/USGS. Not endorsed by NASA. Times and oxygen figures are estimates from our own assumptions.</span>
+        <span data-l="ja">画像：NASA/JPL-Caltech/University of Arizona/USGS。NASAの公認ではありません。時間と酸素の数値は、私たちの仮定にもとづく推定です。</span>
+      </p>
+    </footer>
 
-      <section class="screen" id="home">
-        <h1>MARSWALK</h1>
-        <p class="tag">
-          <span data-l="en">The map that gets Mars explorers home.</span>
-          <span data-l="ja">火星で迷わず、必ず帰るための地図</span>
-        </p>
-        <p class="sub">
-          <span data-l="en">
-            Mars has no GPS. Marswalk maps where an astronaut on foot can check their position, and plans walks that
-            are safe and always lead home. Built on real NASA data of Gale Crater.
-          </span>
-          <span data-l="ja">
-            火星にはGPSがありません。Marswalkは、歩く宇宙飛行士が自分の位置を確かめられる場所を地図にし、安全で、必ず帰れるルートを計画します。ゲール・クレーターの実際のNASAデータで作りました。
-          </span>
-        </p>
-        <button class="btn" id="startBtn"><span data-l="en">Start</span><span data-l="ja">はじめる</span></button>
-      </section>
-
-      <section class="screen" id="menu" hidden>
-        <h2 class="menu-title">MARSWALK</h2>
-        <nav class="menu">
-          <a class="main" href="/sim.html">
-            <b><span data-l="en">Route simulator</span><span data-l="ja">ルート・シミュレーター</span></b>
-            <span class="d">
-              <span data-l="en">
-                Choose a destination on the 2D map or in 3D. Compare four routes that all stay safe, keep your position
-                known, and leave enough oxygen to walk home.
-              </span>
-              <span data-l="ja">
-                2Dの地図か3Dの地形で行き先を選びます。安全で、位置を見失わず、歩いて帰れる酸素を残す4つのルートを比べられます。
-              </span>
-            </span>
-          </a>
-          <a href="/how.html">
-            <b><span data-l="en">How it works</span><span data-l="ja">仕組み</span></b>
-            <span class="d">
-              <span data-l="en">The problem, the map layers, the route rules, and every assumption we made.</span>
-              <span data-l="ja">問題、地図のレイヤー、ルートの条件、そして私たちが置いた仮定のすべて。</span>
-            </span>
-          </a>
-          <a href="/game.html">
-            <b><span data-l="en">Game</span><span data-l="ja">ゲーム</span></b>
-            <span class="d">
-              <span data-l="en">
-                An earlier prototype: walk to the ridge in first person through a dramatised dust storm. English only.
-              </span>
-              <span data-l="ja">
-                初期の試作です。一人称で尾根まで歩き、演出を強めた砂嵐の中を帰ります（英語のみ）。
-              </span>
-            </span>
-          </a>
-          <a href="/credits.html">
-            <b><span data-l="en">Credits</span><span data-l="ja">クレジット</span></b>
-            <span class="d">
-              <span data-l="en">NASA missions and data, methods, and software.</span>
-              <span data-l="ja">NASAのミッションとデータ、手法、ソフトウェア。</span>
-            </span>
-          </a>
-        </nav>
-        <button class="backlink" id="backBtn"><span data-l="en">← Title screen</span><span data-l="ja">← タイトルに戻る</span></button>
-      </section>
-
-      <footer class="foot">
-        NASA Space Apps Challenge 2026 · Interplanetary Survival Guide: Martian Map<br />
-        <span data-l="en">Background: Gale Crater from orbit, MRO HiRISE (NASA/JPL-Caltech/UArizona/USGS)</span>
-        <span data-l="ja">背景：軌道から見たゲール・クレーター、MRO HiRISE（NASA/JPL-Caltech/UArizona/USGS）</span>
-      </footer>
-    </div>
     <script type="module" src="/src/site/home.ts"></script>
   </body>
 </html>

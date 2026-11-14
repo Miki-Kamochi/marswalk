@@ -145,6 +145,9 @@ npm run data:process      # writes public/data/ and re-checks all positions
 - `scripts/download_data.py`: fetches the raw data. The two big USGS mosaics are never downloaded
   whole; only our window is read over HTTP.
 - `scripts/process_data.py`: raw data to web-ready terrain, imagery and layers.
+- `scripts/home_assets.ts` then `scripts/home_images.py`: the home page's example routes
+  (`public/data/home/`) and pictures (`public/img/home/`), made with the real planner. Run them
+  after `nav_layers.py`.
 - `scripts/nav_layers.py`: the route planner's 6 m grid (`public/data/nav/`): tilt, roughness, step,
   sand, hematite and the localizability score. Run it after `process_data.py`; takes about 2 minutes.
 - `scripts/positions.py`: picks the base, stops and landmarks from the data and verifies each one

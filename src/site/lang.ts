@@ -4,6 +4,8 @@
  * Static text sits in the HTML twice, marked data-l="en" and data-l="ja"; site.css hides the
  * one that is not selected. Text built in code uses tr(en, ja) and listens for "langchange".
  */
+import "./fonts";
+
 export type Lang = "en" | "ja";
 
 const KEY = "marswalk-lang";
