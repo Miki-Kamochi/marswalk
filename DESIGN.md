@@ -6,8 +6,8 @@ How Marswalk should look and behave.
 
 Marswalk is **a planning display inside the crew's habitat**. It is one of the formats the challenge suggests. The crew uses it to prepare an EVA (spacewalk on foot) at Gale Crater. It is a working tool for astronauts, **not a game**. Every screen should look like it belongs on a mission console: calm and operational, with real data and one clear next action.
 
-- **Look of the tool screens (decided 2026-11-15, revised the same day):** our own planning-console look, deliberately **not** a copy of Google Maps or Earth (no blue "you are here" dot, teardrop pin, round floating buttons or pill search). Warm near-black panels, hairline borders, small 4 px corners, mono figures, one orange accent. The terrain is drawn as polygons (16 m facets), the same style as the walk preview. Map layers colour whole facets. Markers are survey-style: a square habitat, a flag on a stake for the goal, diamonds for photo checks.
-- **Home:** "MARSWALK" in the centre, one line of purpose, a place search next to a **New plan** button, and the plans saved in this browser (continue or delete). With no plans yet it suggests the three science targets.
+- **Look (decided 2026-11-15, final revision):** simple and clean, rounded (pill inputs and buttons, round tool buttons, 16-22 px panel corners), warm near-black, one orange accent, thin type. Deliberately not a copy of Google Maps (no blue "you are here" dot, no teardrop pin). The 3D is a **subtle pixel rendering**: faceted low-poly surfaces drawn at a fraction of the screen resolution and scaled up with crisp pixels, matching the walk preview's polygon terrain. Markers are a square habitat, a flag on a stake for the goal and diamonds for photo checks.
+- **Home:** black space with a faceted pixel Mars in the centre (Viking colour mosaic, lit from the side so a night half shows, Gale Crater marked, slowly turning, can be dragged). "Mars" and "walk" sit either side of the globe. Below: a search pill and a **New plan** button, then the saved plans as small pills. With no plans yet it suggests the three science targets.
 - **Plans (projects):** every planner session is a plan, saved automatically in the browser (localStorage, no backend) once a destination is chosen. The name follows the destination until the user renames it in the panel header. `sim.html?project=<id>` reopens one.
 - **Planner:** choose a destination and compare routes. This is the core tool. It works like map directions:
   - **Panel (docked left):** plan name, Start / Goal, then the four route options. The recommended route comes first, and each option has a one-line reason. The selected option opens its safety checks and oxygen bar.
@@ -229,13 +229,13 @@ Japanese gets the same treatment: plain words first (迷いやすさ, 位置確�
 
 ## 6. Home (first screen)
 
-Built (`index.html`, `src/site/home.ts`, saved plans in `src/site/projects.ts`).
+Built (`index.html`, `src/site/home.ts`, `src/site/globe.ts`; saved plans in `src/site/projects.ts`). Layout follows the reference of a centred globe with the title split around it.
 
-- **Background:** the real Gale Crater terrain in 3D (polygon facets) with the planned walk, Base Camp and the science stops; a slowly drifting camera.
-- **Centre:** a small "GALE CRATER · MARS" line, the "MARSWALK" title, one line of purpose, then the search box and **New plan** side by side.
-- **Below:** "Your plans", newest first, each with its route type, time, distance and when it was last changed. Pointing at a plan or place flies the camera to its destination.
-- **Corners:** page links and the language switch top right; image credit and position / elevation / local solar time along the bottom.
-- The earlier cinematic menu (title + four tasks) is in git history (commit `4b3a02e`).
+- **Globe:** icosphere with about 12,500 facets, each coloured from the Viking mosaic at its centre (`public/img/home/mars.jpg`, made by `scripts/globe.py`). Rendered at 1/3 resolution (1/2 on phones) with `image-rendering: pixelated`. A thin warm atmosphere rim on the lit side; a few pixel stars. Reduced motion: it stands still.
+- **Title:** "Mars" (semibold) left of the globe, "walk" (thin) right of it; on phones one line above the globe. "Gale Crater" with the orange marker colour under the globe.
+- **Below:** search pill (thin warm gradient ring) and **New plan**; saved plans as pills (name, when, delete).
+- **Top:** "Marswalk", page links and the language switch. **Bottom:** data credit.
+- The earlier menu over the 3D terrain is in git history (`4b3a02e`); the console version with a plans table is `1cbb4c5`.
 
 ## 7. Learn page (today's "How it works")
 

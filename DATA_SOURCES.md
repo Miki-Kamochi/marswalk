@@ -16,6 +16,7 @@ centre longitude 0 (the frame of the USGS Gale mosaics and of Curiosity's waypoi
 | 5 | Mineral layers: hematite (BD860_2), basalt sand (OLINDEX3), hydrated minerals (BD1900_2) | CRISM MTRDR targeted observation `FRT0000B6F1`, refined spectral summary parameters (`frt0000b6f1_07_sr165j_mtr3`) | MRO / CRISM imaging spectrometer, PDS Geosciences Node | 18 m | `https://pds-geosciences.wustl.edu/mro/mro-m-crism-5-rdr-mptargeted-v1/mrocr_4001/mtrdr/2008/2008_191/frt0000b6f1/` |
 | 6 | Curiosity's real path; position of every mission stop | MSL localized waypoints | Mars Science Laboratory (Curiosity) rover, JPL localization team | one point per drive | `https://mars.nasa.gov/mmgis-maps/MSL/Layers/json/MSL_waypoints.json` |
 | 7 | Weather: air and ground temperature, pressure, sunrise and sunset, UV, per sol | REMS weather feed | MSL Curiosity / REMS (Rover Environmental Monitoring Station), Centro de Astrobiología (CSIC-INTA) and JPL | one record per sol, sols 1 to 4995 | `https://mars.nasa.gov/rss/api/?feed=weather&category=msl&feedtype=json` |
+| 8 | The whole planet on the home screen (globe colours) | Viking MDIM 2.1 colourised global mosaic | Viking Orbiters 1 and 2, colourised by USGS Astrogeology | 232 m (we ship 1024 x 512, about 21 km per pixel; `scripts/globe.py`) | `https://planetarymaps.usgs.gov/mosaic/Mars_Viking_MDIM21_ClrMosaic_global_232m.tif` |
 
 ## How each one is processed
 

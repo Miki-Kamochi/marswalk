@@ -1,5 +1,5 @@
-/* Planner: the polygon map with a docked plan panel on the left and one tool rail on the right.
-   Square edges, hairlines and mono figures: a planning console, not a map app. */
+/* Planner: the polygon map with a rounded plan panel on the left and one round tool rail on the
+   right. Warm black, thin lines, one orange accent; rounded and simple. */
 body.planner {
   position: fixed;
   inset: 0;
@@ -21,7 +21,7 @@ button {
   color: inherit;
 }
 .kicker {
-  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
   font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.2em;
@@ -32,14 +32,17 @@ button {
 .card {
   position: absolute;
   z-index: 5;
-  top: 0;
-  left: 0;
-  bottom: 0;
+  top: 12px;
+  left: 12px;
+  bottom: 12px;
   width: var(--panel-w);
   display: flex;
   flex-direction: column;
   background: var(--ui-surface);
-  border-right: 1px solid var(--ui-line);
+  border: 1px solid var(--ui-line);
+  border-radius: 22px;
+  box-shadow: var(--ui-shadow);
+  overflow: hidden;
 }
 .card-top {
   display: flex;
@@ -56,6 +59,7 @@ button {
   height: 34px;
   color: var(--ui-text-2);
   border-radius: var(--ui-r);
+  border-radius: 50%;
 }
 .back:hover {
   color: var(--ui-text);
@@ -84,6 +88,7 @@ button {
   border-radius: var(--ui-r);
   outline: none;
   text-overflow: ellipsis;
+  border-radius: 8px;
 }
 #planName:hover {
   border-color: var(--ui-line);
@@ -95,6 +100,7 @@ button {
 .card-top .seg {
   border-color: var(--ui-line);
   border-radius: var(--ui-r);
+  border-radius: 99px;
 }
 .card-top .seg button {
   padding: 4px 9px;
@@ -123,11 +129,9 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  width: 78px;
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  width: 72px;
+  font-size: 12.5px;
+  font-weight: 500;
   color: var(--ui-text-2);
 }
 .mk {
@@ -136,12 +140,13 @@ button {
   height: 10px;
 }
 .mk.start {
+  border-radius: 50%;
   background: var(--base);
-  box-shadow: inset 0 0 0 3px var(--ui-surface), 0 0 0 1px var(--base);
+  box-shadow: inset 0 0 0 2.5px var(--ui-surface), 0 0 0 1.5px var(--base);
 }
 .mk.pin {
+  border-radius: 50%;
   background: var(--accent);
-  clip-path: polygon(0 0, 100% 50%, 0 100%);
 }
 #homeName {
   flex: 1;
@@ -161,6 +166,7 @@ button {
   border: none;
   border-radius: var(--ui-r);
   cursor: pointer;
+  border-radius: 99px;
 }
 .txt:hover {
   background: rgba(255, 178, 122, 0.1);
@@ -175,6 +181,8 @@ button {
   background: var(--ui-surface-2);
   border: 1px solid var(--ui-line);
   border-radius: var(--ui-r);
+  border-radius: 20px;
+  padding-left: 4px;
 }
 .field:focus-within {
   border-color: var(--accent);
@@ -210,6 +218,7 @@ button {
   border: none;
   border-radius: var(--ui-r);
   cursor: pointer;
+  border-radius: 50%;
 }
 .clear:hover {
   color: var(--ui-text);
@@ -232,6 +241,8 @@ button {
   border: 1px solid var(--ui-line);
   border-radius: var(--ui-r);
   box-shadow: var(--ui-shadow);
+  border-radius: 16px;
+  padding: 6px;
 }
 .suggest li {
   display: flex;
@@ -240,6 +251,7 @@ button {
   padding: 8px 12px;
   font-size: 14px;
   cursor: pointer;
+  border-radius: 10px;
 }
 .suggest li:hover,
 .suggest li[aria-selected="true"] {
@@ -254,6 +266,7 @@ button {
   height: 9px;
   flex: none;
   background: var(--ui-text-2);
+  border-radius: 50%;
 }
 .suggest li.stop .pin {
   background: var(--stop);
@@ -266,7 +279,7 @@ button {
   min-width: 0;
 }
 .suggest .kd {
-  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
   font-size: 11px;
   color: var(--ui-text-2);
 }
@@ -306,6 +319,7 @@ button {
   border: 1px solid var(--ui-line);
   border-radius: var(--ui-r);
   cursor: pointer;
+  border-radius: 99px;
 }
 .chiprow button:hover {
   border-color: var(--stop);
@@ -314,6 +328,7 @@ button {
   width: 9px;
   height: 9px;
   background: var(--stop);
+  border-radius: 50%;
 }
 #notice:empty {
   display: none;
@@ -325,6 +340,8 @@ button {
   color: var(--warn);
   background: rgba(255, 199, 90, 0.08);
   border-left: 3px solid var(--warn);
+  border-left: none;
+  border-radius: 12px;
 }
 #notice p.bad {
   color: #ff8a80;
@@ -351,6 +368,7 @@ button {
   border: 1px solid var(--ui-line);
   border-radius: var(--ui-r);
   cursor: pointer;
+  border-radius: 16px;
 }
 .opt:hover {
   border-color: #5a4d42;
@@ -359,10 +377,14 @@ button {
   border-color: var(--accent);
   background: rgba(255, 107, 44, 0.07);
 }
+.opt[aria-pressed="true"]:has(+ .detail) {
+  border-radius: 16px 16px 0 0;
+}
 .opt[aria-pressed="true"] + .detail {
   margin-top: -9px;
   border-color: var(--accent);
   border-top: none;
+  border-radius: 0 0 16px 16px;
 }
 .opt .ic {
   position: absolute;
@@ -371,6 +393,7 @@ button {
   width: 14px;
   height: 14px;
   border: 1.5px solid var(--ui-text-2);
+  border-radius: 50%;
 }
 .opt[aria-pressed="true"] .ic {
   border-color: var(--accent);
@@ -388,7 +411,7 @@ button {
 }
 .opt .rec {
   padding: 1px 6px;
-  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -396,10 +419,11 @@ button {
   color: #1a0b04;
   background: var(--accent);
   border-radius: 2px;
+  border-radius: 99px;
 }
 .opt .time {
   margin-left: auto;
-  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
   font-size: 14.5px;
   font-weight: 600;
   white-space: nowrap;
@@ -409,7 +433,7 @@ button {
 }
 .opt .l2 {
   margin-top: 3px;
-  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
   font-size: 11.5px;
   color: var(--ui-text-2);
 }
@@ -425,7 +449,7 @@ button {
 }
 .busy {
   margin: 4px 0;
-  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
   font-size: 12px;
   color: var(--ui-text-2);
 }
@@ -460,6 +484,7 @@ button {
   color: var(--ui-bg);
   background: var(--ok);
   border-radius: 2px;
+  border-radius: 50%;
 }
 .checks li.bad .m {
   background: var(--danger);
@@ -470,7 +495,7 @@ button {
 .o2 .lbl {
   display: flex;
   justify-content: space-between;
-  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
   font-size: 11px;
   letter-spacing: 0.04em;
   color: var(--ui-text-2);
@@ -483,6 +508,7 @@ button {
   overflow: hidden;
   background: var(--ui-bg);
   border-radius: 2px;
+  border-radius: 6px;
 }
 .o2bar i {
   display: block;
@@ -511,9 +537,10 @@ button {
   width: 8px;
   height: 8px;
   margin-right: 5px;
+  border-radius: 50%;
 }
 .o2key b {
-  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
   font-weight: 600;
   color: var(--ui-text);
 }
@@ -541,7 +568,7 @@ button {
   gap: 10px;
 }
 .slider output {
-  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
 .slider input {
@@ -569,6 +596,8 @@ button {
   border: 1px solid var(--ui-line);
   border-radius: var(--ui-r);
   box-shadow: var(--ui-shadow);
+  border-radius: 22px;
+  overflow: hidden;
 }
 .fab {
   display: grid;
@@ -594,7 +623,7 @@ button {
   height: 19px;
 }
 .fab.label {
-  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
   font-size: 12px;
   font-weight: 600;
 }
@@ -606,7 +635,6 @@ button {
 .zoom {
   display: flex;
   flex-direction: column;
-  margin-top: 10px;
 }
 .zoom .fab + .fab {
   border-top: 1px solid var(--ui-line);
@@ -628,15 +656,14 @@ button {
   border-radius: var(--ui-r);
   box-shadow: var(--ui-shadow);
   font-size: 13px;
+  border-radius: 18px;
 }
 .pop-title {
   margin: 0 0 8px;
-  font-family: var(--mono);
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--ui-text-2);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ui-text);
 }
 .tiles {
   display: grid;
@@ -654,6 +681,7 @@ button {
   border: 1px solid transparent;
   border-radius: var(--ui-r);
   cursor: pointer;
+  border-radius: 12px;
 }
 .tile:hover {
   background: var(--ui-hover);
@@ -664,6 +692,7 @@ button {
   height: 26px;
   border-radius: 2px;
   background: #8a5a3c url("/img/home/surface.jpg") center / 400% auto;
+  border-radius: 50%;
 }
 .tile .sw.safety {
   background-image:
@@ -720,7 +749,7 @@ button {
 .strip {
   position: absolute;
   z-index: 3;
-  left: calc(var(--panel-w) + 12px);
+  left: calc(var(--panel-w) + 24px);
   right: 64px;
   bottom: 30px;
   max-width: 760px;
@@ -729,6 +758,7 @@ button {
   border: 1px solid var(--ui-line);
   border-radius: var(--ui-r);
   box-shadow: var(--ui-shadow);
+  border-radius: 18px;
 }
 .strip canvas {
   display: block;
@@ -742,12 +772,12 @@ button {
   z-index: 2;
   right: 0;
   bottom: 0;
-  left: var(--panel-w);
+  left: calc(var(--panel-w) + 24px);
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   padding: 5px 12px 6px;
-  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
   font-size: 11px;
   color: rgba(236, 228, 218, 0.85);
   background: linear-gradient(to top, rgba(20, 17, 15, 0.85), rgba(20, 17, 15, 0));
@@ -775,7 +805,7 @@ button {
   z-index: 20;
   display: grid;
   place-items: center;
-  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
   font-size: 13px;
   letter-spacing: 0.06em;
   color: var(--ui-text-2);
@@ -791,6 +821,7 @@ dialog#info {
   border: 1px solid var(--ui-line);
   border-radius: var(--ui-r);
   box-shadow: var(--ui-shadow);
+  border-radius: 20px;
 }
 dialog#info::backdrop {
   background: rgba(10, 8, 7, 0.6);
@@ -822,6 +853,7 @@ dialog#info a {
   border: none;
   border-radius: var(--ui-r);
   cursor: pointer;
+  border-radius: 99px;
 }
 
 /* ---------------------------------------------------------------- narrow screens: bottom sheet */
@@ -833,8 +865,8 @@ dialog#info a {
     bottom: 0;
     width: auto;
     max-height: 52vh;
-    border-right: none;
-    border-top: 1px solid var(--ui-line);
+    border-radius: 22px 22px 0 0;
+    border-bottom: none;
   }
   .pop {
     width: min(280px, calc(100vw - 80px));

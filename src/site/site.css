@@ -33,7 +33,7 @@
   --ui-text-2: #a39a8f;
   --ui-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.35);
   --ui-act: #ffb27a;
-  --ui-r: 4px;
+  --ui-r: 12px;
   --stop: #ffd166;
   --base: #7cc8ff;
   /* older names still used by the simulator and the reading pages until they are redesigned */

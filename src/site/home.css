@@ -1,33 +1,45 @@
-/* Home: the title in the middle, search + new plan, saved plans. Square edges, hairlines,
-   mono figures: a planning console, not a map app. */
+/* Home: black space, a faceted pixel Mars in the middle, the title either side of it,
+   one search pill and one button below. --globe-d / --globe-y come from globe.ts. */
+:root {
+  --globe-d: min(44vh, 62vw);
+  --globe-y: 42vh;
+  --gap: clamp(18px, 3vw, 44px);
+}
 body.home {
   position: fixed;
   inset: 0;
   overflow: hidden;
   color: var(--ui-text);
-  background: var(--ui-bg) url("/img/home/surface.jpg") center / cover no-repeat;
+  background: #000;
 }
-#bg {
+#globe {
   position: absolute;
   inset: 0;
   opacity: 0;
-  transition: opacity 1.2s var(--ease);
+  transition: opacity 1.4s var(--ease);
 }
-#bg.ready {
+#globe.ready {
   opacity: 1;
 }
-#bg canvas {
+#globe canvas {
   display: block;
   width: 100%;
   height: 100%;
+  image-rendering: pixelated;
+  cursor: grab;
+  touch-action: pan-y;
 }
-.shade {
+#globe canvas:active {
+  cursor: grabbing;
+}
+/* a faint warm haze at the bottom, the way dust lights the Martian horizon */
+body.home::after {
+  content: "";
   position: absolute;
-  inset: 0;
+  inset: auto 0 0;
+  height: 28vh;
   pointer-events: none;
-  background:
-    linear-gradient(to bottom, rgba(20, 17, 15, 0.65) 0, rgba(20, 17, 15, 0) 80px),
-    radial-gradient(46% 52% at 50% 50%, rgba(20, 17, 15, 0.7), rgba(20, 17, 15, 0.15) 100%);
+  background: linear-gradient(to top, rgba(120, 50, 20, 0.22), rgba(120, 50, 20, 0));
 }
 
 /* ---------------------------------------------------------------- top bar */
@@ -37,87 +49,109 @@ body.home {
   z-index: 3;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 18px;
-  height: 56px;
-  padding: 0 clamp(16px, 3vw, 32px);
+  height: 64px;
+  padding: 0 clamp(18px, 4vw, 48px);
+}
+.logo {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ui-text);
+  text-decoration: none;
 }
 .links {
   display: flex;
-  gap: 2px;
+  align-items: center;
+  gap: clamp(14px, 2.4vw, 34px);
+  margin-left: auto;
 }
-.links a {
-  padding: 7px 11px;
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--ui-text-2);
+.links a,
+.lang {
+  padding: 4px 0;
+  font-size: 14px;
+  font-weight: 300;
+  color: rgba(236, 228, 218, 0.78);
   text-decoration: none;
-  border-radius: var(--ui-r);
+  background: none;
+  border: none;
   transition: color 0.15s;
 }
-.links a:hover {
-  color: var(--ui-text);
+.links a:hover,
+.lang:hover {
+  color: #fff;
 }
-.bar .seg {
-  border-color: var(--ui-line);
-  border-radius: var(--ui-r);
-  background: rgba(20, 17, 15, 0.6);
-}
-.bar .seg button {
-  padding: 5px 10px;
-  color: var(--ui-text-2);
-}
-.bar .seg button[aria-pressed="true"] {
-  background: var(--ui-text);
-  color: var(--ui-bg);
+.lang {
+  padding: 4px 12px;
+  border: 1px solid rgba(236, 228, 218, 0.22);
+  border-radius: 99px;
+  font-size: 12.5px;
 }
 
-/* ---------------------------------------------------------------- centre */
-.start {
+/* ---------------------------------------------------------------- title around the globe */
+.title {
+  margin: 0;
+  font-size: clamp(28px, 3.6vw, 50px);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  pointer-events: none;
+}
+.title span {
   position: absolute;
   z-index: 2;
-  left: 50%;
-  top: 47%;
-  transform: translate(-50%, -50%);
-  width: min(620px, calc(100vw - 32px));
-  text-align: center;
-  animation: in 0.8s var(--ease) both;
+  top: var(--globe-y);
+  transform: translateY(-50%);
+  animation: fade 1.4s var(--ease) 0.2s both;
 }
-@keyframes in {
+.title .w1 {
+  right: calc(50% + var(--globe-d) / 2 + var(--gap));
+  font-weight: 600;
+}
+.title .w2 {
+  left: calc(50% + var(--globe-d) / 2 + var(--gap));
+  font-weight: 200;
+}
+@keyframes fade {
   from {
     opacity: 0;
-    transform: translate(-50%, calc(-50% + 10px));
   }
 }
-.kicker {
+.gale {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  top: calc(var(--globe-y) + var(--globe-d) / 2 + 12px);
   margin: 0;
-  font-family: var(--mono);
+  text-align: center;
   font-size: 12px;
-  letter-spacing: 0.28em;
-  color: var(--accent-glow);
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  color: rgba(236, 228, 218, 0.6);
+  pointer-events: none;
 }
-.start h1 {
-  margin: 6px 0 0;
-  /* the letter spacing would push the word off-centre: pad the left by the same amount */
-  padding-left: 0.22em;
-  font-size: clamp(44px, 8.4vw, 96px);
-  line-height: 1;
-  font-weight: 800;
-  letter-spacing: 0.22em;
-  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.55);
-}
-.start .sub {
-  margin: 14px 0 28px;
-  font-size: 15.5px;
-  color: rgba(236, 228, 218, 0.82);
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+.gale::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 8px;
+  border-radius: 1px;
+  background: var(--accent);
+  vertical-align: 1px;
 }
 
-/* search + new plan */
+/* ---------------------------------------------------------------- search + new plan */
+.start {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: calc(var(--globe-y) + var(--globe-d) / 2 + 52px);
+  transform: translateX(-50%);
+  width: min(540px, calc(100vw - 32px));
+  animation: fade 1s var(--ease) 0.4s both;
+}
 .go {
   display: flex;
-  gap: 8px;
-  text-align: left;
+  gap: 10px;
 }
 .search {
   position: relative;
@@ -125,14 +159,19 @@ body.home {
   min-width: 0;
   display: flex;
   align-items: center;
-  height: 48px;
-  padding: 0 14px;
-  background: rgba(27, 23, 20, 0.92);
-  border: 1px solid var(--ui-line);
-  border-radius: var(--ui-r);
+  height: 46px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-radius: 23px;
+  /* a thin warm ring around a black field */
+  background:
+    linear-gradient(#0b0908, #0b0908) padding-box,
+    linear-gradient(100deg, rgba(255, 107, 44, 0.85), rgba(255, 178, 122, 0.25) 45%, rgba(255, 107, 44, 0.6)) border-box;
 }
 .search:focus-within {
-  border-color: var(--accent);
+  background:
+    linear-gradient(#0b0908, #0b0908) padding-box,
+    linear-gradient(100deg, #ff6b2c, #ffb27a 50%, #ff6b2c) border-box;
 }
 .search:not(:focus-within) .suggest {
   display: none;
@@ -141,7 +180,7 @@ body.home {
   width: 18px;
   height: 18px;
   flex: none;
-  color: var(--ui-text-2);
+  color: rgba(236, 228, 218, 0.6);
 }
 .search input {
   flex: 1;
@@ -149,14 +188,15 @@ body.home {
   height: 100%;
   padding: 0 10px;
   font: inherit;
-  font-size: 15.5px;
+  font-size: 15px;
+  font-weight: 300;
   color: var(--ui-text);
   background: none;
   border: none;
   outline: none;
 }
 .search input::placeholder {
-  color: var(--ui-text-2);
+  color: rgba(236, 228, 218, 0.5);
 }
 .search input::-webkit-search-cancel-button {
   display: none;
@@ -165,19 +205,24 @@ body.home {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 48px;
-  padding: 0 18px;
-  font-size: 15px;
-  font-weight: 700;
+  height: 46px;
+  padding: 0 20px 0 16px;
+  font-size: 14.5px;
+  font-weight: 600;
   white-space: nowrap;
   color: #1a0b04;
   background: var(--accent);
-  border-radius: var(--ui-r);
+  border-radius: 23px;
   text-decoration: none;
-  transition: background 0.15s;
+  transition:
+    background 0.15s,
+    transform 0.15s;
 }
 .new:hover {
   background: #ff8148;
+}
+.new:active {
+  transform: scale(0.98);
 }
 .new svg {
   width: 16px;
@@ -186,37 +231,39 @@ body.home {
 .suggest {
   position: absolute;
   z-index: 5;
-  left: -1px;
-  right: -1px;
-  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  top: calc(100% + 8px);
   margin: 0;
-  padding: 4px 0;
+  padding: 6px;
   list-style: none;
-  background: var(--ui-surface);
-  border: 1px solid var(--ui-line);
-  border-radius: var(--ui-r);
-  box-shadow: var(--ui-shadow);
+  background: rgba(20, 17, 15, 0.97);
+  border: 1px solid rgba(236, 228, 218, 0.12);
+  border-radius: 18px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
 }
 .suggest li {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 9px 14px;
+  padding: 9px 12px;
+  border-radius: 12px;
   cursor: pointer;
-  font-size: 14.5px;
+  font-size: 14px;
 }
 .suggest li:hover,
 .suggest li[aria-selected="true"] {
-  background: var(--ui-hover);
+  background: rgba(236, 228, 218, 0.08);
 }
 .suggest li.none {
   color: var(--ui-text-2);
   cursor: default;
 }
 .suggest .pin {
-  width: 9px;
-  height: 9px;
+  width: 8px;
+  height: 8px;
   flex: none;
+  border-radius: 50%;
   background: var(--ui-text-2);
 }
 .suggest li.stop .pin {
@@ -230,161 +277,151 @@ body.home {
   min-width: 0;
 }
 .suggest .kd {
-  font-family: var(--mono);
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--ui-text-2);
 }
 
 /* ---------------------------------------------------------------- saved plans */
 .plans {
-  margin-top: 18px;
-  text-align: left;
-}
-.plans h2 {
-  margin: 0 0 6px;
-  font-family: var(--mono);
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--ui-text-2);
+  margin-top: 16px;
+  text-align: center;
 }
 .plans ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
-  max-height: 232px;
-  overflow-y: auto;
-  background: rgba(27, 23, 20, 0.88);
-  border: 1px solid var(--ui-line);
-  border-radius: var(--ui-r);
 }
 .plans li {
   display: flex;
   align-items: center;
+  max-width: 100%;
+  background: rgba(236, 228, 218, 0.05);
+  border: 1px solid rgba(236, 228, 218, 0.12);
+  border-radius: 99px;
+  transition: border-color 0.15s;
 }
-.plans li + li {
-  border-top: 1px solid var(--ui-line);
+.plans li:hover {
+  border-color: rgba(255, 107, 44, 0.6);
 }
 .plans li a {
-  flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
   min-width: 0;
-  display: grid;
-  grid-template-columns: 10px 1fr auto;
-  grid-template-areas: "f nm when" "f facts facts";
-  column-gap: 12px;
-  padding: 10px 6px 10px 14px;
+  padding: 7px 4px 7px 14px;
+  font-size: 13px;
   color: var(--ui-text);
   text-decoration: none;
 }
-.plans li a:hover,
-.plans li a:focus-visible {
-  background: var(--ui-hover);
-}
-.plans .flag {
-  grid-area: f;
+.plans li a::before {
+  content: "";
+  flex: none;
   align-self: center;
-  width: 10px;
-  height: 10px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
   background: var(--accent);
 }
-.plans .flag.bad {
+.plans li a.bad::before {
   background: var(--danger);
 }
 .plans .nm {
-  grid-area: nm;
-  font-weight: 700;
-  font-size: 14.5px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.plans .facts {
-  grid-area: facts;
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--ui-text-2);
-}
 .plans .when {
-  grid-area: when;
-  font-size: 12px;
+  flex: none;
+  font-size: 11.5px;
+  font-weight: 300;
   color: var(--ui-text-2);
 }
 .plans .del {
   display: grid;
   place-items: center;
-  width: 40px;
-  align-self: stretch;
+  width: 28px;
+  height: 28px;
+  margin-right: 3px;
   padding: 0;
   color: var(--ui-text-2);
   background: none;
   border: none;
+  border-radius: 50%;
 }
 .plans .del:hover {
-  color: var(--danger);
-  background: var(--ui-hover);
+  color: var(--ui-text);
+  background: rgba(236, 228, 218, 0.1);
 }
 .plans .del svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
-.plans .empty {
-  margin: 0;
-  text-align: center;
-  font-size: 13.5px;
+.plans .more,
+.plans .try {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  font-weight: 300;
   color: var(--ui-text-2);
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
 }
-.plans .empty a {
-  display: inline-block;
-  margin: 6px 4px 0;
-  padding: 4px 10px;
-  font-weight: 600;
+.plans .try a {
+  margin-left: 14px;
   color: var(--ui-text);
   text-decoration: none;
-  background: rgba(27, 23, 20, 0.85);
-  border: 1px solid var(--ui-line);
-  border-radius: var(--ui-r);
+  border-bottom: 1px solid rgba(236, 228, 218, 0.25);
 }
-.plans .empty a::before {
-  content: "";
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  margin-right: 7px;
-  background: var(--stop);
-}
-.plans .empty a:hover {
-  border-color: var(--stop);
+.plans .try a:hover {
+  border-bottom-color: var(--accent);
 }
 
-.more-sm {
-  display: none;
-}
-
-/* ---------------------------------------------------------------- status bar */
-.status {
+/* ---------------------------------------------------------------- footer */
+.foot {
   position: absolute;
-  inset: auto 0 0;
   z-index: 2;
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 6px clamp(16px, 3vw, 32px) 8px;
-  font-family: var(--mono);
+  inset: auto 0 0;
+  padding: 0 16px 14px;
+  text-align: center;
   font-size: 11px;
-  color: rgba(236, 228, 218, 0.7);
-  background: linear-gradient(to top, rgba(20, 17, 15, 0.75), rgba(20, 17, 15, 0));
-  font-variant-numeric: tabular-nums;
+  font-weight: 300;
+  color: rgba(236, 228, 218, 0.4);
+}
+
+/* no WebGL: a still Mars disc from the same texture */
+body.no-globe #globe {
+  opacity: 1;
+}
+body.no-globe #globe::before {
+  content: "";
+  position: absolute;
+  left: calc(50% - var(--globe-d) / 2);
+  top: calc(var(--globe-y) - var(--globe-d) / 2);
+  width: var(--globe-d);
+  height: var(--globe-d);
+  border-radius: 50%;
+  background: url("/img/home/mars.jpg") 40% 50% / 200% 100%;
+  box-shadow: inset -40px 0 80px #000;
 }
 
 /* ---------------------------------------------------------------- small screens */
 @media (max-width: 720px) {
-  .links {
+  .links a {
     display: none;
   }
-  .start {
-    top: 50%;
+  /* the words no longer fit beside the globe: one line above it */
+  .title {
+    position: absolute;
+    z-index: 2;
+    left: 0;
+    right: 0;
+    top: calc(var(--globe-y) - var(--globe-d) / 2 - 64px);
+    text-align: center;
+  }
+  .title span {
+    position: static;
+    transform: none;
   }
   .go {
     flex-direction: column;
@@ -392,17 +429,9 @@ body.home {
   .new {
     justify-content: center;
   }
-  .status .credit {
+}
+@media (max-height: 560px) {
+  .plans {
     display: none;
-  }
-  .more-sm {
-    display: flex;
-    justify-content: center;
-    gap: 18px;
-    margin-top: 18px;
-    font-size: 13.5px;
-  }
-  .more-sm a {
-    color: var(--ui-text-2);
   }
 }

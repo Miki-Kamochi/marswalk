@@ -20,6 +20,7 @@ const LIFT = 4;
 const FACET = 8;
 const ACCENT = "#ff6b2c";
 const ALT = "#cdbfae";
+const SPACE = new THREE.Color(0x0d0b0a);
 const TILT_3D = 0.95; // radians from straight down
 
 export interface ViewEvents {
@@ -343,7 +344,7 @@ export class View3D {
   }
 
   // ------------------------------------------------------------ drawing helpers
-  private line(points: THREE.Vector3[], color: string, width: number, o: { opacity?: number; dashed?: boolean; xray?: boolean; order?: number } = {}): Line2 {
+  private line(points: THREE.Vector3[], color: string, width: number, o: { opacity?: number; dashed?: boolean; xray?: boolean; order?: number; under?: boolean } = {}): Line2 {
     const flat = new Float32Array(points.length * 3);
     points.forEach((p, i) => p.toArray(flat, i * 3));
     const geo = new LineGeometry();
@@ -357,6 +358,8 @@ export class View3D {
       dashSize: 14,
       gapSize: 14,
       depthTest: !o.xray,
+      // a casing must not hide the line drawn on top of it at the same depth
+      depthWrite: !o.under,
       fog: false,
     });
     const l = new Line2(geo, mat);
@@ -423,7 +426,7 @@ export class View3D {
       if (back.length > 1) this.routes.add(this.line(this.pathPoints(back), "#ffffff", 2, { opacity: 0.7, dashed: true }));
       const pts = this.pathPoints(sel.cells);
       this.routes.add(this.line(pts, ACCENT, 3, { opacity: 0.3, xray: true }));
-      this.routes.add(this.line(pts, "#3a1204", 8, { order: 6 }));
+      this.routes.add(this.line(pts, "#2a0d03", 9, { order: 6, under: true }));
       this.routes.add(this.line(pts, ACCENT, 5, { order: 7 }));
       for (const i of sel.photos) {
         const s = sprite(drawCheck, 0.014);
@@ -488,6 +491,11 @@ export class View3D {
     const g = this.world.groundElevation(f.toEasting(cam.x), f.toNorthing(cam.z));
     if (!Number.isNaN(g)) cam.y = Math.max(cam.y, f.toWorldY(g) + 12);
     this.world.setSky(this.utc, f.toEasting(cam.x), f.toNorthing(cam.z), 0, this.camera);
+    // the planner floats the terrain in the same near-black as the home screen, not in sky haze
+    (this.world.scene.background as THREE.Color).copy(SPACE);
+    this.world.fog.color.copy(SPACE);
+    // thicker than the walk preview's haze: the far backdrop fades out, the planning area stays clear
+    this.world.fog.density = 0.0001;
     this.renderer.render(this.world.scene, this.camera);
     this.ev.onCamera(this.heading(), this.flat);
     if (moving || busy) this.request();
