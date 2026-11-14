@@ -197,7 +197,7 @@ export class Globe {
     const font = Math.min(150, Math.max(46, 0.088 * w));
     const a = this.area?.() ?? { top: phone ? 130 : 64, bottom: h - (phone ? 330 : 274) };
     const sideRoom = phone ? w - 24 : w - 2 * (2.4 * font + 0.22 * font + 12);
-    const d = Math.max(160, Math.min(a.bottom - a.top - 10, sideRoom));
+    const d = Math.max(160, 0.86 * Math.min(a.bottom - a.top - 10, sideRoom));
     const cy = (a.top + a.bottom) / 2;
     const half = h / d; // world units from the screen centre to its top edge (radius 1 = d/2 px)
     const lift = ((h / 2 - cy) * 2) / d;

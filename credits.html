@@ -19,78 +19,82 @@
       </nav>
     </header>
 
-    <main class="page">
+    <main class="page plain">
       <h1><span data-l="en">Credits</span><span data-l="ja">クレジット</span></h1>
       <p class="lead">
-        <span data-l="en">Made for the NASA Space Apps Challenge 2026, “Interplanetary Survival Guide: Martian Map”. Everything on the map is public NASA, USGS and PDS data.</span>
-        <span data-l="ja">NASA Space Apps Challenge 2026「Interplanetary Survival Guide: Martian Map」のために作りました。地図のデータはすべて、NASA・USGS・PDSの公開データです。</span>
+        <span data-l="en">Made for the NASA Space Apps Challenge 2026, “Interplanetary Survival Guide: Martian Map”.</span>
+        <span data-l="ja">NASA Space Apps Challenge 2026「Interplanetary Survival Guide: Martian Map」のために作りました。</span>
       </p>
 
       <section>
-        <h2><span class="n">01</span><span data-l="en">NASA data, by mission</span><span data-l="ja">NASAのデータ（ミッション別）</span></h2>
-        <div class="grid">
-          <div class="box">
-            <h3><span class="dot"></span>MRO · HiRISE</h3>
-            <p><span data-l="en">Elevation (1 m) and images (25 cm) of Gale Crater: the terrain, the safety and "easy to locate" heat maps, the sand.</span><span data-l="ja">ゲール・クレーターの標高（1 m）と画像（25 cm）：地形、安全性と迷いにくさのヒートマップ、砂地。</span></p>
-            <span class="src">MSL Gale DEM &amp; Orthophoto Mosaics v3 (USGS) · PSP_009650_1755 (Univ. of Arizona)</span>
-          </div>
-          <div class="box">
-            <h3><span class="dot" style="background: #ff4fd8"></span>MRO · CRISM</h3>
-            <p><span data-l="en">Spectra from orbit: the hematite heat map (absorption at 0.86 µm).</span><span data-l="ja">軌道からのスペクトル：ヘマタイトのヒートマップ（0.86 µmの吸収）。</span></p>
-            <span class="src">MTRDR FRT0000B6F1 (PDS Geosciences Node)</span>
-          </div>
-          <div class="box">
-            <h3><span class="dot" style="background: #c98b5a"></span>Viking Orbiters 1 &amp; 2</h3>
-            <p><span data-l="en">The colours of the whole planet on the home screen.</span><span data-l="ja">ホーム画面の火星全体の色。</span></p>
-            <span class="src">Viking MDIM 2.1 colour mosaic, 232 m (USGS)</span>
-          </div>
-          <div class="box">
-            <h3><span class="dot" style="background: #a39a8f"></span>Mars Global Surveyor · MOLA</h3>
-            <p><span data-l="en">The far landscape: the crater rim and Mount Sharp.</span><span data-l="ja">遠くの地形：クレーターの縁とシャープ山。</span></p>
-            <span class="src">MOLA MEGDR global elevation, 463 m (USGS)</span>
-          </div>
-          <div class="box">
-            <h3><span class="dot" style="background: var(--stop)"></span>Curiosity (MSL)</h3>
-            <p><span data-l="en">The rover's real path and the positions of the science targets.</span><span data-l="ja">探査車が実際に走った道と、科学目標の位置。</span></p>
-            <span class="src"><a href="https://mars.nasa.gov/mmgis-maps/MSL/Layers/json/MSL_waypoints.json" target="_blank" rel="noopener">MSL localized waypoints</a> (JPL)</span>
-          </div>
-          <div class="box">
-            <h3><span class="dot" style="background: #7cc8ff"></span>Curiosity · REMS</h3>
-            <p><span data-l="en">Weather at Gale. Processed and kept with the project; routes do not use it.</span><span data-l="ja">ゲールの天気。処理して含めていますが、ルート計算には使っていません。</span></p>
-            <span class="src"><a href="https://mars.nasa.gov/rss/api/?feed=weather&amp;category=msl&amp;feedtype=json" target="_blank" rel="noopener">REMS weather feed</a> (CAB, JPL)</span>
-          </div>
-        </div>
-        <p class="foot-note" style="margin-top: 18px">
-          <span data-l="en">Credit: NASA/JPL-Caltech/University of Arizona/USGS (HiRISE), NASA/JPL-Caltech/JHUAPL (CRISM), NASA/JPL/USGS (Viking), NASA/GSFC (MOLA), NASA/JPL-Caltech (Curiosity), NASA/JPL-Caltech/CAB (CSIC-INTA) (REMS). Exact download addresses are in DATA_SOURCES.md in the repository.</span>
-          <span data-l="ja">クレジット：NASA/JPL-Caltech/University of Arizona/USGS（HiRISE）、NASA/JPL-Caltech/JHUAPL（CRISM）、NASA/JPL/USGS（バイキング）、NASA/GSFC（MOLA）、NASA/JPL-Caltech（キュリオシティ）、NASA/JPL-Caltech/CAB (CSIC-INTA)（REMS）。正確なダウンロード先はリポジトリのDATA_SOURCES.mdにあります。</span>
-        </p>
-      </section>
-
-      <section>
-        <h2><span class="n">02</span><span data-l="en">Methods we built on</span><span data-l="ja">土台にした手法</span></h2>
-        <ul class="routes">
-          <li><b><span data-l="en">Photo matching</span><span data-l="ja">写真の照合</span></b><span><span data-l="en">NASA JPL's Mars Global Localization on Perseverance (the principle only).</span><span data-l="ja">NASA JPLがパーサヴィアランスで使うMars Global Localization（原理のみ）。</span></span></li>
-          <li><b><span data-l="en">Hazard check</span><span data-l="ja">危険判定</span></b><span>GESTALT, Goldberg, Maimone &amp; Matthies (2002)</span></li>
-          <li><b><span data-l="en">Walking</span><span data-l="ja">歩行</span></b><span>Tobler (1993) · Pandolf, Givoni &amp; Goldman (1977)</span></li>
-          <li><b><span data-l="en">Walk-back limit</span><span data-l="ja">歩いて帰れる範囲</span></b><span><span data-l="en">Apollo 15–17 traverse planning · Prentice &amp; Roy (2009)</span><span data-l="ja">アポロ15〜17号の行動計画 · Prentice・Roy（2009）</span></span></li>
-          <li><b><span data-l="en">Sun position</span><span data-l="ja">太陽の位置</span></b><span>NASA GISS Mars24 (Allison &amp; McEwen, 2000)</span></li>
+        <h2><span data-l="en">Data</span><span data-l="ja">データ</span></h2>
+        <ul>
+          <li>
+            <b>MRO HiRISE</b> —
+            <a href="https://planetarymaps.usgs.gov/mosaic/Mars/MSL/" target="_blank" rel="noopener">MSL Gale DEM &amp; Orthophoto Mosaics</a>,
+            <a href="https://www.uahirise.org/PSP_009650_1755" target="_blank" rel="noopener">PSP_009650_1755</a>
+            <span class="what"><span data-l="en">Terrain, safety, easy-to-locate</span><span data-l="ja">地形、安全性、迷いにくさ</span></span>
+          </li>
+          <li>
+            <b>MRO CRISM</b> —
+            <a href="https://pds-geosciences.wustl.edu/mro/mro-m-crism-5-rdr-mptargeted-v1/" target="_blank" rel="noopener">MTRDR FRT0000B6F1</a>
+            <span class="what"><span data-l="en">Hematite</span><span data-l="ja">ヘマタイト</span></span>
+          </li>
+          <li>
+            <b>Viking Orbiters</b> —
+            <a href="https://planetarymaps.usgs.gov/mosaic/" target="_blank" rel="noopener">MDIM 2.1 colour mosaic</a>
+            <span class="what"><span data-l="en">The globe on the home screen</span><span data-l="ja">ホーム画面の火星</span></span>
+          </li>
+          <li>
+            <b>MGS MOLA</b> —
+            <a href="https://planetarymaps.usgs.gov/mosaic/" target="_blank" rel="noopener">MEGDR global elevation</a>
+            <span class="what"><span data-l="en">The far landscape</span><span data-l="ja">遠くの地形</span></span>
+          </li>
+          <li>
+            <b>Curiosity (MSL)</b> —
+            <a href="https://mars.nasa.gov/mmgis-maps/MSL/Layers/json/MSL_waypoints.json" target="_blank" rel="noopener">localized waypoints</a>,
+            <a href="https://mars.nasa.gov/rss/api/?feed=weather&amp;category=msl&amp;feedtype=json" target="_blank" rel="noopener">REMS weather</a>
+            <span class="what"><span data-l="en">The rover's path, the science targets, weather</span><span data-l="ja">探査車の道、科学目標、天気</span></span>
+          </li>
         </ul>
       </section>
 
       <section>
-        <h2><span class="n">03</span><span data-l="en">Software</span><span data-l="ja">ソフトウェア</span></h2>
-        <ul class="routes">
-          <li><b><span data-l="en">App</span><span data-l="ja">アプリ</span></b><span>Three.js, Vite, TypeScript</span></li>
-          <li><b><span data-l="en">Data</span><span data-l="ja">データ処理</span></b><span>Python · rasterio, NumPy, SciPy, Pillow</span></li>
-          <li><b><span data-l="en">Fonts</span><span data-l="ja">フォント</span></b><span>Space Grotesk, JetBrains Mono (SIL Open Font License)</span></li>
-          <li><b><span data-l="en">3D</span><span data-l="ja">3D</span></b><span><span data-l="en">Terrain meshes and models are original, built for this project.</span><span data-l="ja">地形メッシュとモデルは、このプロジェクトのためのオリジナルです。</span></span></li>
-          <li><b><span data-l="en">Help</span><span data-l="ja">協力</span></b><span><span data-l="en">Written with an AI coding assistant (Claude Code by Anthropic).</span><span data-l="ja">AIのコーディングアシスタント（AnthropicのClaude Code）の助けを借りて作りました。</span></span></li>
+        <h2><span data-l="en">Methods</span><span data-l="ja">手法</span></h2>
+        <ul>
+          <li>
+            <a href="https://www.jpl.nasa.gov/news/nasas-perseverance-now-autonomously-pinpoints-its-location-on-mars/" target="_blank" rel="noopener">Perseverance self-localization</a>
+            (NASA JPL)
+          </li>
+          <li>GESTALT — Goldberg, Maimone &amp; Matthies, 2002</li>
+          <li>Tobler, 1993 · Pandolf, Givoni &amp; Goldman, 1977</li>
+          <li>Prentice &amp; Roy, 2009 · Apollo Lunar Surface Journal</li>
+          <li><a href="https://www.giss.nasa.gov/tools/mars24/" target="_blank" rel="noopener">Mars24</a> (NASA GISS)</li>
         </ul>
-        <p class="foot-note">
-          <span data-l="en">NASA does not endorse this project. The numbers in the planner are estimates; <a href="/how.html#assumptions">see every assumption</a>.</span>
-          <span data-l="ja">このプロジェクトはNASAの公認ではありません。プランナーの数値は推定です。<a href="/how.html#assumptions">すべての仮定はこちら</a>。</span>
-        </p>
       </section>
+
+      <section>
+        <h2><span data-l="en">Software</span><span data-l="ja">ソフトウェア</span></h2>
+        <ul>
+          <li>
+            <a href="https://threejs.org" target="_blank" rel="noopener">Three.js</a> ·
+            <a href="https://vite.dev" target="_blank" rel="noopener">Vite</a> ·
+            <a href="https://www.typescriptlang.org" target="_blank" rel="noopener">TypeScript</a> ·
+            <a href="https://rasterio.readthedocs.io" target="_blank" rel="noopener">rasterio</a> ·
+            <a href="https://numpy.org" target="_blank" rel="noopener">NumPy</a>
+          </li>
+          <li>
+            <a href="https://fonts.google.com/specimen/Space+Grotesk" target="_blank" rel="noopener">Space Grotesk</a> ·
+            <a href="https://www.jetbrains.com/lp/mono/" target="_blank" rel="noopener">JetBrains Mono</a>
+          </li>
+          <li><span data-l="en">Built with Claude Code (Anthropic)</span><span data-l="ja">Claude Code（Anthropic）を使って制作</span></li>
+        </ul>
+      </section>
+
+      <p class="foot-note">
+        <span data-l="en">Imagery: NASA/JPL-Caltech/University of Arizona/USGS, NASA/JPL-Caltech/JHUAPL, NASA/JPL/USGS, NASA/GSFC. NASA does not endorse this project. Download details: DATA_SOURCES.md in the repository.</span>
+        <span data-l="ja">画像：NASA/JPL-Caltech/University of Arizona/USGS、NASA/JPL-Caltech/JHUAPL、NASA/JPL/USGS、NASA/GSFC。このプロジェクトはNASAの公認ではありません。ダウンロード先はリポジトリのDATA_SOURCES.mdにあります。</span>
+      </p>
     </main>
     <script type="module" src="/src/site/page.ts"></script>
   </body>

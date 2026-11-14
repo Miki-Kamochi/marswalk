@@ -128,7 +128,7 @@ async function start(): Promise<void> {
   // the globe sits between the top bar (or the title on phones) and the cards / search bar
   g.area = () => {
     const phone = innerWidth < 720;
-    const top = phone ? document.querySelector(".title")!.getBoundingClientRect().bottom + 8 : document.querySelector(".bar")!.getBoundingClientRect().bottom - 44;
+    const top = phone ? document.querySelector(".title")!.getBoundingClientRect().bottom + 8 : document.querySelector(".bar")!.getBoundingClientRect().bottom - 16;
     return { top, bottom: document.querySelector(".start")!.getBoundingClientRect().top };
   };
   g.resize();

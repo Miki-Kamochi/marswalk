@@ -2,6 +2,7 @@
 import { DEFAULTS as c } from "../plan/config";
 import { energyPerMetre, walkingPower, walkingSpeed } from "../plan/energy";
 import { initLang, tr } from "./lang";
+import { drawStars } from "./stars";
 
 type Row = [en: string, ja: string, value: string];
 
@@ -56,6 +57,7 @@ function render() {
 }
 
 initLang();
+drawStars();
 render();
 document.addEventListener("langchange", render);
 // links like how.html#assumptions open the dropdown in that section
