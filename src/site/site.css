@@ -569,30 +569,83 @@ header.bar {
 }
 
 /* ---------------------------------------------------------------- moving between pages
-   Cross-document view transitions, kept deliberately simple: the old page fades out, then the
-   new one fades in. The two never overlap (no doubled text, no brightness flicker), nothing
-   moves, and the top bar is swapped in place. Pages have no entrance animations of their own,
-   so what fades in is the finished page. Browsers without view transitions just load the page. */
+   Cross-document view transitions, "out-in": the old page leaves completely before the new one
+   arrives, so the two never overlap (no doubled text, no layout jump). The motion says where you
+   are going:
+   - next / prev: the top-bar pages sit side by side (home, intro, how, credits); the old page
+     slips out one way and the new one comes in from the other.
+   - in / out: the planner lies "inside" Gale Crater; going in, the old page grows a little as it
+     fades and the new one settles up from slightly small; going out is the reverse.
+   - fade: anything else (reloads, unknown pages).
+   The head script on each page picks the type from the URL you came from, so browser back plays
+   the reverse. The top bar does not move; an orange mark under the current page glides between
+   the links. Browsers without view transitions simply load the page. */
 @view-transition {
   navigation: auto;
+}
+:root {
+  --vt-out: 0.17s; /* old page leaving */
+  --vt-in: 0.38s; /* new page arriving, starts when the old one is gone */
+  --vt-ease-out: cubic-bezier(0.4, 0, 1, 1);
+  --vt-ease-in: cubic-bezier(0.22, 1, 0.36, 1);
 }
 header.bar {
   view-transition-name: topbar;
 }
+.bar .links a {
+  position: relative;
+}
+.bar .mark {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  view-transition-name: navmark;
+}
+
 ::view-transition-image-pair(root) {
   isolation: auto;
 }
 ::view-transition-old(root),
 ::view-transition-new(root) {
   mix-blend-mode: normal;
-  animation-timing-function: ease;
 }
 ::view-transition-old(root) {
-  animation: vt-out 0.18s ease-in both;
+  z-index: 0;
+  animation: vt-fade-out var(--vt-out) var(--vt-ease-out) both;
 }
 ::view-transition-new(root) {
-  animation: vt-in 0.38s cubic-bezier(0.2, 0.7, 0.2, 1) 0.18s both;
+  z-index: 1;
+  animation: vt-fade-in var(--vt-in) var(--vt-ease-in) var(--vt-out) both;
 }
+html:active-view-transition-type(next)::view-transition-old(root) {
+  animation-name: vt-out-left;
+}
+html:active-view-transition-type(next)::view-transition-new(root) {
+  animation-name: vt-in-right;
+}
+html:active-view-transition-type(prev)::view-transition-old(root) {
+  animation-name: vt-out-right;
+}
+html:active-view-transition-type(prev)::view-transition-new(root) {
+  animation-name: vt-in-left;
+}
+html:active-view-transition-type(in)::view-transition-old(root) {
+  animation-name: vt-out-grow;
+}
+html:active-view-transition-type(in)::view-transition-new(root) {
+  animation-name: vt-in-grow;
+}
+html:active-view-transition-type(out)::view-transition-old(root) {
+  animation-name: vt-out-shrink;
+}
+html:active-view-transition-type(out)::view-transition-new(root) {
+  animation-name: vt-in-shrink;
+}
+
 /* the top bar stays put between pages that both have it ... */
 ::view-transition-group(topbar) {
   animation: none;
@@ -603,31 +656,102 @@ header.bar {
 ::view-transition-new(topbar) {
   animation: none;
 }
-/* ... and fades with the page when only one side has it (planner, walk preview) */
+/* ... and leaves / arrives with the page when only one side has it (planner) */
 ::view-transition-old(topbar):only-child {
   display: block;
-  animation: vt-out 0.18s ease-in both;
+  animation: vt-fade-out var(--vt-out) var(--vt-ease-out) both;
 }
 ::view-transition-new(topbar):only-child {
-  animation: vt-in 0.38s cubic-bezier(0.2, 0.7, 0.2, 1) 0.18s both;
+  animation: vt-fade-in var(--vt-in) var(--vt-ease-in) var(--vt-out) both;
 }
-@keyframes vt-out {
+
+/* the current-page mark glides from link to link; it grows in when coming from home and fades
+   out when going home (home has no mark) */
+::view-transition-group(navmark) {
+  z-index: 2;
+  animation-duration: calc(var(--vt-out) + var(--vt-in));
+  animation-timing-function: var(--vt-ease-in);
+}
+::view-transition-new(navmark):only-child {
+  animation: vt-mark-in var(--vt-in) var(--vt-ease-in) var(--vt-out) both;
+}
+::view-transition-old(navmark):only-child {
+  animation: vt-fade-out var(--vt-out) var(--vt-ease-out) both;
+}
+
+@keyframes vt-fade-out {
   to {
     opacity: 0;
-    transform: translateY(-6px);
   }
 }
-@keyframes vt-in {
+@keyframes vt-fade-in {
   from {
     opacity: 0;
-    transform: translateY(14px);
   }
 }
+@keyframes vt-out-left {
+  to {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+}
+@keyframes vt-out-right {
+  to {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+@keyframes vt-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+}
+@keyframes vt-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+}
+@keyframes vt-out-grow {
+  to {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+@keyframes vt-in-grow {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+@keyframes vt-out-shrink {
+  to {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+@keyframes vt-in-shrink {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+@keyframes vt-mark-in {
+  from {
+    transform: scaleX(0);
+  }
+}
+/* reduced motion: a short cross-fade, nothing moves */
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-group(*),
-  ::view-transition-old(*),
-  ::view-transition-new(*) {
+  html::view-transition-group(*) {
     animation: none !important;
+  }
+  html::view-transition-old(*) {
+    animation: vt-fade-out 0.16s ease both !important;
+  }
+  html::view-transition-new(*) {
+    animation: vt-fade-in 0.16s ease both !important;
   }
 }
 
@@ -640,4 +764,3 @@ header.bar {
   --glass-line: rgba(236, 228, 218, 0.14);
   --glass-blur: blur(12px) saturate(1.2);
 }
-/*DEBUG-VT*/ ::view-transition-old(*), ::view-transition-new(*), ::view-transition-group(*) { animation-duration: 3s !important; } ::view-transition-new(root), ::view-transition-new(topbar):only-child { animation-delay: 1.5s !important; }

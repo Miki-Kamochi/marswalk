@@ -14,14 +14,32 @@
       } catch (e) {
         document.documentElement.dataset.lang = "en";
       }
-      // resolves when the page-change animation is over; heavy 3D work waits for it
+      // Page changes. Pages sit side by side in the top bar (home, intro, how, credits) and the
+      // planner / walk preview lie one level "inside" Gale Crater, so the animation knows which
+      // way to move (see "moving between pages" in site.css). __revealed resolves when it is
+      // over; heavy 3D work waits for it.
       window.__revealed = new Promise(function (done) {
         addEventListener("pagereveal", function (e) {
-          window.__vt = !!e.viewTransition;
-          if (e.viewTransition) e.viewTransition.finished.then(done, done);
-          else done();
+          var vt = e.viewTransition;
+          window.__vt = !!vt;
+          if (!vt) return done();
+          try {
+            var rank = function (u) {
+              var p = new URL(u).pathname.replace(/\/index\.html$/, "/");
+              var r = { "/": 0, "/intro.html": 1, "/how.html": 2, "/credits.html": 3, "/sim.html": 10, "/game.html": 11 }[p];
+              return r === undefined ? -1 : r;
+            };
+            var a = navigation.activation;
+            var f = a.from ? rank(a.from.url) : -1;
+            var t = rank(a.entry.url);
+            var type = f < 0 || t < 0 || f === t ? "fade" : (f / 10 | 0) !== (t / 10 | 0) ? (t > f ? "in" : "out") : t > f ? "next" : "prev";
+            vt.types.add(type);
+          } catch (err) {
+            vt.types.add("fade");
+          }
+          vt.finished.then(done, done);
         }, { once: true });
-        setTimeout(done, 700);
+        setTimeout(done, 900);
       });
     </script>
     <link rel="stylesheet" href="/src/site/site.css" />
@@ -32,7 +50,7 @@
       <a class="logo" href="/">AresSight</a>
       <nav class="links" aria-label="Pages">
         <a href="/intro.html"><span data-l="en">Introduction</span><span data-l="ja">初めに</span></a>
-        <a href="/how.html" aria-current="page"><span data-l="en">How it works</span><span data-l="ja">仕組み</span></a>
+        <a href="/how.html" aria-current="page"><span data-l="en">How it works</span><span data-l="ja">仕組み</span><i class="mark" aria-hidden="true"></i></a>
         <a href="/credits.html"><span data-l="en">Credits</span><span data-l="ja">クレジット</span></a>
         <button class="lang" data-toggle-lang aria-label="Language"><span data-l="en">日本語</span><span data-l="ja">EN</span></button>
       </nav>
