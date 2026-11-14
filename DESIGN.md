@@ -1,8 +1,18 @@
 # Marswalk design
 
-How Marswalk should look and behave. This is the plan for the redesign; the code does not match it yet.
+How Marswalk should look and behave.
 
-The three reference images (a dark "metaverse" landing page, the "ESCAPE / FLY" page and the "SpaceFox" Mars app) set the mood. We borrow their *qualities*: dark space, one warm glow, thin orbit lines, big calm type, few controls. We do not copy their layouts, logos or artwork.
+## 0. What Marswalk is (decided)
+
+Marswalk is **a planning display inside the crew's habitat**. It is one of the formats the challenge suggests. The crew uses it to prepare an EVA (spacewalk on foot) at Gale Crater. It is a working tool for astronauts, **not a game**. Every screen should look like it belongs on a mission console: calm and operational, with real data and one clear next action.
+
+- **First screen: the EVA briefing.** It shows the site, the science objectives, current conditions, the 3D site view with the planned walk, and one action, "Plan EVA route".
+- **Planner:** choose a destination and compare routes. This is the core tool.
+- **Walk preview:** the first-person view, reframed as a preview of what the ground looks like along the route (the challenge suggests point-of-view images). It must not use game wording.
+- **Conditions** come from Curiosity's REMS weather station and are shown for information only. Routes are planned from terrain, not weather.
+- **Ruled out:** a game title screen, game menus, pixel-art or retro styling, and a marketing landing page.
+
+The three reference images set the general mood: dark, warm, quiet. We borrow qualities, not layouts or artwork.
 
 ---
 
@@ -98,20 +108,14 @@ A single line-icon set at 1.5 px stroke, for example *Lucide*, installed from np
 ## 4. Information architecture
 
 ```
-Home (landing page, one long scroll)
- ├─ Hero: "Never get lost on Mars"            → [Plan a Marswalk]
- ├─ The problem (3 short cards)
- ├─ How Marswalk solves it (3 layers, 4 routes, 3 rules, visually)
- ├─ The data (NASA missions strip)
- └─ Footer: Learn more · Game prototype · Credits · Language
-
-Planner (the simulator)                      ← the main product
-Learn (today's "How it works", rewritten as a visual story + deep-dive sections)
-Credits
-Game (prototype, linked from the footer only)
+EVA briefing (first screen)       objectives · conditions · 3D site view → [Plan EVA route]
+ ├─ Planner                       the core tool (opens with a destination from the briefing)
+ ├─ Walk preview                  first-person view along the route (prototype)
+ ├─ How it works                  method, layers, rules, assumptions
+ └─ Data & credits
 ```
 
-**Change:** the separate menu screen goes away. The home page *is* the menu. Its hero has one big button to the planner, and the other pages sit in the top bar and the footer. A judge reaches the product in one click.
+A judge reaches the planner in one click from the briefing.
 
 Top bar on every page: the wordmark on the left. On the right: Planner, Learn, Credits and the language toggle (`EN / JA`).
 
@@ -217,24 +221,21 @@ Japanese gets the same treatment: plain words first (迷いやすさ, 位置確�
 - **Clicked on no-go or unreachable ground:** an inline card next to the pin says, in one sentence, why there is no route, and offers "Move to the nearest safe spot".
 - **Calculating:** route cards show skeleton shimmer. Routes appear one by one.
 
-## 6. Home page
+## 6. EVA briefing (first screen)
 
-Single scroll, about 5 screens:
+Built (`index.html`). It fits one screen at 1280×720.
 
-1. **Hero.**
-   - Black background with a large soft orange glow and the curved limb of Mars rising from the bottom.
-   - Thin orbit arcs, and a few small dim planets or stars as decoration.
-   - Headline: **"Never get lost on Mars."** Subline: "A map that plans walks you can always come back from. Built on real NASA data."
-   - One accent button: **Plan a Marswalk →**. A quiet secondary link: "How it works".
-2. **The problem.** Three cards with big numbers, each with one sentence:
-   - **0** GPS satellites;
-   - **3–22 min** signal delay;
-   - **30 m**: how close Apollo 14 got before turning back.
-3. **How it works.** Three layer cards (Safe ground, Getting lost risk, Science), each with a small real map crop, then the "3 rules × 4 routes" diagram. Alternating left/right blocks.
-4. **Real NASA data.** A strip of mission chips (MRO HiRISE, MRO CRISM, MGS MOLA, MSL Curiosity), each with a one-line role.
-5. **Closing CTA.** "Plan your first Marswalk" over the glow again, then the footer.
-
-Hero artwork: a CSS/SVG glow plus orbit lines (cheap and crisp). Optionally, a slowly rotating low-poly Mars made in Three.js from the MOLA data we already have. No stock images.
+- **Header:**
+  - the Marswalk mark and "EVA planning";
+  - the site (Gale Crater, foot of Mount Sharp);
+  - the live Gale local solar time, computed with Mars24;
+  - the language switch.
+- **Left: 3D site view.** The real terrain with the four planned routes (recommended in orange) and markers for Base Camp and the stops. Pointing at an objective flies the view there. "Show the whole walk" returns.
+- **Right column:**
+  - **Science objectives for EVA-1.** Each shows why it matters, which instrument found it and how far it is. "Plan →" opens the planner with that destination.
+  - **Conditions.** Curiosity's latest REMS report, labelled with its sol and date.
+  - **"Plan EVA route",** the only accent-coloured button. It is always visible at the bottom of the column.
+  - **Secondary links:** Walk preview, How it works, Data & credits.
 
 ## 7. Learn page (today's "How it works")
 
@@ -266,7 +267,7 @@ Each step ships something that works and is committed on its own.
 3. **Planner flow.** Steps 1–3, the recommended route, route sentences, rule badges and the renamed words.
 4. **Overlays.** Highlight-only colouring, new route styles and pins.
 5. **Oxygen gauge, timeline and "What if…" chips.**
-6. **Home page** as the landing page (removes the menu screen).
+6. ~~Home page~~ → EVA briefing screen (done).
 7. **Learn page** with pictures and deep dives.
 8. **Mobile bottom sheet** and a final pass at 1280×720 and on a phone.
 

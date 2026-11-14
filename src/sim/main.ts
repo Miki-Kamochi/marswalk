@@ -487,7 +487,8 @@ async function main() {
   pushExtras();
   $("boot").remove();
   await setHome(baseCell);
-  const first = positions.places.find((p) => p.id === "stop_vera_rubin_ridge");
+  // the briefing screen can ask for a destination: sim.html?dest=<place id>
+  const first = positions.places.find((p) => p.id === (params.get("dest") ?? "stop_vera_rubin_ridge"));
   if (first) await setDest(cellOfPlace(first));
   if (params.has("debug")) Object.assign(window, { __sim: { state, grid, planner, cfg, setDest, setHome, select, setView } });
 }
