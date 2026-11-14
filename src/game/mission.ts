@@ -1,6 +1,11 @@
-export const TIME_LIMIT = 55 * 60;
 export const SPEEDS = [1, 4, 8, 16] as const;
 export type Speed = typeof SPEEDS[number];
+export const STRAIGHT_LINE_RESERVE = 15 * 60;
+/** Maximum suited walking speed measured in game-time metres per second. */
+export const GAME_WALK_PACE = 1.15;
+
+/** Gives a perfect straight, unobstructed run exactly fifteen minutes in reserve. */
+export const timeLimitForDistance = (distance: number) => Math.ceil(distance / GAME_WALK_PACE + STRAIGHT_LINE_RESERVE);
 
 /** Player.update already encodes the old 4x speed, so this keeps 4x unchanged. */
 export const movementScale = (speed: Speed) => speed / 4;

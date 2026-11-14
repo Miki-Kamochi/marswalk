@@ -62,3 +62,14 @@ test('blank/repeating terrain, missing observations and poor coverage cannot pro
   assert(!matchTerrain({...observation(terrain,0,0),samples:[],coverage:0},terrain,prior).accepted);
   assert(!matchTerrain({...observation(terrain,0,0),coverage:.1},terrain,prior).accepted);
 });
+
+test('usable scan quality produces a smooth range of uncertainty radii', () => {
+  const radii: number[] = [];
+  for (const clarity of [.35, .55, .75, .95]) {
+    const match = matchTerrain({ ...observation(terrain, 10, -6), clarity }, terrain, { e: 25, n: 12, radius: 120 });
+    assert(match.accepted);
+    radii.push(match.radius);
+  }
+  for (let i = 1; i < radii.length; i++) assert(radii[i] < radii[i - 1]);
+  assert(radii[0] - radii.at(-1)! > 15);
+});

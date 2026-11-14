@@ -59,7 +59,9 @@ export function matchTerrain(obs: Observation, map: Surface, prior: Region): Mat
     ? clamp((runner.score - best.score) / 0.22) : 0;
   const factors = { coverage: obs.coverage, contrast: obs.contrast, clarity: obs.clarity, orientation: obs.orientation, uniqueness };
   const quality = scanQuality(factors);
-  const accepted = samples.length >= 24 && factors.coverage >= 0.3 && factors.contrast > 0.08
-    && factors.orientation > 0.25 && uniqueness > 0.12 && quality > 0.4 && best.score < 0.65;
-  return { ...factors, position: { e: best.e, n: best.n }, quality, accepted, radius: 12 + 85 * (1 - quality) ** 2 };
+  // Weak but non-ambiguous observations now provide a coarse fix instead of an all-or-nothing result.
+  // The continuous radius yields roughly 15–110 m fixes across the useful quality range.
+  const accepted = samples.length >= 16 && factors.coverage >= 0.18 && factors.contrast > 0.035
+    && factors.orientation > 0.2 && uniqueness > 0.03 && quality > 0.26 && best.score < 0.85;
+  return { ...factors, position: { e: best.e, n: best.n }, quality, accepted, radius: 14 + 170 * (1 - quality) ** 1.35 };
 }

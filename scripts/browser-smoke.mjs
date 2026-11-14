@@ -40,13 +40,16 @@ try {
     dispatchEvent(new KeyboardEvent('keyup',{code:'KeyW'}));g.tick(0);
     check(g.nav.region.current.radius>initial,'movement expands region');
     const beforeScan=g.nav.region.current.radius;
+    g.setSpeed(16);const scanClock=g.state.missionS;
     g.renderer.domElement.dispatchEvent(new MouseEvent('mousedown',{button:2,bubbles:true}));
     for(let i=0;i<50;i++)g.tick(.1);
+    check(Math.abs(g.state.missionS-scanClock-20)<.1,'scan clock is fixed at 4x');
     check(g.nav.region.pins.length===1,'right-click creates scan pin');
     const pin=g.nav.region.pins[0];
     check(Math.hypot(pin.e-g.player.e,pin.n-g.player.n)<pin.radius,'pin contains truth');
     check(Math.hypot(pin.e-g.player.e,pin.n-g.player.n)>.01,'pin is not true position');
     const saved=JSON.stringify(pin);
+    while(g.state.fixT>=0)g.tick(.1);
     dispatchEvent(new KeyboardEvent('keydown',{code:'KeyM'}));
     check(g.hud.mapOpen&&!document.getElementById('mapOverlay').hidden,'M opens map');
     const time=g.state.missionS;g.tick(1);check(g.state.missionS===time,'map pauses mission clock');
@@ -84,7 +87,7 @@ try {
     for(const target of g.targets){g.player.e=target.e;g.player.n=target.n;g.tick(.1)}
     check(g.state.phase==='done'&&g.state.collected===1,'farthest-site collection completion');
     document.getElementById('againBtn').click();g.tick(0);check(g.state.phase==='collect'&&g.state.collected===0&&g.nav.region.pins.length===0,'restart');
-    g.setSpeed(16);for(let i=0;i<207;i++)g.tick(1);
+    g.setSpeed(16);for(let i=0;i<Math.ceil(g.timeLimit/16)+1;i++)g.tick(1);
     check(g.state.phase==='done'&&document.getElementById('endTitle').textContent.includes('強制帰還'),'time-limit forced return');})()`);
   assert.deepEqual(errors,[],'Uncaught browser exceptions');
   console.log(`PASS: collection start, speed controls, scan, map pause, fixed history, farthest-site completion, restart and forced return. Screenshots: ${profile}`);

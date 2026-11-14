@@ -1,11 +1,18 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { movementScale, SPEEDS, stormLevel } from './mission.ts';
+import { GAME_WALK_PACE, movementScale, SPEEDS, stormLevel, STRAIGHT_LINE_RESERVE, timeLimitForDistance } from './mission.ts';
 
 test('simulation multipliers scale walking and game time consistently', () => {
   assert.deepEqual(SPEEDS, [1, 4, 8, 16]);
   for (const speed of SPEEDS) assert.equal(movementScale(speed) * 4, speed);
   assert.equal(movementScale(4), 1);
+});
+
+test('straight-line maximum pace leaves fifteen game minutes in reserve', () => {
+  const distance = 3195.318;
+  const limit = timeLimitForDistance(distance);
+  assert(limit - distance / GAME_WALK_PACE >= STRAIGHT_LINE_RESERVE);
+  assert(limit - distance / GAME_WALK_PACE < STRAIGHT_LINE_RESERVE + 1);
 });
 
 test('dust storm repeats every fifteen game minutes and has a visible peak', () => {

@@ -10,6 +10,7 @@
 <body>
   <div id="view"></div>
   <div id="hud" style="display:none">
+    <img id="helmetHud" src="/ui/headset-hud.svg" alt="" aria-hidden="true" />
     <div id="mission" class="panel"><div class="tag">EVA-1 / FIELD SAMPLE</div><strong>最遠地点の試料を回収する</strong><div id="clock"></div><div id="targetList"></div><div id="o2"><div id="o2fill"></div><span id="o2text"></span></div></div>
     <div id="heading" class="panel"></div>
     <div id="weather" class="panel"></div>
@@ -17,15 +18,16 @@
     <div id="alert" role="status"></div>
     <div id="instruments" class="panel"><div class="tag">WAYFINDER / MGL</div><div id="radius"></div><div id="scanStatus" aria-live="polite"></div><button id="scanBtn">スキャン [右クリック / E]</button><div class="help">WASD: 移動 · マウス: 見回す · M: 全域マップ</div></div>
     <div id="scanCapture" class="panel" hidden><div class="tag">NAVCAM / 360° PANORAMA</div><div id="panorama"></div></div>
-    <div id="mapBox" class="panel"><button id="mapBtn" aria-label="全域マップを開く">全域マップ [M] ↗</button><canvas id="minimap" aria-label="ステージ全域の地図"></canvas><div class="mapLegend">黄: 未回収 / 緑: 回収済み<br>青: 存在可能性円 / 橙: スキャン履歴</div></div>
+    <div id="fixOverlay" hidden><canvas id="fixMap" aria-label="高精度測位アニメーション"></canvas><div id="fixReticle"></div></div>
+    <div id="mapBox" class="panel"><button id="mapBtn" aria-label="全域マップを開く">全域マップ [M] ↗</button><canvas id="minimap" aria-label="ステージ全域の地図"></canvas><div class="mapLegend">明青: 目標 / 緑: 回収済み<br>青: 存在可能性円 / 暗青: スキャン履歴</div></div>
   </div>
   <div id="mapOverlay" hidden role="dialog" aria-label="全画面マップ">
     <header><div><div class="tag">GALE CRATER / ORBITAL MAP</div><h2>最遠の採取地点</h2></div><button id="closeMap">閉じる [M / Esc]</button></header>
-    <div id="mapLayout"><canvas id="fullMap" aria-label="採取地点と保存したスキャン円"></canvas><aside><h3>地図表示</h3><p>黄: 未回収の採取地点<br>緑: 回収済み<br>青い円: 現在の存在可能性<br>橙の円: 撮影時点の存在可能性</p><p>円内のどこかにいると推定されています。移動すると円は広がり、右側へドリフトします。</p><h3>直近の照合品質</h3><p id="quality"></p><h3>スキャン記録</h3><pre id="scanLog">まだ記録はありません</pre><a href="/MGL_requirements.md" target="_blank" rel="noopener">MGLの要件・モデルの説明 ↗</a><p class="help">マップ表示中は移動・時計・撮影を一時停止します。</p></aside></div>
+    <div id="mapLayout"><canvas id="fullMap" aria-label="採取地点と保存したスキャン円"></canvas><aside><h3>地図表示</h3><p>明青: 未回収の採取地点<br>緑: 回収済み<br>明るい青円: 現在の存在可能性<br>暗い青円: 撮影時点の存在可能性</p><p>円内のどこかにいると推定されています。移動すると円は広がり、右側へドリフトします。</p><h3>直近の照合品質</h3><p id="quality"></p><h3>スキャン記録</h3><pre id="scanLog">まだ記録はありません</pre><a href="/MGL_requirements.md" target="_blank" rel="noopener">MGLの要件・モデルの説明 ↗</a><p class="help">マップ表示中は移動・時計・撮影を一時停止します。</p></aside></div>
   </div>
   <div id="stick"><div id="knob"></div></div>
   <div id="loading" class="overlay">Loading…</div>
-  <div id="start" class="overlay" style="display:none"><div class="card"><div class="tag">MARSWALK / EVA-1</div><h1>採取開始。</h1><p class="lead">マップ右下から出発し、制限時間内に最も遠いMurray Buttesへ向かう。</p><p class="help">黄色い回収円へ入ると試料を自動回収します。地図に現在位置を示す点はありません。歩くほど曖昧になる位置を、周囲の地形と軌道画像の照合で確かめてください。</p><p class="help">WASDで移動、マウスで見回す。静止して右クリック / Eで360°スキャン。Mで全画面マップ。倍率ボタンで移動と時間を1×〜16×へ変更できます。</p><button id="startBtn">採取を開始</button><p class="credit">地形・画像: NASA/JPL-Caltech/UArizona/USGS<br>MGLはPerseveranceの方式を参考にした簡略シミュレーション。</p></div></div>
+  <div id="start" class="overlay" style="display:none"><div class="card"><div class="tag">MARSWALK / EVA-1</div><h1>採取開始。</h1><p class="lead">マップ右下から出発し、制限時間内に最も遠いMurray Buttesへ向かう。</p><p class="help">青い回収円へ入ると試料を自動回収します。直線を最速歩行できた場合は、到着時にゲーム内15分が残る制限時間です。地図に自機は表示されません。</p><p class="help">WASDで移動、マウスで見回す。静止して右クリック / Eで360°スキャン。Mで全画面マップ。倍率ボタンで移動と時間を1×〜16×へ変更できます。</p><button id="startBtn">採取を開始</button><p class="credit">地形・画像: NASA/JPL-Caltech/UArizona/USGS<br>MGLはPerseveranceの方式を参考にした簡略シミュレーション。</p></div></div>
   <div id="end" class="overlay" style="display:none"><div class="card"><h2 id="endTitle"></h2><p id="endLead" class="lead"></p><p id="endStats" class="help"></p><button id="againBtn">もう一度採取する</button></div></div>
   <script type="module" src="/src/game/main.ts"></script>
 </body>

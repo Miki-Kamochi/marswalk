@@ -3,9 +3,10 @@ import { toLonLat } from '../data/frame';
 import { dataUrl, loadRaster, type Place } from '../data/loader';
 import { bearing } from '../nav/rng';
 import { nextLocalTime } from '../nav/sun';
+import type { Region } from '../nav/mgl';
 import { Controls } from './controls';
 import { Hud, type CollectionTarget } from './hud';
-import { movementScale, SPEEDS, stormLevel, TIME_LIMIT, type Speed } from './mission';
+import { movementScale, SPEEDS, stormLevel, timeLimitForDistance, type Speed } from './mission';
 import { Nav } from './nav';
 import { Panorama } from './panorama';
 import { EYE_HEIGHT, Player } from './player';
@@ -41,6 +42,7 @@ async function main() {
     e: world.meta.frame.play.east - 110,
     n: world.meta.frame.play.south + 110,
   };
+  const timeLimit = timeLimitForDistance(Math.hypot(targets[0].e - start.e, targets[0].n - start.n));
   const startUtc = nextLocalTime(Date.UTC(2041, 5, 1), toLonLat(start.e, start.n).lon, 14.5);
   const sites = stopPlaces.map((place: Place, index) => {
     const site = makeSampleSite(index);
@@ -53,7 +55,8 @@ async function main() {
   $('panorama').appendChild(pano.canvas);
   let player: Player, nav: Nav;
   let phase: 'brief' | 'collect' | 'done' = 'brief';
-  let missionS = 0, elapsed = 0, dust = 0.25, scanT = -1, speed: Speed = 4;
+  let missionS = 0, elapsed = 0, dust = 0.25, scanT = -1, fixT = -1, speed: Speed = 4;
+  let fixFrom: Region | null = null, fixTo: Region | null = null;
   let scanStatus = '周囲をスキャンして位置を推定', message = '', messageUntil = 0;
 
   function say(text: string, seconds = 8) { message = text; messageUntil = elapsed + seconds; }
@@ -63,9 +66,9 @@ async function main() {
     controls.mapOpen = false; hud.toggleMap(false);
     nav = new Nav(world, sand, orbital, player, Math.floor(Math.random() * 1e6) + 1);
     targets.forEach((target, i) => { target.collected = false; setSampleCollected(sites[i], false); });
-    missionS = elapsed = 0; dust = 0.25; scanT = -1; speed = 4; phase = 'brief';
+    missionS = elapsed = 0; dust = 0.25; scanT = fixT = -1; fixFrom = fixTo = null; speed = 4; phase = 'brief';
     scanStatus = '周囲をスキャンして位置を推定'; message = ''; messageUntil = 0;
-    pano.reset(); $('scanCapture').hidden = true; updateSpeedButtons();
+    pano.reset(); $('scanCapture').hidden = true; hud.hideLocalization(); updateSpeedButtons();
   }
   function begin() {
     $('start').style.display = 'none'; $('end').style.display = 'none'; phase = 'collect'; controls.enabled = true; hud.show(true);
@@ -73,12 +76,12 @@ async function main() {
     say('制限時間内にマップ上の最遠地点へ向かい、試料を回収してください。');
   }
   function toggleMap() {
-    if (phase !== 'collect') return;
+    if (phase !== 'collect' || fixT >= 0) return;
     hud.toggleMap(); controls.mapOpen = hud.mapOpen; controls.release();
     if (!hud.mapOpen && !controls.touch) controls.capture();
   }
   function scan() {
-    if (phase !== 'collect' || hud.mapOpen || scanT >= 0) return;
+    if (phase !== 'collect' || hud.mapOpen || scanT >= 0 || fixT >= 0) return;
     controls.update();
     if (Math.hypot(controls.moveX, controls.moveY) > 0.05) { say('スキャンするには立ち止まってください。'); return; }
     scanT = 0; pano.reset(); $('scanCapture').hidden = false;
@@ -102,7 +105,7 @@ async function main() {
   document.querySelectorAll<HTMLButtonElement>('[data-speed]').forEach(button => button.addEventListener('click', () => setSpeed(Number(button.dataset.speed))));
 
   function finish(success: boolean, reason = '') {
-    phase = 'done'; scanT = -1; controls.enabled = false; controls.release(); hud.toggleMap(false); controls.mapOpen = false; hud.show(false);
+    phase = 'done'; scanT = fixT = -1; controls.enabled = false; controls.release(); hud.toggleMap(false); hud.hideLocalization(); controls.mapOpen = false; hud.show(false);
     $('endTitle').textContent = success ? '試料の採取を完了。' : '強制帰還';
     $('endLead').textContent = success ? '全試料を制限時間内に確保しました。' : reason;
     $('endStats').textContent = `回収 ${targets.filter(t => t.collected).length}/${targets.length} · 歩行 ${Math.round(player.walked)} m · 経過 ${Math.floor(missionS / 60)}分${String(Math.floor(missionS % 60)).padStart(2, '0')}秒 · スキャン ${nav.region.pins.length} 回`;
@@ -120,18 +123,21 @@ async function main() {
   function tick(dt: number) {
     const active = phase === 'collect' && !hud.mapOpen && !document.hidden;
     if (active) {
-      elapsed += dt; missionS += dt * speed;
+      const cinematic = scanT >= 0 || fixT >= 0;
+      elapsed += dt; missionS += dt * (cinematic ? 4 : speed);
       controls.update();
-      const moving = Math.hypot(controls.moveX, controls.moveY) > 0.05;
+      const moving = fixT < 0 && Math.hypot(controls.moveX, controls.moveY) > 0.05;
       if (scanT >= 0 && moving) { scanT = -1; scanStatus = '撮影中断 · 移動を検出'; $('scanCapture').hidden = true; say('立ち止まって、もう一度スキャンしてください。'); }
-      const terrainFactor = nav.isSand(player.e, player.n) ? 0.65 : 1;
-      if (moving && dust > 0.45) controls.yaw += RIGHT_VEER * dt * Math.min(1, (dust - 0.45) / 0.5);
-      player.update(dt * movementScale(speed) * terrainFactor, controls, world);
-      nav.update(player); collectNearby();
+      if (fixT < 0) {
+        const terrainFactor = nav.isSand(player.e, player.n) ? 0.65 : 1;
+        if (moving && dust > 0.45) controls.yaw += RIGHT_VEER * dt * Math.min(1, (dust - 0.45) / 0.5);
+        player.update(dt * movementScale(speed) * terrainFactor, controls, world);
+        nav.update(player); collectNearby();
+      }
       dust = stormLevel(missionS);
-      if (phase === 'collect' && missionS >= TIME_LIMIT) finish(false, 'EVA時間切れ。安全規定により採取を中断し、隊員を強制帰還させました。');
+      if (phase === 'collect' && missionS >= timeLimit) finish(false, 'EVA時間切れ。安全規定により採取を中断し、隊員を強制帰還させました。');
     }
-    world.worldPos(player.e, player.n, EYE_HEIGHT + (scanT >= 0 ? 0 : Math.sin(player.bob * 1.9) * 0.05), camera.position);
+    world.worldPos(player.e, player.n, EYE_HEIGHT + (scanT >= 0 || fixT >= 0 ? 0 : Math.sin(player.bob * 1.9) * 0.05), camera.position);
     camera.rotation.set(controls.pitch, -controls.yaw, 0, 'YXZ'); camera.updateMatrixWorld();
     world.setSky(startUtc + missionS * 1000, player.e, player.n, dust, camera);
     if (active && phase === 'collect' && scanT >= 0) {
@@ -143,15 +149,28 @@ async function main() {
       }
       if (scanT > 3.9) scanStatus = '軌道画像・地形を照合中…';
       if (scanT > 4.5) {
+        const before = { ...nav.region.current };
         const { pin, match } = nav.scan(player, dust, missionS);
         scanStatus = `#${pin.id} ${pin.improved ? '位置推定を更新' : '円の縮小なし'} · 照合品質 ${Math.round(match.quality * 100)}%`;
         say(pin.improved ? `存在可能性円を半径 ${Math.ceil(pin.radius)} m に更新。` : '十分な新しい情報が得られませんでした。');
         scanT = -1; $('scanCapture').hidden = true;
+        if (pin.improved && pin.radius <= 40) {
+          fixT = 0; fixFrom = before; fixTo = { ...pin };
+          controls.release(); hud.showLocalization(nav, targets, fixFrom, fixTo, 0);
+        }
+      }
+    }
+    if (active && phase === 'collect' && fixT >= 0 && fixFrom && fixTo) {
+      fixT += dt;
+      hud.showLocalization(nav, targets, fixFrom, fixTo, fixT / 3.6);
+      if (fixT >= 3.6) {
+        fixT = -1; hud.hideLocalization();
+        if (!controls.touch) controls.capture();
       }
     }
     if (phase === 'collect') hud.update(nav, targets, {
-      time: missionS, remaining: Math.max(0, TIME_LIMIT - missionS), dust, scan: scanStatus,
-      message: elapsed < messageUntil ? message : '', heading: controls.yaw, speed,
+      time: missionS, remaining: Math.max(0, timeLimit - missionS), total: timeLimit, dust, scan: scanStatus,
+      message: elapsed < messageUntil ? message : '', heading: controls.yaw, speed: scanT >= 0 || fixT >= 0 ? 4 : speed,
     });
     renderer.render(world.scene, camera);
   }
@@ -159,9 +178,9 @@ async function main() {
   $('startBtn').addEventListener('click', begin); $('againBtn').addEventListener('click', () => { reset(); begin(); });
   addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
   if (params.has('debug')) (window as unknown as Record<string, unknown>).__mw = {
-    world, controls, camera, renderer, targets, start, hud, begin, scan, tick, reset, setSpeed,
+    world, controls, camera, renderer, targets, start, timeLimit, hud, begin, scan, tick, reset, setSpeed,
     get player() { return player; }, get nav() { return nav; },
-    get state() { return { phase, missionS, dust, elapsed, scanT, speed, collected: targets.filter(t => t.collected).length }; },
+    get state() { return { phase, missionS, dust, elapsed, scanT, fixT, speed, collected: targets.filter(t => t.collected).length }; },
   };
   let last = performance.now();
   renderer.setAnimationLoop(now => { const dt = Math.min((now - last) / 1000, 0.1); last = now; if (!params.has('manual')) tick(dt); });
