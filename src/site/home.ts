@@ -16,6 +16,8 @@ const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
 let places: Place[] = [];
+/** re-fits the globe when the content below the search bar changes height */
+let relayout = () => {};
 const open = (p: Place) => location.assign(`/sim.html?dest=${encodeURIComponent(p.id)}`);
 
 /** what each science target is for, in a few words */
@@ -79,6 +81,7 @@ function renderBelow(): void {
     : `<div class="head"><h2>${esc(tr("Start with a science target", "科学目標から始める"))}</h2></div>`;
   const cards = tab === "plans" ? plans.slice(0, 3).map(planCard) : stops.map((p) => targetCard(p, base));
   box.innerHTML = `${head}<ul class="cards">${cards.join("")}</ul>`;
+  relayout();
 }
 
 function renderText(): void {
@@ -122,6 +125,14 @@ async function start(): Promise<void> {
 
   const g = await globe;
   if (!g) return;
+  // the globe sits between the top bar (or the title on phones) and the cards / search bar
+  g.area = () => {
+    const phone = innerWidth < 720;
+    const top = phone ? document.querySelector(".title")!.getBoundingClientRect().bottom + 8 : document.querySelector(".bar")!.getBoundingClientRect().bottom - 44;
+    return { top, bottom: document.querySelector(".start")!.getBoundingClientRect().top };
+  };
+  g.resize();
+  relayout = () => g.resize();
   // the "Gale Crater" label follows the marker while it faces us
   const spot = $("spot");
   g.onSpot = (x, y, facing) => {

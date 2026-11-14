@@ -140,11 +140,11 @@ body.home::after {
   animation: fade 1.4s var(--ease) 0.2s both;
 }
 .title .w1 {
-  right: calc(50% + var(--globe-d) / 2 + var(--gap));
+  right: calc(50% + var(--globe-d) / 2 + var(--title-size, 80px) * 0.22);
   font-weight: 600;
 }
 .title .w2 {
-  left: calc(50% + var(--globe-d) / 2 + var(--gap));
+  left: calc(50% + var(--globe-d) / 2 + var(--title-size, 80px) * 0.22);
   font-weight: 300;
 }
 @keyframes fade {

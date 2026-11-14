@@ -26,6 +26,8 @@ export class Globe {
   private t0 = performance.now();
   /** called every frame with Gale Crater's screen position (CSS px) and how much it faces us (0..1) */
   onSpot: ((x: number, y: number, facing: number) => void) | null = null;
+  /** the free band for the globe, in CSS px from the top of the screen; set by the page */
+  area: (() => { top: number; bottom: number }) | null = null;
   private tmpV = new THREE.Vector3();
   private tmpN = new THREE.Vector3();
 
@@ -189,15 +191,14 @@ export class Globe {
     // draw at 1/pixel of the CSS size; CSS scales it back up with crisp pixels
     this.renderer.setPixelRatio(1 / this.pixel);
     this.renderer.setSize(w, h, true);
-    // the globe fills the space between the top bar and the cards above the search bar,
-    // and leaves room for "Ares" and "Sight" on either side (on phones the title sits above)
+    // the globe fills the space between the top bar and whatever sits below it (measured by
+    // the page through `area`), and leaves room for "Ares" and "Sight" on either side
     const phone = w < 720;
-    const top = phone ? 130 : 64;
-    const below = phone ? 330 : 274;
-    const font = Math.min(124, Math.max(46, 0.075 * w));
-    const sideRoom = phone ? w - 40 : w - 2 * (2.8 * font + 32 + 24);
-    const d = Math.max(160, Math.min(h - below - top - 8, sideRoom));
-    const cy = top + (h - below - top) / 2;
+    const font = Math.min(150, Math.max(46, 0.088 * w));
+    const a = this.area?.() ?? { top: phone ? 130 : 64, bottom: h - (phone ? 330 : 274) };
+    const sideRoom = phone ? w - 24 : w - 2 * (2.4 * font + 0.22 * font + 12);
+    const d = Math.max(160, Math.min(a.bottom - a.top - 10, sideRoom));
+    const cy = (a.top + a.bottom) / 2;
     const half = h / d; // world units from the screen centre to its top edge (radius 1 = d/2 px)
     const lift = ((h / 2 - cy) * 2) / d;
     this.camera.aspect = w / Math.max(1, h);
