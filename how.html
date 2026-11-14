@@ -37,6 +37,9 @@
           } catch (err) {
             vt.types.add("fade");
           }
+          // a skipped transition rejects these; that is fine, the page simply appears
+          vt.ready.catch(function () {});
+          vt.updateCallbackDone.catch(function () {});
           vt.finished.then(done, done);
         }, { once: true });
         setTimeout(done, 900);
