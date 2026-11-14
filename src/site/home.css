@@ -2,7 +2,7 @@
    one search bar and a row of cards below. --globe-d / --globe-y come from globe.ts. */
 :root {
   --globe-d: min(56vh, 66vw);
-  --globe-y: 39vh;
+  --globe-y: 37vh;
   --gap: clamp(20px, 3vw, 48px);
 }
 body.home {
@@ -146,7 +146,7 @@ body.home::after {
   position: absolute;
   z-index: 3;
   left: 50%;
-  top: calc(var(--globe-y) + var(--globe-d) / 2 + 28px);
+  bottom: 48px;
   transform: translateX(-50%);
   width: min(620px, calc(100vw - 32px));
   animation: fade 1s var(--ease) 0.4s both;
@@ -230,14 +230,14 @@ body.home::after {
   z-index: 10;
   left: 0;
   right: 0;
-  top: calc(100% + 8px);
+  bottom: calc(100% + 8px);
   margin: 0;
   padding: 6px;
   list-style: none;
   background: #14110f;
   border: 1px solid rgba(236, 228, 218, 0.12);
   border-radius: 20px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.8);
 }
 .suggest li {
   display: flex;
@@ -280,7 +280,7 @@ body.home::after {
 
 /* ---------------------------------------------------------------- cards below the search */
 .below {
-  margin-top: 22px;
+  margin-bottom: 18px;
 }
 .below .head {
   display: flex;
@@ -416,7 +416,7 @@ body.home::after {
   position: absolute;
   z-index: 2;
   inset: auto 0 0;
-  padding: 0 16px 14px;
+  padding: 0 16px 16px;
   text-align: center;
   font-size: 11px;
   color: rgba(236, 228, 218, 0.38);

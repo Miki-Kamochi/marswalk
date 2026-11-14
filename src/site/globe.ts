@@ -43,9 +43,9 @@ export class Globe {
     this.scene.add(this.spin);
 
     // light from the right and a little behind: a lit crescent, the rest in night
-    const sun = new THREE.DirectionalLight(0xfff1e0, 3.4);
-    sun.position.set(3, 0.9, 0.4);
-    this.scene.add(sun, new THREE.AmbientLight(0x6a5444, 0.55));
+    const sun = new THREE.DirectionalLight(0xfff1e0, 4.4);
+    sun.position.set(2.4, 0.9, 1.5);
+    this.scene.add(sun, new THREE.AmbientLight(0x7a6050, 1.1));
 
     // thin warm rim of atmosphere
     const rim = new THREE.Mesh(
@@ -60,7 +60,7 @@ export class Globe {
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }`,
         fragmentShader: `uniform vec3 uSun; varying vec3 vN; varying vec3 vW;
           void main(){ float edge = pow(1. - abs(vN.z), 3.); float lit = smoothstep(-0.3, 0.6, dot(vW, uSun));
-          gl_FragColor = vec4(vec3(1., .55, .3), edge * lit * .45); }`,
+          gl_FragColor = vec4(vec3(1., .55, .3), edge * lit * .6); }`,
       }),
     );
     this.scene.add(rim);
@@ -189,8 +189,8 @@ export class Globe {
     // draw at 1/pixel of the CSS size; CSS scales it back up with crisp pixels
     this.renderer.setPixelRatio(1 / this.pixel);
     this.renderer.setSize(w, h, true);
-    const d = Math.min(0.56 * h, 0.66 * w);
-    const cy = 0.39 * h;
+    const d = Math.min(0.54 * h, 0.66 * w);
+    const cy = 0.37 * h;
     const half = h / d; // world units from the screen centre to its top edge (radius 1 = d/2 px)
     const lift = ((h / 2 - cy) * 2) / d;
     this.camera.aspect = w / Math.max(1, h);
