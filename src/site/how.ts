@@ -797,7 +797,7 @@ function pin(c: CanvasRenderingContext2D, x: number, y: number, color: string, l
   c.fillText(label, right ? x + 8 * s : x - 8 * s - w, y + 4 * s);
 }
 
-// ------------------------------------------------------------ 12: the error circle along the real route
+// ------------------------------------------------------------ 12: exaggerated dead-reckoning circle, reset by a photo every 100 m
 async function error(ctx: SlideCtx) {
   const [L, P] = await Promise.all([ready, getPlans()]);
   if (!ctx.alive()) return;
@@ -828,44 +828,81 @@ async function error(ctx: SlideCtx) {
   const c = cv.getContext("2d")!;
   const comp = composite(L, { safety: true, loc: true, hem: false });
   const total = r.cells.length - 1;
-  const photos = new Set(r.photos);
-  const dur = 9000;
+  const totalDistance = r.dist[total];
+  const fixes = Array.from({ length: Math.floor(totalDistance / 100) }, (_, i) => (i + 1) * 100);
+  const routePoint = (distance: number): { v: number; x: number; y: number } => {
+    let lo = 0;
+    let hi = total;
+    while (lo < hi) {
+      const mid = Math.ceil((lo + hi) / 2);
+      if (r.dist[mid] <= distance) lo = mid;
+      else hi = mid - 1;
+    }
+    const v = Math.min(total, lo);
+    const next = Math.min(total, v + 1);
+    const span = Math.max(1e-6, r.dist[next] - r.dist[v]);
+    const f = next === v ? 0 : clamp01((distance - r.dist[v]) / span);
+    const [ax, ay] = at(L, r.cells[v], s);
+    const [bx, by] = at(L, r.cells[next], s);
+    return { v, x: ax + (bx - ax) * f, y: ay + (by - ay) * f };
+  };
+  const dur = 8500;
   await ctx.frames((t) => {
     const k = ctx.reduced ? 1 : clamp01(t / dur);
-    const f = k * total;
-    const v = Math.min(total, Math.floor(f));
+    const walked = k * totalDistance;
+    const pos = routePoint(walked);
+    const v = pos.v;
+    const cycleDistance = walked % 100;
+    const cycle = Math.floor(walked / 100);
+    // Intentionally theatrical: the uncertainty gets big almost immediately, then snaps to 2 m.
+    const shown = 2 + 48 * Math.pow(cycleDistance / 100, 0.42);
+    const justFixed = walked >= 100 && cycleDistance < 10;
     c.imageSmoothingEnabled = false;
     c.drawImage(comp, x0, y0, x1 - x0, y1 - y0, 0, 0, cv.width, cv.height);
     c.save();
     c.translate(-x0 * s, -y0 * s);
     drawRoute(c, L, r, s, "rgba(255,178,122,0.35)", 3);
     drawRoute(c, L, r, s, "#ff6b2c", 4, v + 1);
-    for (const p of r.photos) if (p <= v) pin(c, ...at(L, r.cells[p], s), "#7cc8ff", "", 0.7);
+    for (const distance of fixes) {
+      const p = routePoint(distance);
+      pin(c, p.x, p.y, distance <= walked ? "#7cc8ff" : "rgba(124,200,255,0.35)", "", 0.7);
+    }
     const [hx, hy] = at(L, P.home, s);
     pin(c, hx, hy, "#7cc8ff", tr("Base", "基地"), 1.2);
     const [dx, dy] = at(L, P.dest, s);
     pin(c, dx, dy, "#ffd166", tr("Vera Rubin Ridge", "ヴェラ・ルービン・リッジ"), 1.2);
     // the walker and the circle it could be in (metres → pixels: 1 cell = 6 m)
-    const [wx, wy] = at(L, r.cells[v], s);
-    const err = r.errorIn[v] + (r.errorIn[Math.min(total, v + 1)] - r.errorIn[v]) * (f - v);
-    const shown = photos.has(v) ? r.errorOut[v] : err;
-    const rad = (shown / 6) * s;
-    c.fillStyle = shown > cfg.errorLimit * 0.8 ? "rgba(255,90,90,0.25)" : "rgba(124,200,255,0.22)";
-    c.strokeStyle = shown > cfg.errorLimit * 0.8 ? "#ff5a5a" : "#7cc8ff";
-    c.lineWidth = 2;
+    const wx = pos.x;
+    const wy = pos.y;
+    // Visual radius is amplified so the rapid growth and 100 m snap-reset read clearly at slide scale.
+    const rad = (shown / 6) * s * 2.5;
+    c.fillStyle = shown > 24 ? "rgba(255,90,90,0.27)" : "rgba(124,200,255,0.25)";
+    c.strokeStyle = shown > 24 ? "#ff5a5a" : "#7cc8ff";
+    c.lineWidth = 3;
     c.beginPath();
     c.arc(wx, wy, Math.max(rad, 3), 0, Math.PI * 2);
     c.fill();
     c.stroke();
+    if (justFixed) {
+      const flash = 1 - cycleDistance / 10;
+      c.strokeStyle = `rgba(255,255,255,${flash})`;
+      c.lineWidth = 4;
+      c.beginPath();
+      c.arc(wx, wy, 8 + 30 * (1 - flash), 0, Math.PI * 2);
+      c.stroke();
+      c.fillStyle = `rgba(255,255,255,${flash})`;
+      c.font = `700 ${12 * s}px system-ui, sans-serif`;
+      c.fillText(tr("PHOTO FIX", "写真で補正"), wx + 10, wy - 12);
+    }
     c.fillStyle = "#fff";
     c.beginPath();
     c.arc(wx, wy, 4, 0, Math.PI * 2);
     c.fill();
     c.restore();
-    const photosSoFar = r.photos.filter((p) => p <= v).length;
+    const toFix = Math.max(0, 100 - cycleDistance);
     read.textContent = tr(
-      `${Math.round(r.dist[v])} m walked · position error ${shown.toFixed(1)} m · photo fixes ${photosSoFar}`,
-      `${Math.round(r.dist[v])} m · 位置の誤差 ${shown.toFixed(1)} m · 写真で確認 ${photosSoFar}回`,
+      `${Math.round(walked)} m · possible-position circle ${shown.toFixed(0)} m · next photo in ${Math.ceil(toFix)} m · fixes ${cycle}`,
+      `${Math.round(walked)} m · 存在可能性円 ${shown.toFixed(0)} m · 次の撮影まで ${Math.ceil(toFix)} m · 補正 ${cycle}回`,
     );
     return k < 1;
   });
