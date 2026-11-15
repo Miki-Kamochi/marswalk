@@ -82,7 +82,7 @@ const LIMITER: Record<string, Pair> = {
 export const limiterName = (k: string) => tr(...LIMITER[k]);
 
 const PROFILE: Record<Profile, Pair> = {
-  short: ["Shortest distance", "最短距離"],
+  short: ["Fastest", "最短時間"],
   o2: ["Least oxygen", "省エネ"],
   found: ["Easiest to locate", "迷いにくさ"],
   mix: ["Balanced", "統合"],

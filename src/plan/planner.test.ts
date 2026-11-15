@@ -83,7 +83,7 @@ test("a destination behind a closed wall is reported as cut off; one inside a wa
   assert.equal(p.plan(-1).problem, "outside");
 });
 
-test("the least-oxygen route walks around a hill that the shortest route climbs", () => {
+test("over a hill: the fastest route takes the least time, the least-oxygen route the least oxygen", () => {
   const { grid, at } = makeGrid(90, 70, (l) => {
     for (let r = 0; r < 70; r++) {
       for (let c = 0; c < 90; c++) {
@@ -95,9 +95,12 @@ test("the least-oxygen route walks around a hill that the shortest route climbs"
   const p = new Planner(grid, DEFAULTS);
   p.setHome(at(10, 35));
   const r = byProfile(p.plan(at(80, 35)).routes);
-  assert.ok(r.short.stats.distance < r.o2.stats.distance, "shortest is shorter");
-  assert.ok(r.o2.stats.o2Out < r.short.stats.o2Out * 0.9, `o2 ${r.o2.stats.o2Out} vs short ${r.short.stats.o2Out}`);
-  assert.ok(r.o2.stats.ascent < r.short.stats.ascent / 2);
+  // walking time without the photo stops (the search does not plan those)
+  const walk = (x: Route) => x.stats.duration - x.photos.length * DEFAULTS.photoSeconds;
+  for (const x of [r.o2, r.found, r.mix]) assert.ok(walk(r.short) <= walk(x) + 1, `fastest ${walk(r.short)} vs ${x.profile} ${walk(x)}`);
+  for (const x of [r.short, r.found, r.mix]) assert.ok(r.o2.stats.o2Out <= x.stats.o2Out + 1e-9, `o2 ${r.o2.stats.o2Out} vs ${x.profile}`);
+  // neither climbs straight over the 40 m hill
+  assert.ok(r.short.stats.ascent < 30 && r.o2.stats.ascent < 30);
 });
 
 test("the easiest-to-locate route avoids ground where photo fixes fail", () => {

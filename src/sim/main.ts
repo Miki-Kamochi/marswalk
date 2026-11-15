@@ -448,7 +448,7 @@ async function main() {
       case "mix":
         return tr(`Balances oxygen and position checks. <b>${blind} m</b> without a check.`, `酸素と位置確認のバランス。確認できない区間 <b>${blind} m</b>。`);
       case "short":
-        return tr(`Shortest distance. <b>${blind} m</b> without a position check.`, `最短距離。確認できない区間 <b>${blind} m</b>。`);
+        return tr(`Fastest. <b>${blind} m</b> without a position check.`, `最短時間。確認できない区間 <b>${blind} m</b>。`);
       case "o2":
         return tr(`Avoids climbs and soft sand (<b>${sand} m</b> of sand).`, `登りと砂を避ける（砂地 <b>${sand} m</b>）。`);
       default:
@@ -463,8 +463,8 @@ async function main() {
     return `<button class="opt${bad ? " bad" : ""}" data-route="${r.profile}" aria-pressed="${on}">
       <span class="ic" aria-hidden="true"></span>
       <span class="name">${esc(profileName(r.profile))}${r.profile === "mix" ? `<span class="rec">${esc(t("recommended"))}</span>` : ""}</span>
-      <span class="time">${r.profile === "short" ? esc(km(s.distance)) : dur(s.duration)}</span>
-      <span class="l2">${r.profile === "short" ? dur(s.duration) : esc(km(s.distance))} · O₂ ${pc(s.o2Out + s.o2Work + s.o2Back)}${bad ? ` · <b>${esc(tr("not safe", "条件を満たさない"))}</b>` : ""}</span>
+      <span class="time">${dur(s.duration)}</span>
+      <span class="l2">${esc(km(s.distance))} · O₂ ${pc(s.o2Out + s.o2Work + s.o2Back)}${bad ? ` · <b>${esc(tr("not safe", "条件を満たさない"))}</b>` : ""}</span>
     </button>${on ? detail(r) : ""}`;
   }
 

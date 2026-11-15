@@ -178,6 +178,8 @@ export class Planner {
   private eEnergy = 0;
   private flatEnergy: number;
   private minEnergy: number;
+  /** fastest walking speed on any slope, m/s (keeps the time estimate of the fastest route admissible) */
+  private maxSpeed = 0;
 
   constructor(grid: NavGrid, cfg: PlanConfig) {
     this.grid = grid;
@@ -194,6 +196,7 @@ export class Planner {
     this.seen = new Uint8Array(grid.size);
     this.toHome = new Float32Array(grid.size).fill(Infinity);
     this.fromHome = new Float32Array(grid.size).fill(Infinity);
+    this.maxSpeed = Math.max(...this.speed);
     this.flatEnergy = energyPerMetre(0, cfg);
     this.minEnergy = minEnergyPerMetre(cfg);
   }
@@ -308,7 +311,7 @@ export class Planner {
     const gr = Math.floor(goal / w);
     const perMetre =
       profile === "short"
-        ? 1
+        ? 1 / this.maxSpeed
         : profile === "o2"
           ? this.minEnergy
           : profile === "found"
@@ -352,7 +355,7 @@ export class Planner {
         const errorSum = L * (cfg.fixError + cfg.drift * (ra + L / 2));
         const cost =
           profile === "short"
-            ? this.eLen
+            ? this.eTime
             : profile === "o2"
               ? this.eEnergy
               : profile === "found"
