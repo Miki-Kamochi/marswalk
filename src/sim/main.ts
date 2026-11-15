@@ -125,6 +125,13 @@ async function main() {
   let project: Project | null = saved ?? null;
   let restoring = false;
   const nameInput = $<HTMLInputElement>("planName");
+  const walkPreview = $<HTMLAnchorElement>("walkBtn");
+  const syncWalkPreview = () => {
+    const q = new URLSearchParams({ area: AREA });
+    if (project) q.set("project", project.id);
+    walkPreview.href = `/game.html?${q}`;
+    walkPreview.toggleAttribute("aria-disabled", !project || state.dest < 0 || state.busy);
+  };
   const defaultName = () => {
     if (state.dest < 0) return tr("New plan", "新しい計画");
     const first = state.destName || nameOf(state.dest);
@@ -159,6 +166,7 @@ async function main() {
     });
     if (!project.custom) project.name = defaultName();
     saveProject(project);
+    syncWalkPreview();
     renderName();
   }
 
@@ -790,7 +798,7 @@ async function main() {
   }
   renderAreas();
   document.addEventListener("langchange", renderAreas);
-  $<HTMLAnchorElement>("walkBtn").href = `/game.html?area=${AREA}`;
+  syncWalkPreview();
   // the hematite layer exists only where CRISM saw the ground
   const hemTile = document.querySelector<HTMLElement>('.tile[data-layer="hematite"]');
   if (hemTile && !meta.layers.hematite) hemTile.hidden = true;
@@ -845,6 +853,7 @@ async function main() {
   renderSliders();
   renderLayers();
   renderTop();
+  syncWalkPreview();
   const needle = $("needle");
   try {
     await revealed();

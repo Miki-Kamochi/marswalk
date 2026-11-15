@@ -1,7 +1,5 @@
 /* Self-hosted fonts, loaded with the stylesheet so text never switches font after it appears. */
 @import "./font-inline.css";
-@import "@fontsource/jetbrains-mono/400.css";
-@import "@fontsource/jetbrains-mono/600.css";
 
 /* Shared look of every page: design tokens, spacing, the top bar, page changes, glass. */
 :root {

@@ -1,5 +1,6 @@
 /** The Mars world: real terrain, backdrop, sky, sun and a few placeholder objects. */
 import * as THREE from "three";
+import { AREA } from "../data/areas";
 import { Frame, toLonLat } from "../data/frame";
 import {
   HeightGrid,
@@ -14,7 +15,8 @@ import {
   type Traverse,
 } from "../data/loader";
 import { sunPosition } from "../nav/sun";
-import { buildTerrain, elevationTint, facetHeight, rasterColor } from "./terrainMesh";
+import { buildTerrain, elevationTint, facetHeight, groundDetailMaterial, rasterColor } from "./terrainMesh";
+import { loadBackdrop } from '../game/backdrop';
 
 export const HAZE = new THREE.Color(0xd4a076);
 const CLEAR_FOG = 0.00002;
@@ -31,9 +33,9 @@ export class World {
   readonly sunDisc: THREE.Sprite;
   /** current sun direction in the sky */
   sun = { azimuth: 0, elevation: 45 };
-  /** the drawn play-area terrain (the route simulator recolours it with map layers) */
+  /** Drawn play-area terrain; the planner view recolours this group with analysis layers. */
   playMesh = new THREE.Group();
-  /** the land around it out to the crater rim (the planner can hide it and show a block instead) */
+  /** Surrounding DEM or supplied Buttes skyline, hidden by the planner's block view. */
   readonly backdrop = new THREE.Group();
 
   private constructor(
@@ -55,7 +57,6 @@ export class World {
     this.scene.add(this.sunDisc);
   }
 
-  /** facet: grid step of the play-area mesh (2 m samples), to force bigger, more visible triangles. */
   static async load(onProgress: (msg: string) => void, lowDetail: boolean, facet?: number): Promise<World> {
     onProgress("Loading map of Gale Crater…");
     const meta = await loadMeta();
@@ -73,14 +74,20 @@ export class World {
       loadRaster(meta.images.color.file, meta.images.color.bounds),
       loadRaster(meta.images.surround.file, meta.images.surround.bounds),
     ]);
+    onProgress("Loading close-range ground texture…");
+    const groundDetail = await new THREE.TextureLoader().loadAsync(`${import.meta.env.BASE_URL}models/brown_mud_dry_diff_2k.jpg`);
+    groundDetail.wrapS = groundDetail.wrapT = THREE.MirroredRepeatWrapping;
+    groundDetail.colorSpace = THREE.SRGBColorSpace;
+    groundDetail.anisotropy = 8;
+    const groundMaterial = groundDetailMaterial(groundDetail);
     onProgress("Building terrain…");
     await new Promise((r) => setTimeout(r, 0));
-    const step = facet ?? (lowDetail ? 6 : 3); // 12 m or 6 m triangles unless asked otherwise
+    const step = facet ?? (lowDetail ? 6 : 3); // 2 m samples per step
     const w = new World(meta, frame, play, surround, mid, far, positions, traverse, step);
     const playB = meta.frame.play;
     const fetchB = meta.frame.fetch;
     const k = lowDetail ? 2 : 1;
-    w.playMesh = buildTerrain(play, frame, { step, color: rasterColor(color, elevationTint), chunkCells: 48 });
+    w.playMesh = buildTerrain(play, frame, { step, color: rasterColor(color, elevationTint), chunkCells: 48, material: groundMaterial });
     w.scene.add(w.playMesh, w.backdrop);
     w.backdrop.add(
       buildTerrain(surround, frame, {
@@ -93,26 +100,29 @@ export class World {
       buildTerrain(mid, frame, {
         step: 2 * k,
         color: elevationTint,
-        skip: (e, n) => inside(fetchB, e, n, 150),
+        skip: (e, n) => inside(fetchB, e, n, 150) || Math.hypot(frame.toWorldX(e), frame.toWorldZ(n)) > 7000,
         lift: -3,
         curvature: true,
         chunkCells: 96,
       }),
-      buildTerrain(far, frame, {
+    );
+    if (AREA === "buttes") {
+      onProgress('Loading Mars_view.stl…');
+      w.backdrop.add(await loadBackdrop());
+    } else {
+      w.backdrop.add(buildTerrain(far, frame, {
         step: 2 * k,
         color: elevationTint,
-        // leave out a MOLA cell only where the finer grid really covers all of it
         skip: (e, n, half) => {
           const r = half + 400;
-          for (const [de, dn] of [[0, 0], [-r, -r], [r, -r], [-r, r], [r, r], [-r, 0], [r, 0], [0, -r], [0, r]]) {
+          for (const [de, dn] of [[0, 0], [-r, -r], [r, -r], [-r, r], [r, r], [-r, 0], [r, 0], [0, -r], [0, r]])
             if (Number.isNaN(mid.sample(e + de, n + dn))) return false;
-          }
           return true;
         },
         lift: -30,
         curvature: true,
-      }),
-    );
+      }));
+    }
     return w;
   }
 
@@ -164,13 +174,14 @@ export class World {
     this.sunLight.position.copy(camera.position).addScaledVector(dir, 1000);
     this.sunLight.target.position.copy(camera.position);
     const day = THREE.MathUtils.clamp((s.elevation + 4) / 20, 0, 1);
-    this.sunLight.intensity = 2.6 * day * (1 - 0.9 * dust);
-    this.skyLight.intensity = (0.35 + 0.65 * day) * (1 - 0.35 * dust);
+    this.sunLight.intensity = 2.6 * day * (1 - 0.45 * dust);
+    this.skyLight.intensity = (0.65 + 0.65 * day) * (1 - 0.15 * dust);
     this.sunDisc.position.copy(camera.position).addScaledVector(dir, 5000);
-    (this.sunDisc.material as THREE.SpriteMaterial).opacity = day * Math.max(0, 1 - dust * 1.6);
-    // haze: clear-day view of tens of km down to a few tens of metres in the storm
-    this.fog.density = CLEAR_FOG * Math.pow(0.045 / CLEAR_FOG, dust);
-    const sky = HAZE.clone().multiplyScalar(0.35 + 0.65 * day).lerp(new THREE.Color(0x8a5a36), dust * 0.75);
+    // The sun remains a reliable direction cue even at the storm peak.
+    (this.sunDisc.material as THREE.SpriteMaterial).opacity = 1;
+    // Dust softens the distant horizon without hiding the middle-distance ground.
+    this.fog.density = 0.00004 + 0.00018 * dust * dust;
+    const sky = HAZE.clone().multiplyScalar(0.35 + 0.65 * day).lerp(new THREE.Color(0x8a5a36), dust * 0.4);
     if (this.scene.background instanceof THREE.Color) this.scene.background.copy(sky);
     this.fog.color.copy(sky);
   }

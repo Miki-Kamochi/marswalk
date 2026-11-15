@@ -141,7 +141,7 @@ export class NavGrid {
   }
 }
 
-/** Decode public/data/nav/nav_6m.bin (see scripts/nav_layers.py for the encodings). */
+/** Decode public/data/buttes/nav/nav_6m.bin (see scripts/nav_layers.py for the encodings). */
 export function decodeNav(meta: NavMeta, bytes: Uint8Array): Omit<NavLayers, "elev"> {
   const n = meta.width * meta.height;
   if (bytes.length !== n * meta.channels.length) {

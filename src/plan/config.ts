@@ -71,7 +71,7 @@ export interface PlanConfig {
 
 export const DEFAULTS: PlanConfig = {
   tiltSafe: 15,
-  tiltMax: 25,
+  tiltMax: 20,
   sandTiltSafe: 8,
   sandTiltMax: 15,
   roughSafe: 0.1,

@@ -68,3 +68,8 @@ stones (sol 4200).
   Checked first: its eastern edge stops about 100 to 400 m short of where Curiosity climbed Vera
   Rubin Ridge, so the hematite stop would have had no terrain. The MSL Gale mosaic (dataset 1) is
   built from the same kind of HiRISE stereo data and covers the whole route.
+# 帰還ミッション追加資料
+
+- **Mars_view.stl**: ユーザー提供。元ファイル `C:/Users/takoy/Mars_view.stl`、同梱先 `public/models/Mars_view.stl`。地理参照と単位情報は不明。遠景としてのみ使用し、NASAの測位用DEMとは区別する。
+- **足元の細部画像**: ユーザー提供。元ファイル `C:/Users/takoy/mud_textures/brown_mud_dry_diff_2k.jpg`、同梱先 `public/models/brown_mud_dry_diff_2k.jpg`。既存の衛星地形色に明暗として重ねる視覚素材で、科学データや測位には使用しない。
+- **MGL / Censible**: [JPL公式説明](https://www.jpl.nasa.gov/news/nasas-perseverance-now-autonomously-pinpoints-its-location-on-mars/)、[ICRA 2024論文](https://robotics.jpl.nasa.gov/media/documents/2024_Global_Localization_ICRA.pdf)。ゲームの実装範囲と制約は [MGL_requirements.md](MGL_requirements.md) を参照。
