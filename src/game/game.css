@@ -129,52 +129,61 @@ button {
 }
 
 /* ---------------------------------------------------------------- view modes */
-.modes {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+/* the switch in the bottom-right corner (outside the HUD, so it stays in VR too) */
+#viewModes {
+  position: fixed;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 16;
+  display: flex;
+  align-items: center;
   gap: 8px;
-  margin: 0 0 16px;
+  padding: 5px 6px;
+  background: rgba(3, 29, 42, 0.76);
+  border: 1px solid rgba(91, 228, 252, 0.4);
 }
-.modes button {
-  display: grid;
-  gap: 4px;
-  align-content: start;
-  padding: 10px 8px;
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.35;
-  color: #9ddbe5;
-  background: rgba(127, 234, 255, 0.06);
-  border: 1px solid rgba(91, 228, 252, 0.3);
+#viewModes a {
+  padding: 0 4px;
+  font: 700 10px ui-monospace, Consolas, monospace;
+  color: #aef5ff;
+  text-decoration: none;
+}
+#viewModes span {
+  display: flex;
+  gap: 3px;
+}
+#viewModes button {
+  min-width: 38px;
+  padding: 5px 7px;
+  font: 700 11px ui-monospace, Consolas, monospace;
+  letter-spacing: 0.08em;
+  color: #aef3ff;
+  background: rgba(7, 53, 68, 0.55);
+  border: 1px solid rgba(103, 235, 255, 0.4);
   box-shadow: none;
 }
-.modes button b {
-  font-size: 16px;
-  letter-spacing: 0.12em;
-  color: var(--cyan);
+#viewModes button:hover {
+  background: rgba(38, 155, 180, 0.45);
 }
-.modes button.active {
+#viewModes button.active {
   color: #04202a;
-  background: var(--cyan);
-  border-color: var(--cyan);
+  background: #67eaff;
+  box-shadow: 0 0 13px rgba(89, 231, 255, 0.7);
 }
-.modes button.active b {
-  color: #04202a;
+/* phone: the map sits in the corner, so the switch goes just above it */
+@media (max-width: 760px) {
+  #viewModes {
+    right: 34px;
+    bottom: 222px;
+  }
 }
-#modeExit {
-  position: fixed;
-  top: max(8px, env(safe-area-inset-top));
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 16;
-  display: none;
-  padding: 6px 12px;
-  font-size: 12px;
-  opacity: 0.8;
-}
-body.mode-ar #modeExit,
-body.mode-vr #modeExit {
-  display: block;
+@media (max-height: 500px) {
+  #viewModes {
+    bottom: 8px;
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+  }
 }
 /* VR: no HUD, two lenses and a short readout in each eye */
 #vrFrame,
@@ -235,11 +244,4 @@ body.mode-vr #vrFrame {
     border: 1px solid rgba(91, 228, 252, 0.45);
     pointer-events: none;
   }
-}
-/* AR: the top centre holds the mission panel on a phone; sit under the speed buttons instead */
-body.mode-ar #modeExit {
-  top: calc(max(8px, env(safe-area-inset-top)) + 96px);
-  left: auto;
-  right: 8px;
-  transform: none;
 }

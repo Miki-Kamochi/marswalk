@@ -56,6 +56,7 @@ export class Controls {
   private holdId: number | null = null;
   private mouseHold = false;
   private listening = false;
+  private askOnTouch = false;
 
   constructor(private dom: HTMLElement) {
     this.stickEl = document.getElementById("stick")!;
@@ -96,13 +97,19 @@ export class Controls {
    * Switch the view mode. Call from a tap or click: iPhone asks for the motion sensor only then.
    * Resolves false if the sensor was refused.
    */
-  async setMode(mode: ViewMode): Promise<boolean> {
+  async setMode(mode: ViewMode, gesture = true): Promise<boolean> {
     this.mode = mode;
     this.roll = 0;
+    if (mode === "fpv") this.pitch = 0;
     this.recentre();
     if (mode === "fpv") return true;
     const ask = (DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }).requestPermission;
     let ok = true;
+    if (ask && !gesture) {
+      // iPhone: the permission prompt needs a tap; the first touch asks (see touchEnd)
+      this.askOnTouch = true;
+      return true;
+    }
     if (ask) {
       try {
         ok = (await ask()) === "granted";
@@ -196,6 +203,10 @@ export class Controls {
 
   private touchEnd(e: TouchEvent) {
     e.preventDefault();
+    if (this.askOnTouch && this.mode !== "fpv") {
+      this.askOnTouch = false;
+      void this.setMode(this.mode);
+    }
     for (const t of Array.from(e.changedTouches)) {
       if (t.identifier === this.holdId) this.holdId = null;
       if (t.identifier === this.stickId) {

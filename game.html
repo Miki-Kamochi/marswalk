@@ -23,10 +23,9 @@
   </div>
   <div id="vrFrame" aria-hidden="true"><div class="eye"><span class="vrInfo"></span></div><div class="eye"><span class="vrInfo"></span></div></div>
   <div id="vrRotate" aria-live="polite">スマホを横向きにしてVRゴーグルに入れてください</div>
-  <button id="modeExit" type="button">モード選択へ</button>
+  <nav id="viewModes" class="panel" aria-label="表示モード"><a id="plannerLink" href="/sim.html" aria-label="ルート計画へ戻る">← 計画</a><span role="radiogroup" aria-label="表示モード"><button type="button" role="radio" data-mode="fpv" title="マウス・キーボード／画面のスティック">FPV</button><button type="button" role="radio" data-mode="ar" title="スマホを向けて見回す・画面を押して前進">AR</button><button type="button" role="radio" data-mode="vr" title="スマホをVRゴーグルに入れて使う（試作）">VR</button></span></nav>
   <div id="stick"><div id="knob"></div></div>
   <div id="loading" class="overlay">Loading…</div>
-  <div id="start" class="overlay" style="display:none"><div class="card"><a class="menuLink" id="plannerLink" href="/sim.html">← ルート計画へ</a><div class="tag">MARSWALK / EVA-1</div><h1>歩行プレビュー</h1><p id="planSummary" class="lead"></p><p class="help">右下の全体マップに計画経路を表示します。マップに自分の位置は表示されません。存在可能性円を見ながら経路を辿り、必要に応じて静止して360°スキャンしてください。</p><div class="modes" role="radiogroup" aria-label="表示モード"><button type="button" role="radio" data-mode="fpv"><b>FPV</b><span>マウス・キーボード／画面のスティックで歩く</span></button><button type="button" role="radio" data-mode="ar"><b>AR</b><span>スマホを向けた方向が見える・画面を押して前進</span></button><button type="button" role="radio" data-mode="vr"><b>VR</b><span>スマホをVRゴーグルに入れて使う（試作）</span></button></div><p class="help">傾斜が強い地面では歩行速度が大幅に低下し、20°以上の登りには進入できません。Mでマップを拡大できます。</p><button id="startBtn">歩行を開始</button><p class="credit">地形・画像: NASA/JPL-Caltech/UArizona/USGS<br>MGLはPerseveranceの方式を参考にした簡略シミュレーション。</p></div></div>
   <div id="end" class="overlay" style="display:none"><div class="card"><h2 id="endTitle"></h2><p id="endLead" class="lead"></p><p id="endStats" class="help"></p><button id="againBtn">もう一度歩く</button><p class="credit"><a class="menuLink" href="/sim.html">← ルート計画へ</a></p></div></div>
   <script type="module" src="/src/game/main.ts"></script>
 </body>

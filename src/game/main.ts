@@ -71,7 +71,7 @@ async function main() {
   $('missionName').textContent = targets.length > 1
     ? `${targets.map(t => t.name).join('→')}の${targets.length}か所で試料を回収する`
     : `${plan.target.name}へ向かい試料を回収する`;
-  $('planSummary').textContent = `${areaName} · ${plan.project?.name || '既定の計画'} · ${Math.round(plan.route.stats.distance)} m · 計画所要 ${Math.ceil(timeLimit / 60)}分 · ${plan.route.stats.photoCount}回の測位を想定`;
+  const planSummary = `${areaName} · ${plan.project?.name || '既定の計画'} · ${Math.round(plan.route.stats.distance)} m · 計画所要 ${Math.ceil(timeLimit / 60)}分 · ${plan.route.stats.photoCount}回の測位を想定`;
   const plannerQuery = new URLSearchParams({ area: AREA });
   if (plan.project) plannerQuery.set('project', plan.project.id);
   $('plannerLink').setAttribute('href', `/sim.html?${plannerQuery}`);
@@ -108,19 +108,29 @@ async function main() {
     });
   }
   document.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach(b => b.addEventListener('click', () => {
-    mode = b.dataset.mode as ViewMode; renderModes();
+    if (b.dataset.mode === mode) return;
+    mode = b.dataset.mode as ViewMode;
     try { localStorage.setItem(MODE_KEY, mode); } catch { /* not kept */ }
+    applyMode(true);
   }));
-  renderModes();
-  /** Apply the chosen mode; runs inside the start tap so the phone can ask for its motion sensor. */
-  function enterMode() {
+  /**
+   * Switch to the chosen mode. From a tap (gesture) it can also go full screen and ask for the motion
+   * sensor; on load it cannot, so the phone asks on the first touch instead.
+   */
+  function applyMode(gesture: boolean) {
+    renderModes();
+    if (mode !== 'fpv') controls.release();
     document.body.classList.toggle('mode-ar', mode === 'ar');
     document.body.classList.toggle('mode-vr', mode === 'vr');
     document.querySelector('#instruments .help')!.textContent = HELP[mode];
-    const sensor = controls.setMode(mode);
-    if (mode !== 'fpv') {
-      document.documentElement.requestFullscreen?.().catch(() => {});
-      if (mode === 'vr') (screen.orientation as unknown as { lock?: (o: string) => Promise<void> }).lock?.('landscape').catch(() => {});
+    const sensor = controls.setMode(mode, gesture);
+    if (mode === 'fpv') {
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    } else {
+      if (gesture) {
+        document.documentElement.requestFullscreen?.().catch(() => {});
+        if (mode === 'vr') (screen.orientation as unknown as { lock?: (o: string) => Promise<void> }).lock?.('landscape').catch(() => {});
+      }
       void sensor.then(ok => {
         if (!ok) say('モーションセンサーが許可されていません。ドラッグで見回してください。');
         // no sensor event soon after: a laptop. The mouse looks around instead.
@@ -129,20 +139,11 @@ async function main() {
     }
     onResize();
   }
-  function leaveMode() {
-    controls.enabled = false; controls.release(); hud.toggleMap(false); hud.hideLocalization(); controls.mapOpen = false; hud.show(false);
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-    document.body.classList.remove('mode-ar', 'mode-vr');
-    void controls.setMode('fpv'); onResize();
-    reset(); $('start').style.display = 'flex';
-  }
-  $('modeExit').addEventListener('click', leaveMode);
 
   function begin() {
-    enterMode();
-    $('start').style.display = 'none'; $('end').style.display = 'none'; phase = 'collect'; controls.enabled = true; hud.show(true);
+    $('end').style.display = 'none'; phase = 'collect'; controls.enabled = true; hud.show(true);
     if (!controls.touch) controls.capture();
-    say('全体マップの計画経路を辿り、制限時間内に試料を回収してください。');
+    say(`${planSummary}。全体マップの計画経路を辿り、制限時間内に試料を回収してください。`, 10);
   }
   function toggleMap() {
     if (phase !== 'collect' || fixT >= 0) return;
@@ -263,8 +264,9 @@ async function main() {
     } else renderer.render(world.scene, camera);
   }
   const vrInfo = Array.from(document.querySelectorAll<HTMLElement>('.vrInfo'));
-  reset(); $('loading').style.display = 'none'; $('start').style.display = 'flex';
-  $('startBtn').addEventListener('click', begin); $('againBtn').addEventListener('click', () => { reset(); begin(); });
+  // no start card: you spawn as soon as the world has loaded
+  reset(); applyMode(false); $('loading').style.display = 'none'; begin();
+  $('againBtn').addEventListener('click', () => { reset(); begin(); });
   function onResize() {
     camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
     renderer.setSize(innerWidth, innerHeight); stereo.setSize(innerWidth, innerHeight);
