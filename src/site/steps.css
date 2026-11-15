@@ -1,0 +1,379 @@
+/* Step-by-step pages (Introduction, How it works): one idea per screen. The visual is big and the
+   words are short, so it works on a projector while someone talks, and alone on a phone. */
+
+body.deckpage {
+  height: 100dvh;
+  overflow: hidden;
+}
+body.deckpage .bar {
+  position: fixed;
+  inset: 0 0 auto;
+}
+
+main.deck {
+  position: fixed;
+  z-index: 1;
+  inset: var(--bar-h) 0 72px;
+}
+
+/* ---------------------------------------------------------------- one slide */
+.slide {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(280px, 400px) minmax(0, 1fr);
+  gap: clamp(20px, 4vw, 56px);
+  align-items: center;
+  padding: 8px max(var(--edge), 3vw) 8px;
+  visibility: hidden;
+  opacity: 0;
+}
+.slide.on {
+  visibility: visible;
+  opacity: 1;
+  animation: slide-in 0.5s var(--ease) both;
+}
+.slide.on.from-left {
+  animation-name: slide-in-left;
+}
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+}
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+}
+.slide.wide {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  text-align: center;
+}
+
+.cap {
+  min-width: 0;
+}
+.cap .kicker {
+  margin: 0 0 10px;
+  font: 600 12px/1 var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.cap h2 {
+  margin: 0 0 14px;
+  font-size: clamp(26px, 3.2vw, 40px);
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.cap p {
+  margin: 0 0 12px;
+  font-size: clamp(15px, 1.25vw, 18px);
+  line-height: 1.6;
+  color: var(--ui-text-2);
+}
+.cap p b,
+.cap p strong {
+  color: var(--ui-text);
+  font-weight: 600;
+}
+.cap .src {
+  margin-top: 18px;
+  font-size: 12px;
+  color: rgba(163, 154, 143, 0.75);
+}
+.cap .src a {
+  color: inherit;
+}
+.cap .try {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 12px;
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-glow);
+  background: rgba(255, 107, 44, 0.1);
+  border: 1px solid rgba(255, 107, 44, 0.35);
+  border-radius: 99px;
+}
+.cap .try::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse-dot 1.4s infinite;
+}
+@keyframes pulse-dot {
+  50% {
+    opacity: 0.25;
+  }
+}
+.formula {
+  margin: 10px 0 12px;
+  padding: 10px 14px;
+  font: 500 13.5px/1.6 var(--mono);
+  color: var(--ui-text);
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  border-radius: 12px;
+  white-space: pre-wrap;
+}
+
+/* things that appear one at a time on "next" */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 0.45s var(--ease),
+    transform 0.45s var(--ease);
+}
+[data-reveal].shown {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------------------------------------------------------------- the visual side */
+.vis {
+  position: relative;
+  min-width: 0;
+  height: 100%;
+  max-height: 100%;
+  display: grid;
+  place-items: center;
+}
+.panel {
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  border-radius: 18px;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+.vis canvas.map,
+.vis .mapbox {
+  max-width: 100%;
+  max-height: 100%;
+}
+canvas.pix {
+  image-rendering: pixelated;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chip {
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ui-text);
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  border-radius: 99px;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.chip:hover {
+  background: var(--ui-hover);
+}
+.chip[aria-pressed="true"],
+.chip.on {
+  color: #1a0d05;
+  background: var(--accent-glow);
+  border-color: var(--accent-glow);
+}
+.btn-main {
+  padding: 12px 22px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a0d05;
+  background: var(--accent);
+  border: 0;
+  border-radius: 99px;
+  text-decoration: none;
+  box-shadow: 0 0 24px rgba(255, 107, 44, 0.35);
+}
+.btn-main:hover {
+  background: #ff8148;
+}
+.btn-ghost {
+  padding: 12px 22px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ui-text);
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  border-radius: 99px;
+  text-decoration: none;
+}
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ui-text-2);
+}
+.legend i {
+  display: block;
+  width: 120px;
+  height: 8px;
+  border-radius: 4px;
+}
+.readout {
+  font: 600 13px/1.5 var(--mono);
+  color: var(--ui-text);
+}
+.big-num {
+  font: 700 clamp(40px, 6vw, 84px) / 1 var(--font);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.range {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+/* ---------------------------------------------------------------- the bar at the bottom */
+.deckbar {
+  position: fixed;
+  z-index: 4;
+  left: 50%;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 24px);
+  padding: 6px;
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  border-radius: 99px;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+.deckbar button {
+  display: grid;
+  place-items: center;
+  height: 40px;
+  min-width: 40px;
+  padding: 0;
+  color: var(--ui-text);
+  background: none;
+  border: 0;
+  border-radius: 99px;
+}
+.deckbar button:hover:not(:disabled) {
+  background: var(--ui-hover);
+}
+.deckbar button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.deckbar svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.db-dots {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 4px;
+}
+.db-dots button {
+  height: 24px;
+  min-width: 14px;
+}
+.db-dots button::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(236, 228, 218, 0.25);
+  transition:
+    width 0.25s var(--ease),
+    background 0.25s;
+}
+.db-dots button.seen::after {
+  background: rgba(255, 178, 122, 0.55);
+}
+.db-dots button.on::after {
+  width: 20px;
+  border-radius: 3px;
+  background: var(--accent);
+}
+.db-count {
+  min-width: 44px;
+  font: 500 12px var(--mono);
+  color: var(--ui-text-2);
+  text-align: center;
+}
+.deckbar .db-next {
+  display: flex;
+  gap: 4px;
+  padding: 0 14px 0 18px;
+  font-weight: 700;
+  color: #1a0d05;
+  background: var(--accent);
+}
+.deckbar .db-next:hover:not(:disabled) {
+  background: #ff8148;
+}
+.deckbar .db-next.ready {
+  animation: ready 1.2s infinite;
+}
+@keyframes ready {
+  50% {
+    box-shadow: 0 0 0 6px rgba(255, 107, 44, 0.3);
+  }
+}
+
+/* ---------------------------------------------------------------- phone and small windows */
+@media (max-width: 820px) {
+  main.deck {
+    bottom: 64px;
+  }
+  .slide {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    align-items: stretch;
+    gap: 12px;
+    padding: 6px 16px 8px;
+  }
+  .slide .vis {
+    grid-row: 1;
+    min-height: 0;
+  }
+  .slide .cap {
+    grid-row: 2;
+    max-height: 46vh;
+    overflow-y: auto;
+  }
+  .cap h2 {
+    margin-bottom: 8px;
+  }
+  .cap p {
+    margin-bottom: 8px;
+  }
+  .db-dots {
+    display: none;
+  }
+}
+@media (max-height: 560px) and (min-width: 821px) {
+  .cap h2 {
+    font-size: 24px;
+  }
+}

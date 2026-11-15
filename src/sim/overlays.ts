@@ -5,9 +5,9 @@ import type { NavGrid } from "../plan/grid";
 export type OverlayId = "none" | "hematite" | "safety" | "loc";
 
 /** [position, red, green, blue, alpha] */
-type Stop = [number, number, number, number, number];
+export type Stop = [number, number, number, number, number];
 
-function ramp(stops: Stop[], t: number, out: Uint8ClampedArray, o: number): void {
+export function ramp(stops: Stop[], t: number, out: Uint8ClampedArray, o: number): void {
   let k = 1;
   while (k < stops.length - 1 && t > stops[k][0]) k++;
   const a = stops[k - 1];

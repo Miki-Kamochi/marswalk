@@ -47,8 +47,10 @@
     </script>
     <link rel="stylesheet" href="/src/site/site.css" />
     <link rel="stylesheet" href="/src/site/doc.css" />
+    <link rel="stylesheet" href="/src/site/steps.css" />
+    <link rel="stylesheet" href="/src/site/intro.css" />
   </head>
-  <body class="read">
+  <body class="read deckpage">
     <header class="bar">
       <a class="logo" href="/">AresSight</a>
       <nav class="links" aria-label="Pages">
@@ -59,38 +61,263 @@
       </nav>
     </header>
 
-    <main class="page">
-      <h1><span data-l="en">Introduction</span><span data-l="ja">初めに</span></h1>
-      <p class="lead"><span data-l="en">Why we built AresSight.</span><span data-l="ja">なぜAresSightを作ったのか。</span></p>
-      <section id="intro" class="intro-page">
-        
-        <p class="intro-big">
-          <span data-l="en">One day, people will walk on Mars. When they step away from the habitat, one question decides whether they come back: <b>where am I?</b></span>
-          <span data-l="ja">いつか、人が火星を歩く日が来ます。基地から歩き出した宇宙飛行士が無事に帰れるかどうかは、ひとつの問いにかかっています。<b>「自分は今、どこにいるのか？」</b></span>
-        </p>
-        <div class="intro">
+    <main class="deck" id="deck">
+      <!-- 1 -->
+      <section class="slide hero" data-slide="arrive">
+        <div class="vis"><div class="hero-img" style="background-image: url(/img/story/arrive.jpg)"></div></div>
+        <div class="cap">
+          <p class="kicker"><span data-l="en">Gale Crater, Mars · 2040s</span><span data-l="ja">火星・ゲール・クレーター · 2040年代</span></p>
+          <h2><span data-l="en">You step out of the rover.</span><span data-l="ja">あなたはローバーを降りた。</span></h2>
           <p>
-            <span data-l="en">On Earth, a phone answers that in a second. On Mars there is no GPS, a compass does not work, and a message to Earth takes up to 22 minutes. The suit carries only so much oxygen, so getting lost is not an inconvenience: it is a life-or-death problem.</span>
-            <span data-l="ja">地球ならスマートフォンが一瞬で答えてくれます。でも火星にはGPSがなく、方位磁針も使えず、地球への通信には最大22分かかります。宇宙服の酸素には限りがあるので、迷うことは「不便」ではなく、命に関わる問題です。</span>
+            <span data-l="en">Your job today: walk 1 km to a rock layer and bring back a sample. Then walk back.</span>
+            <span data-l="ja">今日の任務は、1 km先の地層まで歩いて試料を採り、歩いて戻ること。</span>
           </p>
-          <p>
-            <span data-l="en">It has happened before. In 1971, the Apollo 14 crew walked the Moon with a map in hand and still could not find the crater rim they were looking for. They turned back about 30 m short.</span>
-            <span data-l="ja">実際に起きたことがあります。1971年、アポロ14号の飛行士は地図を手に月面を歩きましたが、目指していたクレーターの縁を見つけられず、約30 m手前で引き返しました。</span>
-          </p>
-          <p>
-            <span data-l="en">Robots on Mars already have an answer. NASA's Perseverance rover finds its own position by matching photos of the ground to maps made from orbit. But that only works where the ground looks unique. So we asked: <b>what if astronauts on foot had the same tool, and a map that shows in advance where it will work?</b></span>
-            <span data-l="ja">火星のロボットは、すでに答えを持っています。NASAの探査車パーサヴィアランスは、地面の写真を軌道からの地図と照合して、自分の位置を出しています。ただし、それが使えるのは見分けのつく地面だけです。そこで私たちは考えました。<b>歩く宇宙飛行士も同じ方法を使えて、しかも「どこならそれが使えるか」が事前に分かる地図があったら？</b></span>
-          </p>
-          <p>
-            <span data-l="en">AresSight is that map. Built from real NASA data of Gale Crater, it plans walks that stay on safe ground, where your position can always be checked, and always with enough oxygen to walk home.</span>
-            <span data-l="ja">それがAresSightです。ゲール・クレーターの本物のNASAデータから、安全な地面を通り、いつでも自分の位置を確かめられて、必ず歩いて帰れる酸素が残るルートを計画します。</span>
-          </p>
+          <p class="src"><span data-l="en">AresSight 3D view of Murray Buttes, built from HiRISE elevation data (NASA/JPL-Caltech/UArizona/USGS).</span><span data-l="ja">AresSightの3D表示（マレー・ビュート）。HiRISEの標高データ（NASA/JPL-Caltech/UArizona/USGS）から作成。</span></p>
         </div>
       </section>
-      <p class="next">
-        <a href="/how.html"><span data-l="en">How it works →</span><span data-l="ja">仕組みへ →</span></a>
-      </p>
+
+      <!-- 2 -->
+      <section class="slide" data-slide="phone">
+        <div class="cap">
+          <p class="kicker"><span data-l="en">Step 1 · Where am I?</span><span data-l="ja">1 · 自分はどこ？</span></p>
+          <h2><span data-l="en">First, check your position.</span><span data-l="ja">まず、現在地を確かめよう。</span></h2>
+          <p class="try"><span data-l="en">Tap "Show my location"</span><span data-l="ja">「現在地を表示」を押してみよう</span></p>
+          <p data-reveal>
+            <span data-l="en"><b>There is no GPS on Mars.</b> No satellites tell you where you are.</span>
+            <span data-l="ja"><b>火星にはGPSがない。</b>現在地を教えてくれる衛星は1機もない。</span>
+          </p>
+          <p class="src"><span data-l="en">Mars has no navigation satellites (NASA JPL, IPN Progress Report 42-246).</span><span data-l="ja">火星に測位衛星はない（NASA JPL IPN Progress Report 42-246）。</span></p>
+        </div>
+        <div class="vis">
+          <div class="phone" data-interactive>
+            <div class="ph-screen">
+              <div class="ph-top"><span>9:41</span><span class="ph-sig">GPS ✕</span></div>
+              <div class="ph-map"><div class="ph-ring"></div><div class="ph-q">?</div></div>
+              <div class="ph-status"><span data-l="en">Ready</span><span data-l="ja">待機中</span></div>
+              <button class="ph-btn" type="button"><span data-l="en">Show my location</span><span data-l="ja">現在地を表示</span></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3 -->
+      <section class="slide" data-slide="compass">
+        <div class="cap">
+          <p class="kicker"><span data-l="en">Step 2 · Which way is north?</span><span data-l="ja">2 · 北はどっち？</span></p>
+          <h2><span data-l="en">Then a compass?</span><span data-l="ja">じゃあ、方位磁針は？</span></h2>
+          <p class="try"><span data-l="en">Drag to turn around</span><span data-l="ja">ドラッグして向きを変えてみよう</span></p>
+          <p data-reveal>
+            <span data-l="en"><b>It points nowhere.</b> Mars has no global magnetic field, only weak patches in old rock, about 200 nT on average. Earth's field is 25,000–65,000 nT.</span>
+            <span data-l="ja"><b>針はどこも指さない。</b>火星には星全体の磁場がなく、古い岩に弱い磁気が残るだけ（平均 約200 nT）。地球は25,000〜65,000 nT。</span>
+          </p>
+          <p class="src">NASA MAVEN; Phys.org (2014)</p>
+        </div>
+        <div class="vis">
+          <svg class="compass" viewBox="-160 -160 320 320" data-interactive aria-label="compass">
+            <circle r="150" class="cp-body" />
+            <g class="cp-dial">
+              <circle r="128" class="cp-ring" />
+              <g class="cp-ticks"></g>
+              <text y="-100" class="cp-n">N</text>
+              <text x="100" y="6" class="cp-l">E</text>
+              <text y="112" class="cp-l">S</text>
+              <text x="-100" y="6" class="cp-l">W</text>
+            </g>
+            <g class="cp-needle">
+              <path d="M0 -96 L10 0 L-10 0 Z" class="cp-red" />
+              <path d="M0 96 L10 0 L-10 0 Z" class="cp-white" />
+              <circle r="7" class="cp-pin" />
+            </g>
+          </svg>
+          <p class="readout cp-read"></p>
+        </div>
+      </section>
+
+      <!-- 4 -->
+      <section class="slide" data-slide="earth">
+        <div class="cap">
+          <p class="kicker"><span data-l="en">Step 3 · Ask for help</span><span data-l="ja">3 · 助けを呼ぶ</span></p>
+          <h2><span data-l="en">Call Earth.</span><span data-l="ja">地球に聞いてみよう。</span></h2>
+          <p class="try"><span data-l="en">Set the distance and press Send</span><span data-l="ja">距離を選んで「送信」</span></p>
+          <p data-reveal>
+            <span data-l="en">A message takes <b>3 to 22 minutes</b> each way. By the time the answer arrives, you have walked on. Around solar conjunction, every 26 months, there is <b>no contact for 2–3 weeks</b>.</span>
+            <span data-l="ja">通信は片道<b>3〜22分</b>。答えが届く頃には、あなたはもう先へ歩いている。約26か月ごとの「合」の時期には、<b>2〜3週間まったく通信できない</b>。</span>
+          </p>
+          <p class="src">NASA ASCEND (2022), Communication delays, disruptions and blackouts for crewed Mars missions</p>
+        </div>
+        <div class="vis">
+          <div class="call panel" data-interactive>
+            <svg class="call-svg" viewBox="0 0 640 200" aria-hidden="true">
+              <line class="call-line" x1="70" y1="100" x2="570" y2="100" />
+              <circle class="call-earth" cx="70" cy="100" r="26" />
+              <circle class="call-mars" cx="570" cy="100" r="18" />
+              <text x="70" y="160" class="call-t"><tspan data-l="en">Earth</tspan><tspan data-l="ja">地球</tspan></text>
+              <text class="call-mars-t" x="570" y="160"><tspan data-l="en">You</tspan><tspan data-l="ja">あなた</tspan></text>
+              <circle class="call-dot" cx="570" cy="100" r="7" />
+            </svg>
+            <label class="call-row">
+              <span><span data-l="en">Earth–Mars distance</span><span data-l="ja">地球と火星の距離</span></span>
+              <input class="range call-au" type="range" min="0.38" max="2.67" step="0.01" value="1.5" />
+            </label>
+            <div class="call-row">
+              <span class="readout call-delay"></span>
+              <button class="btn-main call-send" type="button"><span data-l="en">Send</span><span data-l="ja">送信</span></button>
+            </div>
+            <div class="big-num call-clock">00:00</div>
+            <p class="readout call-state"></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5 -->
+      <section class="slide" data-slide="oxygen">
+        <div class="cap">
+          <p class="kicker"><span data-l="en">Step 4 · The clock</span><span data-l="ja">4 · 時間</span></p>
+          <h2><span data-l="en">Meanwhile, your oxygen keeps going down.</span><span data-l="ja">その間も、酸素は減り続ける。</span></h2>
+          <p class="ox-text"></p>
+          <p data-reveal>
+            <span data-l="en">Every minute spent working out where you are is a minute less for science, and less margin to walk home.</span>
+            <span data-l="ja">自分の位置を考えている1分は、科学に使えない1分。帰り道の余裕も減っていく。</span>
+          </p>
+        </div>
+        <div class="vis">
+          <svg class="gauge" viewBox="-110 -110 220 220" aria-hidden="true">
+            <circle r="92" class="g-bg" />
+            <circle r="92" class="g-fill" transform="rotate(-90)" />
+            <text y="-6" class="g-num">100%</text>
+            <text y="22" class="g-lbl">O₂</text>
+          </svg>
+        </div>
+      </section>
+
+      <!-- 6 -->
+      <section class="slide" data-slide="apollo">
+        <div class="cap">
+          <p class="kicker"><span data-l="en">It has happened · Apollo 14, 1971</span><span data-l="ja">実際にあった · アポロ14号（1971年）</span></p>
+          <h2><span data-l="en">With a map, two astronauts still could not find a crater.</span><span data-l="ja">地図があっても、2人はクレーターを見つけられなかった。</span></h2>
+          <p>
+            <span data-l="en">Shepard and Mitchell walked toward the rim of Cone Crater. The ground rolled up and down, and they lost track of where they were. Running short of time and oxygen, they turned back.</span>
+            <span data-l="ja">シェパードとミッチェルはコーン・クレーターの縁を目指した。起伏が続き、自分たちの位置が分からなくなった。時間と酸素が足りなくなり、引き返した。</span>
+          </p>
+          <p class="try"><span data-l="en">Guess: how far from the rim did they turn back?</span><span data-l="ja">予想しよう：縁まであと何mで引き返した？</span></p>
+          <p data-reveal class="ap-answer">
+            <span data-l="en"><b>Only tens of metres</b> (about 15–50 m, depending on the source). The rim was hidden by the rolling ground. They were safe (the lander stayed in view), but the science goal was lost.</span>
+            <span data-l="ja"><b>たった数十m</b>（資料により約15〜50 m）。縁は起伏に隠れて見えなかった。着陸船は見えていたので命は無事だったが、科学の目的地は失われた。</span>
+          </p>
+          <p class="src">NASA SVS 4883; NASA SP-350, ch. 12</p>
+        </div>
+        <div class="vis">
+          <div class="apollo panel" data-interactive>
+            <svg class="ap-svg" viewBox="0 0 640 360" aria-hidden="true"></svg>
+            <label class="call-row">
+              <span class="readout ap-guess"></span>
+              <input class="range ap-range" type="range" min="10" max="300" step="5" value="150" />
+            </label>
+            <button class="btn-main ap-go" type="button"><span data-l="en">Show the answer</span><span data-l="ja">答え合わせ</span></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7 -->
+      <section class="slide" data-slide="eyes">
+        <div class="cap">
+          <p class="kicker"><span data-l="en">Your eyes lie</span><span data-l="ja">目はだまされる</span></p>
+          <h2><span data-l="en">How steep is this slope?</span><span data-l="ja">この坂、何度に見える？</span></h2>
+          <p class="try"><span data-l="en">Move the slider, then check</span><span data-l="ja">スライダーで予想して、確かめよう</span></p>
+          <p data-reveal>
+            <span data-l="en">On the Moon, Apollo 16 astronauts judged slopes <b>under 30° to be 60°</b>. No trees, no buildings, nothing of known size: distances and angles are hard to judge, and Mars is the same.</span>
+            <span data-l="ja">アポロ16号の飛行士は、月面で<b>30°未満の斜面を60°と見誤った</b>。木も建物もなく、大きさの分かるものがないので、距離も角度もつかみにくい。火星も同じだ。</span>
+          </p>
+          <p class="src">EPSC 2024-196</p>
+        </div>
+        <div class="vis">
+          <div class="eyes panel" data-interactive>
+            <canvas class="eye-cv"></canvas>
+            <label class="call-row">
+              <span class="readout eye-guess"></span>
+              <input class="range eye-range" type="range" min="0" max="80" step="1" value="45" />
+            </label>
+            <button class="btn-main eye-go" type="button"><span data-l="en">Check</span><span data-l="ja">確かめる</span></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8 -->
+      <section class="slide" data-slide="robot">
+        <div class="cap">
+          <p class="kicker"><span data-l="en">Robots already solved it</span><span data-l="ja">ロボットはもう解決している</span></p>
+          <h2><span data-l="en">Perseverance finds itself from photos.</span><span data-l="ja">パーサヴィアランスは、写真で自分の位置を出す。</span></h2>
+          <p>
+            <span data-l="en">Since 2026, NASA's rover matches photos of the ground around it to the map made from orbit. In about <b>2 minutes</b> it knows where it is to about <b>25 cm</b>.</span>
+            <span data-l="ja">2026年から、NASAの探査車は周りの地面の写真を軌道からの地図と照合している。約<b>2分</b>で、約<b>25 cm</b>の精度で自分の位置が分かる。</span>
+          </p>
+          <p data-reveal>
+            <span data-l="en">An astronaut's suit camera could use <b>the same principle</b>.</span>
+            <span data-l="ja">宇宙服のカメラでも、<b>同じ原理</b>が使える。</span>
+          </p>
+          <p class="src">NASA JPL (2026), Perseverance now autonomously pinpoints its location on Mars. Animation: illustration.</p>
+        </div>
+        <div class="vis"><canvas class="robot-cv panel"></canvas></div>
+      </section>
+
+      <!-- 9 -->
+      <section class="slide" data-slide="unique">
+        <div class="cap">
+          <p class="kicker"><span data-l="en">But there is a catch</span><span data-l="ja">ただし、弱点がある</span></p>
+          <h2><span data-l="en">Where would a photo tell you where you are?</span><span data-l="ja">写真で位置が分かるのは、どっち？</span></h2>
+          <p class="try"><span data-l="en">Pick one</span><span data-l="ja">どちらかを選ぼう</span></p>
+          <p data-reveal>
+            <span data-l="en">The patch is slid over everything within 24 m. <b>Bright = looks the same.</b> On the dunes, many spots look alike, so a photo could put you in the wrong place. On the rock there is only one match.</span>
+            <span data-l="ja">切り取った地面を、周り24 mの範囲でずらして比べた。<b>明るいほど「そっくり」</b>。砂丘では似た場所がたくさんあり、写真で別の場所と取り違えるおそれがある。岩の地面では一致するのは1か所だけ。</span>
+          </p>
+          <p data-reveal>
+            <span data-l="en">So the question is not only "where am I?" but <b>"where will I be able to tell?"</b>, before you go.</span>
+            <span data-l="ja">だから大事なのは「今どこか」だけではない。<b>「どこなら確かめられるか」を、歩く前に知ること</b>。</span>
+          </p>
+          <p class="src"><span data-l="en">Real HiRISE image of Gale Crater (NASA/JPL-Caltech/UArizona/USGS), computed in your browser.</span><span data-l="ja">ゲール・クレーターの本物のHiRISE画像（NASA/JPL-Caltech/UArizona/USGS）。ブラウザで計算しています。</span></p>
+        </div>
+        <div class="vis">
+          <div class="pair" data-interactive>
+            <div class="pick">
+              <button class="pick-btn" data-pick="dune" type="button"><canvas class="pix pk-view"></canvas><span>A</span></button>
+              <canvas class="pix pk-heat"></canvas>
+              <p class="readout pk-read"></p>
+            </div>
+            <div class="pick">
+              <button class="pick-btn" data-pick="rock" type="button"><canvas class="pix pk-view"></canvas><span>B</span></button>
+              <canvas class="pix pk-heat"></canvas>
+              <p class="readout pk-read"></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10 -->
+      <section class="slide" data-slide="answer">
+        <div class="cap">
+          <p class="kicker">AresSight</p>
+          <h2><span data-l="en">Plan the walk so you can always tell where you are, and always get back.</span><span data-l="ja">いつでも位置を確かめられて、必ず帰れるように、歩く前に計画する。</span></h2>
+          <p>
+            <span data-l="en">Getting lost on a walk costs <b>science, oxygen and time</b>. NASA lists navigation and walk-back distance among the design drivers for surface spacewalks.</span>
+            <span data-l="ja">歩く探査で迷うと、<b>科学・酸素・時間</b>を失う。NASAも、地表での船外活動を設計するうえで、航法と「歩いて戻れる距離」を重要な条件に挙げている。</span>
+          </p>
+          <p class="src">NASA NTRS 20230014957, Surface EVA Architectural Drivers</p>
+        </div>
+        <div class="vis">
+          <div class="answer">
+            <div class="ans-row">
+              <div class="ans panel"><b><span data-l="en">Safe</span><span data-l="ja">安全</span></b><span><span data-l="en">never on no-go ground</span><span data-l="ja">通れない場所を通らない</span></span></div>
+              <div class="ans panel"><b><span data-l="en">Never lost</span><span data-l="ja">迷わない</span></b><span><span data-l="en">position checked on the way</span><span data-l="ja">途中で位置を確かめられる</span></span></div>
+              <div class="ans panel"><b><span data-l="en">Always home</span><span data-l="ja">必ず帰れる</span></b><span><span data-l="en">oxygen left to walk back</span><span data-l="ja">歩いて戻る酸素が残る</span></span></div>
+            </div>
+            <div class="ans-cta">
+              <a class="btn-main" href="/how.html"><span data-l="en">How it works →</span><span data-l="ja">仕組みへ →</span></a>
+              <a class="btn-ghost" href="/sim.html"><span data-l="en">Open the planner</span><span data-l="ja">プランナーを開く</span></a>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
-    <script type="module" src="/src/site/page.ts"></script>
+    <script type="module" src="/src/site/intro.ts"></script>
   </body>
 </html>
