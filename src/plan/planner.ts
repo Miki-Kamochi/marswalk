@@ -22,7 +22,8 @@ import type { PlanConfig } from "./config.ts";
 import { energyPerMetre, minEnergyPerMetre, terrainFactor, walkingPower, walkingSpeed } from "./energy.ts";
 import type { NavGrid } from "./grid.ts";
 
-export type Profile = "short" | "o2" | "found" | "mix";
+/** the four fixed routes, and "custom" with the user's own weights (planned only when asked) */
+export type Profile = "short" | "o2" | "found" | "mix" | "custom";
 export const PROFILES: Profile[] = ["short", "o2", "found", "mix"];
 
 export interface RouteStats {
@@ -180,6 +181,8 @@ export class Planner {
   private minEnergy: number;
   /** fastest walking speed on any slope, m/s (keeps the time estimate of the fastest route admissible) */
   private maxSpeed = 0;
+  /** seconds per metre on flat ground (the time term of the custom route is in these units) */
+  private flatTime = 1;
 
   constructor(grid: NavGrid, cfg: PlanConfig) {
     this.grid = grid;
@@ -197,6 +200,7 @@ export class Planner {
     this.toHome = new Float32Array(grid.size).fill(Infinity);
     this.fromHome = new Float32Array(grid.size).fill(Infinity);
     this.maxSpeed = Math.max(...this.speed);
+    this.flatTime = 1 / walkingSpeed(0, cfg);
     this.flatEnergy = energyPerMetre(0, cfg);
     this.minEnergy = minEnergyPerMetre(cfg);
   }
@@ -309,8 +313,14 @@ export class Planner {
     const bw = limitError ? dmax / RUN_BUCKETS : Infinity;
     const gc = goal % w;
     const gr = Math.floor(goal / w);
+    // custom: each term in "metres of flat walking", so the weights compare like with like
+    const cw = cfg.custom;
+    const wsum = cw.time + cw.o2 + cw.locate;
+    const [wt, we, wl] = wsum > 0 ? [cw.time / wsum, cw.o2 / wsum, cw.locate / wsum] : [1 / 3, 1 / 3, 1 / 3];
     const perMetre =
-      profile === "short"
+      profile === "custom"
+        ? (wt * (1 / this.maxSpeed)) / this.flatTime + (we * this.minEnergy) / this.flatEnergy + (wl * cfg.fixError) / cfg.errorLimit
+        : profile === "short"
         ? 1 / this.maxSpeed
         : profile === "o2"
           ? this.minEnergy
@@ -354,7 +364,9 @@ export class Planner {
         this.edge(a, b, L);
         const errorSum = L * (cfg.fixError + cfg.drift * (ra + L / 2));
         const cost =
-          profile === "short"
+          profile === "custom"
+            ? (wt * this.eTime) / this.flatTime + (we * this.eEnergy) / this.flatEnergy + (wl * errorSum) / cfg.errorLimit
+            : profile === "short"
             ? this.eTime
             : profile === "o2"
               ? this.eEnergy

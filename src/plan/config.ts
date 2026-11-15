@@ -64,6 +64,9 @@ export interface PlanConfig {
   // --- balanced route
   /** weight of the uncertainty term against the energy term */
   mixWeight: number;
+
+  // --- custom route: the user's own weights (any scale; only their ratio matters)
+  custom: { time: number; o2: number; locate: number };
 }
 
 export const DEFAULTS: PlanConfig = {
@@ -99,4 +102,5 @@ export const DEFAULTS: PlanConfig = {
   reserve: 0.2,
 
   mixWeight: 1,
+  custom: { time: 1, o2: 1, locate: 1 },
 };

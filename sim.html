@@ -88,6 +88,28 @@
         <div id="notice"></div>
         <div id="routes"></div>
 
+        <details class="weights" id="weights" hidden>
+          <summary>
+            <span data-l="en">Custom route: set your own weights</span><span data-l="ja">カスタムルート：自分で重み付け</span>
+          </summary>
+          <label class="slider">
+            <span class="top"><span><span data-l="en">Time</span><span data-l="ja">時間</span></span><output id="wTimeVal"></output></span>
+            <input type="range" id="wTime" min="0" max="100" step="5" value="50" />
+          </label>
+          <label class="slider">
+            <span class="top"><span><span data-l="en">Oxygen</span><span data-l="ja">酸素</span></span><output id="wO2Val"></output></span>
+            <input type="range" id="wO2" min="0" max="100" step="5" value="50" />
+          </label>
+          <label class="slider">
+            <span class="top"><span><span data-l="en">Easy to locate</span><span data-l="ja">迷いにくさ</span></span><output id="wLocVal"></output></span>
+            <input type="range" id="wLoc" min="0" max="100" step="5" value="50" />
+          </label>
+          <p class="fine">
+            <span data-l="en">Safety, the position limit and the oxygen reserve still apply to every route.</span>
+            <span data-l="ja">安全・位置の誤差の上限・酸素の余裕の条件は、どのルートにも必ず適用されます。</span>
+          </p>
+        </details>
+
         <details class="whatif">
           <summary><span data-l="en">What if…</span><span data-l="ja">もしも…</span></summary>
           <label class="slider">

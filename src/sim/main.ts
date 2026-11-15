@@ -36,6 +36,8 @@ const ACCENT = "#ff6b2c";
 const O2_COLORS = { before: "#3c4043", out: "#8ab4f8", work: "#c58af9", back: "#fdd663", left: "rgba(129, 201, 149, 0.6)" };
 /** recommended first, then the alternatives */
 const ORDER: Profile[] = ["mix", "short", "o2", "found"];
+/** shown after the four, once the user has set weights */
+const CUSTOM: Profile = "custom";
 
 /** a walk without a plan, measured with the same model as the planned routes */
 interface Naive {
@@ -111,6 +113,8 @@ async function main() {
   };
   let token = 0;
   let view: View3D | null = null;
+  /** plan the custom route too: once the user has touched the weights (or a saved plan has them) */
+  let useCustom = false;
   /** every stop of the walk in visiting order (the destination first) */
   const stops = () => [state.dest, ...state.more.map((m) => m.dest)].filter((c) => c >= 0);
   /** replay the search on the map while planning (not with reduced motion) */
@@ -147,6 +151,7 @@ async function main() {
       destE: state.dest >= 0 ? grid.east(state.dest) : undefined,
       destN: state.dest >= 0 ? grid.northOf(state.dest) : undefined,
       more: state.more.length ? state.more.map((m) => ({ target: m.target, name: m.name })) : undefined,
+      weights: useCustom ? { ...cfg.custom } : undefined,
       selected: state.selected,
       o2: state.o2,
       errorLimit: cfg.errorLimit,
@@ -241,9 +246,32 @@ async function main() {
       pushRoutes();
       if (p === state.selected && fitAfter) fit();
     }
+    if (useCustom) {
+      await breathe();
+      if (my !== token) return;
+      const c = planner.routeVia(stops(), CUSTOM, state.o2);
+      if (c) state.routes.push(c);
+    }
     computeNaive();
     renderRoutes();
     pushRoutes();
+    renderStrip();
+    save();
+  }
+
+  /** Re-plan only the custom route (the weights changed) and select it. */
+  async function replanCustom() {
+    if (state.dest < 0 || state.problem || state.busy || !state.routes.length) return;
+    useCustom = true;
+    const c = planner.routeVia(stops(), CUSTOM, state.o2);
+    state.routes = state.routes.filter((r) => r.profile !== CUSTOM);
+    if (c) state.routes.push(c);
+    state.selected = CUSTOM;
+    renderRoutes();
+    computeNaive();
+    renderRoutes();
+    if (c && view) await view.drawIn(state.routes, state.selected, state.back, 450);
+    else pushRoutes();
     renderStrip();
     save();
   }
@@ -451,6 +479,13 @@ async function main() {
         return tr(`Fastest. <b>${blind} m</b> without a position check.`, `最短時間。確認できない区間 <b>${blind} m</b>。`);
       case "o2":
         return tr(`Avoids climbs and soft sand (<b>${sand} m</b> of sand).`, `登りと砂を避ける（砂地 <b>${sand} m</b>）。`);
+      case "custom": {
+        const w = cfg.custom;
+        return tr(
+          `Your weights: time ${w.time}, oxygen ${w.o2}, easy to locate ${w.locate}. <b>${blind} m</b> without a check.`,
+          `あなたの重み：時間 ${w.time}・酸素 ${w.o2}・迷いにくさ ${w.locate}。確認できない区間 <b>${blind} m</b>。`,
+        );
+      }
       default:
         return tr(`Position can be checked almost all the way (<b>${blind} m</b> without).`, `ほぼ全行程で位置を確認できる（確認できない区間 <b>${blind} m</b>）。`);
     }
@@ -500,10 +535,11 @@ async function main() {
     if (state.moved) notes.push(`<p>${esc(t("moved"))}</p>`);
     $("notice").innerHTML = notes.join("");
     let html = "";
-    for (const p of ORDER) {
+    for (const p of [...ORDER, CUSTOM]) {
       const r = state.routes.find((r) => r.profile === p);
       if (r) html += option(r);
     }
+    $("weights").hidden = state.dest < 0 || !!state.problem || (state.busy && !state.routes.length);
     if (state.busy) html += `<p class="busy">${esc(t("calculating"))}</p>`;
     else if (state.naive.length) html += naiveBlock();
     $("routes").innerHTML = html;
@@ -713,7 +749,7 @@ async function main() {
     o2Queued = true;
     requestAnimationFrame(() => {
       o2Queued = false;
-      state.routes = state.routes.map((r) => planner.evaluate(r.cells, r.profile, state.o2));
+      state.routes = state.routes.map((r) => planner.evaluate(r.cells, r.profile, state.o2, r.stops));
       computeNaive();
       pushLimit();
       renderRoutes();
@@ -785,6 +821,26 @@ async function main() {
   }
   renderScene();
 
+  // ---------------------------------------------------------------- custom weights
+  const wInputs = { time: $<HTMLInputElement>("wTime"), o2: $<HTMLInputElement>("wO2"), locate: $<HTMLInputElement>("wLoc") };
+  const wOut = { time: $("wTimeVal"), o2: $("wO2Val"), locate: $("wLocVal") };
+  function renderWeights() {
+    for (const k of ["time", "o2", "locate"] as const) {
+      wInputs[k].value = String(cfg.custom[k]);
+      wOut[k].textContent = String(cfg.custom[k]);
+    }
+  }
+  for (const k of ["time", "o2", "locate"] as const) {
+    wInputs[k].addEventListener("input", () => {
+      cfg.custom = { ...cfg.custom, [k]: Number(wInputs[k].value) };
+      wOut[k].textContent = wInputs[k].value;
+    });
+    // re-plan when the slider is let go, not on every step of the drag
+    wInputs[k].addEventListener("change", () => void replanCustom());
+  }
+  cfg.custom = { time: 50, o2: 50, locate: 50 };
+  renderWeights();
+
   // ---------------------------------------------------------------- start
   renderSliders();
   renderLayers();
@@ -824,7 +880,12 @@ async function main() {
     err.value = String(p.errorLimit);
     state.o2 = p.o2;
     $<HTMLInputElement>("o2").value = String(Math.round(p.o2 * 100));
-    state.selected = p.selected;
+    if (p.weights) {
+      cfg.custom = { ...p.weights };
+      useCustom = true;
+      renderWeights();
+    }
+    state.selected = p.selected === CUSTOM && !p.weights ? "mix" : p.selected;
     renderSliders();
     await setHome(p.home >= 0 ? p.home : baseCell);
     restoring = false;

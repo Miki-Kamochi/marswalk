@@ -1158,3 +1158,34 @@ dialog#info a {
   font-size: 12.5px;
   font-weight: 500;
 }
+
+/* custom route weights: the same sliders as "What if…" */
+.weights {
+  margin: 10px 2px 0;
+  padding: 0 12px;
+  border: 1px solid var(--glass-line);
+  border-radius: 14px;
+}
+.weights > summary {
+  padding: 10px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-glow);
+  cursor: pointer;
+  list-style: none;
+}
+.weights > summary::-webkit-details-marker {
+  display: none;
+}
+.weights > summary::before {
+  content: "+ ";
+}
+.weights[open] > summary::before {
+  content: "− ";
+}
+.weights .slider {
+  margin: 0 0 10px;
+}
+.weights .fine {
+  margin: 0 0 12px;
+}

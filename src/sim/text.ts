@@ -86,6 +86,7 @@ const PROFILE: Record<Profile, Pair> = {
   o2: ["Least oxygen", "省エネ"],
   found: ["Easiest to locate", "迷いにくさ"],
   mix: ["Balanced", "統合"],
+  custom: ["Custom", "カスタム"],
 };
 export const profileName = (p: Profile) => tr(...PROFILE[p]);
 
