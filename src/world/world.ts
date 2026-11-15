@@ -1,5 +1,6 @@
 /** The Mars world: real terrain, backdrop, sky, sun and a few placeholder objects. */
 import * as THREE from "three";
+import { AREA } from "../data/areas";
 import { Frame, toLonLat } from "../data/frame";
 import {
   HeightGrid,
@@ -29,11 +30,13 @@ export class World {
   readonly fog = new THREE.FogExp2(HAZE, CLEAR_FOG);
   readonly sunLight = new THREE.DirectionalLight(0xfff0dc, 2.6);
   readonly skyLight = new THREE.HemisphereLight(0xe9c7a4, 0x5c3b28, 1.0);
-  private sunDisc: THREE.Sprite;
+  readonly sunDisc: THREE.Sprite;
   /** current sun direction in the sky */
   sun = { azimuth: 0, elevation: 45 };
   /** Drawn play-area terrain; the planner view recolours this group with analysis layers. */
   playMesh = new THREE.Group();
+  /** Surrounding DEM or supplied Buttes skyline, hidden by the planner's block view. */
+  readonly backdrop = new THREE.Group();
 
   private constructor(
     readonly meta: Meta,
@@ -85,8 +88,8 @@ export class World {
     const fetchB = meta.frame.fetch;
     const k = lowDetail ? 2 : 1;
     w.playMesh = buildTerrain(play, frame, { step, color: rasterColor(color, elevationTint), chunkCells: 48, material: groundMaterial });
-    w.scene.add(
-      w.playMesh,
+    w.scene.add(w.playMesh, w.backdrop);
+    w.backdrop.add(
       buildTerrain(surround, frame, {
         step: 2 * k,
         color: rasterColor(surroundImg, elevationTint),
@@ -103,8 +106,23 @@ export class World {
         chunkCells: 96,
       }),
     );
-    onProgress('Loading Mars_view.stl…');
-    w.scene.add(await loadBackdrop());
+    if (AREA === "buttes") {
+      onProgress('Loading Mars_view.stl…');
+      w.backdrop.add(await loadBackdrop());
+    } else {
+      w.backdrop.add(buildTerrain(far, frame, {
+        step: 2 * k,
+        color: elevationTint,
+        skip: (e, n, half) => {
+          const r = half + 400;
+          for (const [de, dn] of [[0, 0], [-r, -r], [r, -r], [-r, r], [r, r], [-r, 0], [r, 0], [0, -r], [0, r]])
+            if (Number.isNaN(mid.sample(e + de, n + dn))) return false;
+          return true;
+        },
+        lift: -30,
+        curvature: true,
+      }));
+    }
     return w;
   }
 
@@ -164,7 +182,7 @@ export class World {
     // Dust softens the distant horizon without hiding the middle-distance ground.
     this.fog.density = 0.00004 + 0.00018 * dust * dust;
     const sky = HAZE.clone().multiplyScalar(0.35 + 0.65 * day).lerp(new THREE.Color(0x8a5a36), dust * 0.4);
-    (this.scene.background as THREE.Color).copy(sky);
+    if (this.scene.background instanceof THREE.Color) this.scene.background.copy(sky);
     this.fog.color.copy(sky);
   }
 }

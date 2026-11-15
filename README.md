@@ -21,6 +21,18 @@ home. Built on real NASA data. Runs in a browser with no backend.
 Every page except the walk preview is in English and Japanese. The original project vision is in [CLAUDE.md](CLAUDE.md);
 the simulator is where the idea went after that.
 
+## Two map areas
+
+Both are real HiRISE windows on Curiosity's route, chosen in the planner's top switch (`?area=`):
+**Murray Buttes** (gentle plain, sols 1352–2804) and **Gediz Vallis** (the steep foothills of Mount
+Sharp just south of it, sols 3143–4552). Under the four routes the planner also measures the same
+walk **without a plan**: a straight line, and Curiosity's own path where it passes both ends, with
+the same speed and oxygen model. On Gediz Vallis, Base Camp to the sulfur stones: the planned
+route takes 1 h 50 min and 60 % of a tank there and back; the straight line crosses 683 m of unsafe
+ground; following Curiosity's path would need 129 % of a tank.
+
+To process an area: `MARSWALK_AREA=gediz` before each data script (default `buttes`).
+
 ## How the route simulator works
 
 **Three map layers, three kinds of NASA data**

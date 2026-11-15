@@ -2,6 +2,7 @@
  * Home: Mars in the middle with "Ares" and "Sight" either side, one search bar with "New plan"
  * inside it, and a row of cards below: your recent plans, or the science targets to start from.
  */
+import { AREAS, areaOf, type AreaId } from "../data/areas";
 import { loadJson, type Place, type Positions } from "../data/loader";
 import { placeName, profileName } from "../sim/text";
 import { Globe } from "./globe";
@@ -16,14 +17,20 @@ const $ = (id: string) => document.getElementById(id)!;
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
-let places: Place[] = [];
-const open = (p: Place) => location.assign(`/sim.html?dest=${encodeURIComponent(p.id)}`);
+/** places of every map area, each tagged with its area */
+type AreaPlace = Place & { area: AreaId };
+let places: AreaPlace[] = [];
+const destUrl = (p: AreaPlace) => `/sim.html?area=${p.area}&dest=${encodeURIComponent(p.id)}`;
+const open = (p: Place) => location.assign(destUrl(p as AreaPlace));
 
 /** what each science target is for, in a few words */
 const WHY: Record<string, [string, string]> = {
   stop_murray_buttes: ["Rock layers of an old lake", "古い湖の地層"],
   stop_bagnold_dunes: ["Active dark sand dunes", "動いている黒い砂丘"],
   stop_vera_rubin_ridge: ["Hematite seen from orbit", "軌道から見えたヘマタイト"],
+  stop_marker_band: ["Ripples of an ancient lake", "古代の湖の波の跡"],
+  stop_gediz_ridge: ["Debris left by floods", "洪水が残した岩くず"],
+  stop_sulfur_field: ["Pure sulfur stones", "純粋な硫黄の石"],
 };
 
 const dur = (s: number) => {
@@ -36,7 +43,7 @@ function planCard(p: Project): string {
   const s = p.summary;
   const facts = s ? `${profileName(s.profile)} · ${dur(s.duration)}` : tr("No route yet", "ルート未計算");
   return `<li class="card">
-    <a href="/sim.html?project=${encodeURIComponent(p.id)}">
+    <a href="/sim.html?area=${areaOf(p.area)}&project=${encodeURIComponent(p.id)}">
       <span class="dot${s && !s.ok ? " bad" : " plan"}" aria-hidden="true"></span>
       <span class="nm">${esc(p.name)}</span>
       <span class="sub">${esc(facts)}</span>
@@ -48,13 +55,14 @@ function planCard(p: Project): string {
   </li>`;
 }
 
-function targetCard(p: Place, base: Place | undefined): string {
+function targetCard(p: AreaPlace): string {
+  const base = places.find((q) => q.kind === "base" && q.area === p.area);
   const km = base ? `${(Math.hypot(p.easting - base.easting, p.northing - base.northing) / 1000).toFixed(1)} km` : "";
   const why = WHY[p.id];
   return `<li class="card">
-    <a href="/sim.html?dest=${encodeURIComponent(p.id)}">
+    <a href="${destUrl(p)}">
       <span class="dot" aria-hidden="true"></span>
-      <span class="nm">${esc(placeName(p.id, p.name).replace(/（ヘマタイト）|\s*\(hematite\)/i, ""))}</span>
+      <span class="nm">${esc(placeName(p.id, p.name).replace(/（[^）]*）|\s*\([^)]*\)/, ""))}</span>
       <span class="sub">${why ? esc(tr(...why)) : ""}</span>
       <span class="meta">${esc(tr(`${km} from Base Camp`, `ベースキャンプから ${km}`))}</span>
     </a>
@@ -67,7 +75,6 @@ let tab: "plans" | "targets" | null = null;
 function renderBelow(): void {
   const plans = listProjects();
   const stops = places.filter((p) => p.kind === "stop");
-  const base = places.find((p) => p.kind === "base");
   const box = $("below");
   if (!plans.length) tab = "targets";
   else if (!tab) tab = "plans";
@@ -78,7 +85,7 @@ function renderBelow(): void {
         tab === "plans" && plans.length > 6 ? `<span class="count">${esc(tr(`${plans.length} saved`, `${plans.length}件保存`))}</span>` : ""
       }</div>`
     : `<div class="head"><h2>${esc(tr("Start with a science target", "科学目標から始める"))}</h2></div>`;
-  const cards = tab === "plans" ? plans.slice(0, 6).map(planCard) : stops.map((p) => targetCard(p, base));
+  const cards = tab === "plans" ? plans.slice(0, 6).map(planCard) : stops.map(targetCard);
   box.innerHTML = `${head}<ul class="cards">${cards.join("")}</ul>`;
   renderButton();
 }
@@ -134,8 +141,8 @@ async function start(): Promise<void> {
     document.body.classList.add("no-globe");
     return null;
   });
-  const pos = await loadJson<Positions>("positions.json");
-  places = pos.places;
+  const all = await Promise.all(AREAS.map((a) => loadJson<Positions>("positions.json", a.id).catch(() => null)));
+  places = all.flatMap((pos, i) => (pos ? pos.places.map((p) => ({ ...p, area: AREAS[i].id })) : []));
   renderText();
   attachPlaceSearch($("q") as HTMLInputElement, $("suggest"), searchable(places), open);
 

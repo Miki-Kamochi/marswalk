@@ -2,7 +2,7 @@
 
 Usage:  .venv/Scripts/python scripts/home_images.py
 
-Reads files that are already processed (public/data, data/interim) and writes
+Reads files that are already processed for the buttes area (public/data/buttes, data/interim/buttes) and writes
 public/img/home/surface.jpg.
 """
 import json
@@ -12,8 +12,8 @@ import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
-DATA = ROOT / "public" / "data"
-INTERIM = ROOT / "data" / "interim"
+DATA = ROOT / "public" / "data" / "buttes"
+INTERIM = ROOT / "data" / "interim" / "buttes"
 OUT = ROOT / "public" / "img" / "home"
 
 meta = json.loads((DATA / "meta.json").read_text())

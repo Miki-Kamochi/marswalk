@@ -111,7 +111,7 @@ def pct(name, a, mask=None):
 def main():
     preview = Path(sys.argv[sys.argv.index("--preview") + 1]) if "--preview" in sys.argv else None
     print("nav grid")
-    dem, b, nd, res = read_tif(RAW / "gale_mosaic" / "gale_dem_1m_window.tif")
+    dem, b, nd, res = read_tif(DEM_WINDOW)
     dem = crop(dem, FETCH_BOUNDS, 1.0, PLAY_BOUNDS).astype(np.float64)
     bad = ~np.isfinite(dem) | (dem == nd) if nd is not None else ~np.isfinite(dem)
     print(f"    DEM {dem.shape[1]}x{dem.shape[0]}, no-data {bad.mean()*100:.2f}%")
@@ -122,10 +122,11 @@ def main():
     rows, cols = tilt.shape
 
     sand = block_mean(np.load(INTERIM / "sand.npy").astype(np.float64), CELL // 2)
-    hem = np.load(INTERIM / "crism_hematite.npy")
+    hem_file = INTERIM / "crism_hematite.npy"
+    hem = np.load(hem_file) if HAS_CRISM else np.full(tilt.shape, np.nan, np.float32)  # NaN = no CRISM coverage
     assert sand.shape == tilt.shape == hem.shape, (sand.shape, tilt.shape, hem.shape)
 
-    gray, gb, gnd, gres = read_tif(RAW / "gale_mosaic" / "gale_ortho_1m_window.tif")
+    gray, gb, gnd, gres = read_tif(ORTHO_WINDOW)
     print(f"    image {gray.shape[1]}x{gray.shape[0]} at {gres:.2f} m, zero pixels {(gray == 0).mean()*100:.2f}%")
     loc, tex, side = localizability(gray)
 
@@ -165,8 +166,8 @@ def main():
         localizability=dict(templateM=TEMPLATE, searchM=SEARCH, excludeM=EXCLUDE, noiseDN=NOISE_DN,
                             imageMetersPerPixel=1,
                             formula="sqrt(var / (var + noise^2)) * (1 - highest correlation with another spot)"),
-        source="MSL Gale Merged DEM 1 m v3 and Orthophoto Mosaic v3 resampled to 1 m (USGS; MRO HiRISE); "
-               "MRO CRISM FRT0000B6F1"))
+        source="MSL Gale Merged DEM 1 m v3 and Orthophoto Mosaic v3 resampled to 1 m (USGS; MRO HiRISE)"
+               + ("; MRO CRISM FRT0000B6F1" if HAS_CRISM else "")))
 
     if preview:
         preview.mkdir(parents=True, exist_ok=True)

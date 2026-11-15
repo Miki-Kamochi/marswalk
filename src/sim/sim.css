@@ -5,8 +5,25 @@ body.planner {
   inset: 0;
   overflow: hidden;
   color: var(--ui-text);
-  background: var(--ui-bg);
+  /* block view: the home screen's look, a warm glow behind the block and Mars-red haze at the bottom */
+  background:
+    radial-gradient(ellipse 46% 52% at calc(50% + var(--panel-w) / 2) 55%, rgba(255, 112, 52, 0.13), rgba(255, 112, 52, 0) 70%),
+    linear-gradient(to top, rgba(120, 50, 20, 0.28), rgba(120, 50, 20, 0) 38%),
+    #000;
   --panel-w: 384px;
+}
+/* surroundings view: the 3D scene fills the screen with its own background */
+body.planner.scene-land .stars {
+  display: none;
+}
+/* the home screen's pixel stars around the block */
+.stars {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  image-rendering: pixelated;
 }
 #map {
   position: absolute;
@@ -90,6 +107,35 @@ button {
 #planName:focus {
   border-color: var(--accent);
   background: rgba(236, 228, 218, 0.05);
+}
+
+/* map area switch: two areas side by side */
+.areas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin: 12px 14px 0;
+  padding: 3px;
+  background: rgba(236, 228, 218, 0.05);
+  border-radius: 99px;
+}
+.areas a {
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  color: var(--ui-text-2);
+  border-radius: 99px;
+}
+.areas a:hover {
+  color: var(--ui-text);
+}
+.areas a[aria-selected="true"] {
+  color: var(--ui-text);
+  background: var(--ui-hover);
+  box-shadow: inset 0 0 0 1px rgba(255, 107, 44, 0.55);
 }
 
 /* start / goal */
@@ -971,4 +1017,85 @@ dialog#info a {
   .walk-fab {
     bottom: calc(52vh + var(--gap));
   }
+}
+
+/* the same walk without a plan: straight line and Curiosity's path, measured the same way */
+.naive {
+  margin: 14px 2px 0;
+}
+.naive h3 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ui-text-2);
+}
+.naive ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.naive li {
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  align-items: baseline;
+  column-gap: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  border: 1px dashed var(--glass-line);
+  border-radius: 14px;
+}
+.naive .sw {
+  align-self: center;
+  height: 0;
+  border-top: 2.5px dashed #ff6464;
+}
+.naive .sw.rover {
+  border-top-color: #7cc8ff;
+}
+.naive .nm {
+  font-weight: 600;
+}
+.naive .f {
+  color: var(--ui-text-2);
+  font-variant-numeric: tabular-nums;
+}
+.naive em {
+  font-style: normal;
+  color: var(--warn);
+}
+.naive .w {
+  grid-column: 2 / -1;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+/* view: block or surroundings */
+.scene-seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin: 0 0 10px;
+  padding: 3px;
+  background: rgba(236, 228, 218, 0.05);
+  border-radius: 99px;
+}
+.scene-seg button {
+  padding: 6px 10px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ui-text-2);
+  background: none;
+  border: 0;
+  border-radius: 99px;
+}
+.scene-seg button:hover {
+  color: var(--ui-text);
+}
+.scene-seg button[aria-checked="true"] {
+  color: var(--ui-text);
+  background: var(--ui-hover);
+  box-shadow: inset 0 0 0 1px rgba(255, 107, 44, 0.55);
 }

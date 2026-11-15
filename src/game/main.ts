@@ -1,10 +1,12 @@
 import * as THREE from 'three';
 import { toLonLat } from '../data/frame';
+import { AREA, AREAS, areaOf } from '../data/areas';
 import { dataUrl, loadRaster } from '../data/loader';
 import { bearing } from '../nav/rng';
 import { nextLocalTime } from '../nav/sun';
 import type { Region } from '../nav/mgl';
 import { loadWalkPlan } from '../plan/walk-plan';
+import { getProject } from '../site/projects';
 import { Controls } from './controls';
 import { Hud, type CollectionTarget } from './hud';
 import { movementScale, SPEEDS, stormLevel, type Speed } from './mission';
@@ -29,11 +31,17 @@ const COLLECTION_RADIUS = 7;
 const RIGHT_VEER = Math.PI / 360;
 
 async function main() {
+  const projectId = params.get('project');
+  const savedProject = projectId ? getProject(projectId) : undefined;
+  if (savedProject && areaOf(savedProject.area) !== AREA) {
+    location.replace(`/game.html?area=${areaOf(savedProject.area)}&project=${encodeURIComponent(savedProject.id)}`);
+    return;
+  }
   const world = await World.load(m => $('loading').textContent = m, low);
   const [sand, orbital, plan] = await Promise.all([
     loadRaster(world.meta.layers.sand.raw, world.meta.layers.sand.bounds),
     loadRaster(world.meta.images.ortho.file, world.meta.images.ortho.bounds),
-    loadWalkPlan(world, params.get('project')),
+    loadWalkPlan(world, projectId),
   ]);
   const controls = new Controls(renderer.domElement);
   const targets: CollectionTarget[] = [{
@@ -49,9 +57,12 @@ async function main() {
     return site;
   });
   const hud = new Hud(world, dataUrl(world.meta.images.color.file), plan.points);
+  const areaName = AREAS.find(a => a.id === AREA)?.name[1] ?? AREA;
   $('missionName').textContent = `${plan.target.name}へ向かい試料を回収する`;
-  $('planSummary').textContent = `${plan.project?.name || '既定の計画'} · ${Math.round(plan.route.stats.distance)} m · 計画所要 ${Math.ceil(timeLimit / 60)}分 · ${plan.route.stats.photoCount}回の測位を想定`;
-  if (plan.project) $('plannerLink').setAttribute('href', `/sim.html?project=${encodeURIComponent(plan.project.id)}`);
+  $('planSummary').textContent = `${areaName} · ${plan.project?.name || '既定の計画'} · ${Math.round(plan.route.stats.distance)} m · 計画所要 ${Math.ceil(timeLimit / 60)}分 · ${plan.route.stats.photoCount}回の測位を想定`;
+  const plannerQuery = new URLSearchParams({ area: AREA });
+  if (plan.project) plannerQuery.set('project', plan.project.id);
+  $('plannerLink').setAttribute('href', `/sim.html?${plannerQuery}`);
   const pano = new Panorama();
   $('panorama').appendChild(pano.canvas);
   let player: Player, nav: Nav;

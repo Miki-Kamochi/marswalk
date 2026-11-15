@@ -43,11 +43,15 @@ export async function loadWalkPlan(world: World, projectId: string | null): Prom
 
   let home = project?.home ?? -1;
   let target = project?.target ?? -1;
+  let targetName = project?.destName || "";
   if (home < 0 || target < 0) {
-    const base = world.place("base");
-    const stop = world.place("stop_murray_buttes");
-    home = grid.nearestOpen(grid.index(base.easting, base.northing));
+    const walk = world.positions.walk;
+    const start = walk ? world.place(walk.camp) : world.place("base");
+    const stop = walk ? world.place(walk.stop) : world.positions.places.find((p) => p.kind === "stop");
+    if (!stop) throw new Error("このエリアに採取地点がありません。");
+    home = grid.nearestOpen(grid.index(start.easting, start.northing));
     target = grid.index(stop.easting, stop.northing);
+    targetName = stop.name.replace(/ \(.+\)$/, "");
   }
   if (!planner.setHome(home)) throw new Error("計画の出発地点が歩行可能範囲にありません。");
   const resolved = planner.resolve(target);
@@ -67,7 +71,7 @@ export async function loadWalkPlan(world: World, projectId: string | null): Prom
     route,
     points,
     start: pointAt(grid, home),
-    target: { ...pointAt(grid, resolved.dest), name: project?.destName || "採取地点" },
+    target: { ...pointAt(grid, resolved.dest), name: targetName || "採取地点" },
     timeLimit: Math.ceil(route.stats.duration),
     // Planner duration uses this same Tobler off-path model for every edge.
     speedForGrade: (grade) => walkingSpeed(grade, cfg),

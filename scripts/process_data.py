@@ -32,7 +32,6 @@ from config import *
 
 Image.MAX_IMAGE_PIXELS = None
 OUT = PUBLIC_DATA
-INTERIM = ROOT / "data" / "interim"
 META_PATH = OUT / "meta.json"
 
 PW, PS, PE, PN = PLAY_BOUNDS
@@ -59,7 +58,7 @@ def out_path(rel):
 
 
 def report(rel):
-    print(f"  wrote public/data/{rel} ({(OUT / rel).stat().st_size/1e3:.0f} kB)")
+    print(f"  wrote public/data/{AREA}/{rel} ({(OUT / rel).stat().st_size/1e3:.0f} kB)")
 
 
 def read_tif(path):
@@ -126,14 +125,14 @@ def save_overlay(rel, value01, alpha01, stops, layer, info):
 
 # ----------------------------------------------------------------------------- terrain
 def load_play_dem():
-    dem, b, nd, res = read_tif(RAW / "gale_mosaic" / "gale_dem_1m_window.tif")
+    dem, b, nd, res = read_tif(DEM_WINDOW)
     return crop(dem, FETCH_BOUNDS, 1.0, PLAY_BOUNDS).astype(np.float64)
 
 
 def terrain():
     print("terrain")
     src = "MSL Gale Merged DEM 1 m v3 (USGS; MRO HiRISE stereo)"
-    dem, b, nd, res = read_tif(RAW / "gale_mosaic" / "gale_dem_1m_window.tif")
+    dem, b, nd, res = read_tif(DEM_WINDOW)
     play = block_mean(crop(dem, FETCH_BOUNDS, 1.0, PLAY_BOUNDS), PLAY_CELL, nd)
     write_grid("terrain/play_2m.u16", play, PW + PLAY_CELL / 2, PN - PLAY_CELL / 2, PLAY_CELL, src)
     sur = block_mean(dem, 8, nd)
@@ -231,7 +230,7 @@ def color_lut():
 
 def imagery():
     print("imagery")
-    gray, b, nd, res = read_tif(RAW / "gale_mosaic" / "gale_ortho_1m_window.tif")
+    gray, b, nd, res = read_tif(ORTHO_WINDOW)
     lut, cal = color_lut()
     np.save(INTERIM / "color_lut.npy", lut) if INTERIM.exists() else None
     play = crop(gray, FETCH_BOUNDS, 1.0, PLAY_BOUNDS)
@@ -318,7 +317,9 @@ def layers():
         ("hydration", "BD1900_2", "1.9 um band depth - water-bearing minerals",
          [(0, (190, 220, 255)), (0.5, (70, 130, 235)), (1, (30, 30, 150))]),
     ]
-    for layer, band, desc, stops in specs:
+    if not HAS_CRISM:
+        print("    no CRISM observation over this area: mineral layers skipped")
+    for layer, band, desc, stops in (specs if HAS_CRISM else []):
         v = crism_band(band)
         fin = np.isfinite(v)
         vs = ndi.median_filter(np.where(fin, v, 0), 3)
@@ -335,7 +336,7 @@ def layers():
         print(f"    {band}: coverage {fin.mean()*100:.0f}% of play area, p70 {lo:.4f}, p99.5 {hi:.4f}")
 
     # dark sand hazard: low albedo + smooth, from the orthophoto
-    gray, b, nd, res = read_tif(RAW / "gale_mosaic" / "gale_ortho_1m_window.tif")
+    gray, b, nd, res = read_tif(ORTHO_WINDOW)
     g = block_mean(crop(gray, FETCH_BOUNDS, 1.0, PLAY_BOUNDS), 2)
     gs = ndi.gaussian_filter(g, 3)
     thr = float(np.percentile(gs, 50)) * 0.72
