@@ -71,7 +71,7 @@ body.home::after {
   top: 0;
   transform: translateY(-50%);
   padding: 4px 10px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: #fff;
   background: var(--glass);
@@ -243,7 +243,7 @@ body.home::after {
   min-width: 0;
 }
 .suggest .kd {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--ui-text-2);
 }
 
@@ -287,7 +287,7 @@ body.home::after {
 .dd-count {
   min-width: 18px;
   padding: 0 5px;
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 700;
   line-height: 18px;
   text-align: center;
@@ -375,7 +375,7 @@ body.home::after {
 }
 .below .count {
   margin-left: auto;
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(236, 228, 218, 0.45);
 }
 .cards {
@@ -436,13 +436,13 @@ body.home::after {
 .card .sub,
 .card .meta {
   grid-column: 1 / -1;
-  font-size: 12.5px;
+  font-size: 13.5px;
   line-height: 1.35;
   color: rgba(236, 228, 218, 0.7);
 }
 .card .meta {
   margin-top: 6px;
-  font-size: 11.5px;
+  font-size: 13px;
   color: rgba(236, 228, 218, 0.42);
   font-variant-numeric: tabular-nums;
 }
@@ -482,7 +482,7 @@ body.home::after {
   inset: auto 0 0;
   padding: 0 var(--edge) var(--gap);
   text-align: center;
-  font-size: 11px;
+  font-size: 12.5px;
   color: rgba(236, 228, 218, 0.38);
 }
 

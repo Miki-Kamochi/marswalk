@@ -79,7 +79,7 @@ main.deck {
 }
 .cap p {
   margin: 0 0 12px;
-  font-size: clamp(15px, 1.25vw, 18px);
+  font-size: clamp(16px, 1.35vw, 19px);
   line-height: 1.6;
   color: var(--ui-text-2);
 }
@@ -90,8 +90,8 @@ main.deck {
 }
 .cap .src {
   margin-top: 18px;
-  font-size: 12px;
-  color: rgba(163, 154, 143, 0.75);
+  font-size: 13.5px;
+  color: rgba(163, 154, 143, 0.9);
 }
 .cap .src a {
   color: inherit;
@@ -101,8 +101,8 @@ main.deck {
   align-items: center;
   gap: 8px;
   margin: 4px 0 12px;
-  padding: 5px 12px;
-  font-size: 13px;
+  padding: 6px 14px;
+  font-size: 14.5px;
   font-weight: 600;
   color: var(--accent-glow);
   background: rgba(255, 107, 44, 0.1);
@@ -125,7 +125,7 @@ main.deck {
 .formula {
   margin: 10px 0 12px;
   padding: 10px 14px;
-  font: 500 13.5px/1.6 var(--mono);
+  font: 500 15px/1.6 var(--mono);
   color: var(--ui-text);
   background: var(--glass);
   border: 1px solid var(--glass-line);
@@ -176,8 +176,8 @@ canvas.pix {
   gap: 6px;
 }
 .chip {
-  padding: 7px 14px;
-  font-size: 13px;
+  padding: 8px 16px;
+  font-size: 14.5px;
   font-weight: 600;
   color: var(--ui-text);
   background: var(--glass);
@@ -224,7 +224,7 @@ canvas.pix {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
+  font-size: 13.5px;
   color: var(--ui-text-2);
 }
 .legend i {
@@ -234,7 +234,7 @@ canvas.pix {
   border-radius: 4px;
 }
 .readout {
-  font: 600 13px/1.5 var(--mono);
+  font: 600 14.5px/1.5 var(--mono);
   color: var(--ui-text);
 }
 .big-num {

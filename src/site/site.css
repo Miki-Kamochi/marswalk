@@ -132,6 +132,30 @@ header.bar {
   border-radius: 99px;
   font-size: 12.5px;
 }
+/* full screen: a round button with the expand / shrink corners */
+.bar .lang.full {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 28px;
+  padding: 0;
+}
+.bar .lang.full svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.bar .lang.full .fs-off,
+:root:fullscreen .bar .lang.full .fs-on {
+  display: none;
+}
+:root:fullscreen .bar .lang.full .fs-off {
+  display: inline;
+}
 
 /* ---------------------------------------------------------------- moving between pages
    Cross-document view transitions, "out-in": the old page leaves completely before the new one

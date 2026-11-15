@@ -49,9 +49,9 @@
   bottom: 8px;
   max-width: 520px;
   margin: 0;
-  font-size: 11px;
+  font-size: 12.5px;
   text-align: right;
-  color: rgba(244, 237, 230, 0.6);
+  color: rgba(244, 237, 230, 0.7);
 }
 
 /* 2: the phone */
@@ -491,7 +491,7 @@
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  font-size: clamp(14px, 1.15vw, 16px);
+  font-size: clamp(15.5px, 1.3vw, 18px);
   line-height: 1.5;
   color: var(--ui-text-2);
 }
@@ -526,7 +526,7 @@
 }
 .qcard > p {
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--ui-text-2);
   text-align: center;
@@ -579,7 +579,7 @@
   bottom: 10px;
   left: 4px;
   right: 4px;
-  font-size: 10.5px;
+  font-size: 12px;
   text-align: center;
   color: var(--ui-text);
 }
@@ -644,12 +644,12 @@
   fill: #ffc75a;
 }
 .rk-t {
-  font: 600 14px var(--font);
+  font: 600 16px var(--font);
   text-anchor: middle;
   fill: var(--ui-text-2);
 }
 .rk-date {
-  font-size: 13px;
+  font-size: 15px;
   fill: var(--accent-glow);
 }
 
@@ -684,7 +684,7 @@
   gap: 6px;
   margin: 0 0 12px;
   padding-left: 22px;
-  font-size: clamp(14px, 1.15vw, 16px);
+  font-size: clamp(15.5px, 1.3vw, 18px);
   color: var(--ui-text-2);
 }
 .howto li::marker {
@@ -807,7 +807,7 @@
   fill: #5a3d2c;
 }
 .nh-t {
-  font: 600 11px var(--font);
+  font: 600 13px var(--font);
   text-anchor: middle;
   fill: var(--ui-text);
 }
@@ -828,7 +828,7 @@
 .no-read {
   min-height: 1.4em;
   margin: 0;
-  font-size: 12px;
+  font-size: 14px;
 }
 .final {
   margin-top: 4px;

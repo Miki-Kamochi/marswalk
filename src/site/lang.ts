@@ -39,6 +39,13 @@ export function initLang(): void {
   for (const b of document.querySelectorAll<HTMLElement>("[data-set-lang]")) {
     b.addEventListener("click", () => setLang(b.dataset.setLang as Lang));
   }
+  // full screen buttons in the top bar (for presenting)
+  for (const b of document.querySelectorAll<HTMLElement>("[data-fullscreen]")) {
+    b.addEventListener("click", () => {
+      if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+      else void document.documentElement.requestFullscreen?.().catch(() => {});
+    });
+  }
   for (const b of document.querySelectorAll<HTMLElement>("[data-toggle-lang]")) {
     b.addEventListener("click", () => setLang(getLang() === "ja" ? "en" : "ja"));
   }

@@ -317,8 +317,7 @@ function drawRover(svg: SVGSVGElement) {
     <rect x="106" y="30" width="48" height="26" rx="5" class="rv-head"/>
     <circle cx="120" cy="43" r="5" class="rv-eye"/><circle cx="140" cy="43" r="5" class="rv-eye"/>
     <path d="M96 160 L66 150 L48 176" class="rv-arm"/>
-    <path d="M154 43 L260 4 L260 82 Z" class="rv-beam"/>
-    <text x="210" y="258" class="rv-t">${tr("Mars rover (illustration) · about 3 m long", "火星探査車（イラスト）· 長さ約3 m")}</text>`;
+    <path d="M154 43 L260 4 L260 82 Z" class="rv-beam"/>`;
 }
 async function robot(ctx: SlideCtx) {
   const el = ctx.el;

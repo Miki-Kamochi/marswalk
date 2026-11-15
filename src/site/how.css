@@ -78,11 +78,11 @@
 }
 .tiles figcaption {
   display: grid;
-  font-size: 12.5px;
+  font-size: 14px;
   color: var(--ui-text-2);
 }
 .tiles figcaption b {
-  font-size: 17px;
+  font-size: 19px;
   color: var(--ui-text);
 }
 
@@ -106,18 +106,18 @@
   display: grid;
   grid-template-columns: auto auto;
   gap: 2px 14px;
-  padding: 12px 14px;
-  font-size: 12.5px;
+  padding: 14px 16px;
+  font-size: 14px;
   color: var(--ui-text-2);
 }
 .g-info b {
   grid-column: 1 / -1;
   margin-bottom: 4px;
-  font: 600 12px var(--mono);
+  font: 600 13.5px var(--mono);
   color: var(--accent-glow);
 }
 .g-info i {
-  font: 600 12.5px var(--mono);
+  font: 600 14px var(--mono);
   font-style: normal;
   color: var(--ui-text);
   text-align: right;
@@ -228,12 +228,12 @@
 .sp-t,
 .sp-n,
 .sp-l {
-  font: 11px var(--font);
+  font: 13px var(--font);
   fill: var(--ui-text-2);
   text-anchor: middle;
 }
 .sp-l {
-  font-size: 12px;
+  font-size: 14px;
   text-anchor: end;
 }
 .sp-hl {
@@ -300,7 +300,7 @@
 }
 .en-nums > div {
   display: grid;
-  font-size: 12.5px;
+  font-size: 14px;
   color: var(--ui-text-2);
 }
 .en-nums .big-num {
@@ -359,8 +359,8 @@
   position: absolute;
   left: 102%;
   top: 40%;
-  padding: 3px 10px;
-  font-size: 13px;
+  padding: 4px 12px;
+  font-size: 15px;
   font-weight: 600;
   white-space: nowrap;
   background: var(--glass);
@@ -417,8 +417,8 @@
   grid-template-columns: 12px 1fr auto auto auto;
   align-items: center;
   gap: 12px;
-  padding: 9px 12px;
-  font-size: 13px;
+  padding: 10px 14px;
+  font-size: 14.5px;
   text-align: left;
   color: var(--ui-text-2);
   background: var(--glass);
@@ -434,13 +434,13 @@
   color: var(--ui-text);
 }
 .r-card span {
-  font: 500 12.5px var(--mono);
+  font: 500 13.5px var(--mono);
 }
 .r-card.on {
   border-color: var(--accent-glow);
 }
 .r-custom summary {
-  font-size: 13px;
+  font-size: 14.5px;
   font-weight: 600;
   color: var(--accent-glow);
   cursor: pointer;
@@ -450,7 +450,7 @@
   grid-template-columns: 110px 1fr;
   align-items: center;
   gap: 10px;
-  font-size: 13px;
+  font-size: 14.5px;
   color: var(--ui-text-2);
 }
 
@@ -470,7 +470,7 @@
   align-content: start;
   gap: 4px;
   padding: 16px;
-  font-size: 13px;
+  font-size: 14.5px;
   color: var(--ui-text-2);
 }
 .rule b {
@@ -492,7 +492,7 @@
 }
 .lim-h {
   margin: 8px 0 0;
-  font: 600 12px var(--mono);
+  font: 600 13.5px var(--mono);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ui-text-2);
