@@ -377,3 +377,12 @@ canvas.pix {
     font-size: 24px;
   }
 }
+.deckbar .db-next {
+  white-space: nowrap;
+}
+@media (max-width: 820px) {
+  /* the picture never spills over the words */
+  .slide .vis {
+    overflow: hidden;
+  }
+}

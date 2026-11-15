@@ -11,9 +11,9 @@ home. Built on real NASA data. Runs in a browser with no backend.
 | Page | What it is |
 |---|---|
 | `/` | Home: a faceted pixel Mars between "Ares" and "Sight", one search bar with New plan, and a History menu (saved plans, science targets) |
-| `/intro.html` | Introduction: why we built it (used in the presentation) |
+| `/intro.html` | Introduction: the problem as a step-by-step story, "you are the astronaut" (used in the presentation) |
 | `/sim.html` | **Route simulator**: pick a destination on the 2D map or in 3D, compare four routes |
-| `/how.html` | How it works: the problem, the layers, the route rules, every assumption |
+| `/how.html` | How it works, step by step: the data, the 6 m grid, each indicator, how they stack into one map, and the route search (live, on the real data) |
 | `/game.html` | Walk preview: the earlier first-person prototype (see below), opened from the planner |
 | `/credits.html` | Data, methods and software |
 | `/dev/` | Data check pages for developers |

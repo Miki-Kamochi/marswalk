@@ -126,7 +126,7 @@ export const INFO: Record<string, Info> = {
         "CRISMの1ピクセルは18 mです。分かるのは「この辺り」までで、「この岩」までは分かりません。色のない場所は観測されていません。",
       ],
     ],
-    anchor: "layers",
+    anchor: "hem",
   },
   safety: {
     title: ["Safety", "安全性"],
@@ -144,7 +144,7 @@ export const INFO: Record<string, Info> = {
         "閾値（たとえば25°以上は通行不可）は、宇宙服で歩く人を想定した私たちの仮の値です。NASAの公式値ではありません。",
       ],
     ],
-    anchor: "layers",
+    anchor: "safety",
   },
   loc: {
     title: ["Easy to locate", "迷いにくさ"],
@@ -162,7 +162,7 @@ export const INFO: Record<string, Info> = {
         "なめらかな地面や、砂丘のような繰り返し模様はどこも同じに見えるので、照合は失敗します（紫）。これは周回機の画像だけから出した予測で、実際の地上写真では検証していません。",
       ],
     ],
-    anchor: "layers",
+    anchor: "loc",
   },
   limit: {
     title: ["Walk-back limit", "ウォークバック限界"],
@@ -180,7 +180,7 @@ export const INFO: Record<string, Info> = {
         "酸素が満タンなら、この地図の全体が限界の内側です。酸素残量のスライダーを下げると、限界が近づいてくるのが分かります。",
       ],
     ],
-    anchor: "routes",
+    anchor: "rules",
   },
   routes: {
     title: ["How the routes are chosen", "ルートの決め方"],

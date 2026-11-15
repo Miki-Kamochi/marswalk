@@ -176,9 +176,16 @@ export function startDeck(slides: Record<string, Slide>): void {
     if (Math.abs(dx) > 60 && Math.abs(dx) > 1.5 * Math.abs(dy)) (dx < 0 ? next : back)();
   }, { passive: true });
 
+  /** #5 opens slide 5; #routes opens the slide marked data-slide="routes" (links from the planner) */
+  const fromHash = () => {
+    const h = decodeURIComponent(location.hash.slice(1));
+    const n = Number(h);
+    if (h && Number.isInteger(n)) return n - 1;
+    return els.findIndex((e) => e.dataset.slide === h);
+  };
   addEventListener("hashchange", () => {
-    const n = Number(location.hash.slice(1));
-    if (n >= 1 && n - 1 !== index) go(n - 1);
+    const i = fromHash();
+    if (i >= 0 && i !== index) go(i);
   });
   document.addEventListener("langchange", renderBar);
 
@@ -186,8 +193,7 @@ export function startDeck(slides: Record<string, Slide>): void {
     el.setAttribute("aria-hidden", "true");
     el.inert = true;
   }
-  const start = Number(location.hash.slice(1));
-  go(start >= 1 ? start - 1 : 0);
+  go(Math.max(0, fromHash()));
 }
 
 /** Ease in-out, 0..1 → 0..1. */
