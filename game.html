@@ -21,9 +21,12 @@
     <div id="fixOverlay" hidden><canvas id="fixMap" aria-label="高精度測位アニメーション"></canvas><div id="fixReticle"></div></div>
     <div id="mapBox" class="panel"><button id="mapBtn" aria-label="マップを拡大・縮小">MAP [M]</button><canvas id="minimap" aria-label="計画経路とステージ全域の地図"></canvas></div>
   </div>
+  <div id="vrFrame" aria-hidden="true"><div class="eye"><span class="vrInfo"></span></div><div class="eye"><span class="vrInfo"></span></div></div>
+  <div id="vrRotate" aria-live="polite">スマホを横向きにしてVRゴーグルに入れてください</div>
+  <button id="modeExit" type="button">モード選択へ</button>
   <div id="stick"><div id="knob"></div></div>
   <div id="loading" class="overlay">Loading…</div>
-  <div id="start" class="overlay" style="display:none"><div class="card"><a class="menuLink" id="plannerLink" href="/sim.html">← ルート計画へ</a><div class="tag">MARSWALK / EVA-1</div><h1>歩行プレビュー</h1><p id="planSummary" class="lead"></p><p class="help">右下の全体マップに計画経路を表示します。自機位置はAR投影されません。存在可能性円を見ながら経路を辿り、必要に応じて静止して右クリック / Eで360°スキャンしてください。</p><p class="help">傾斜が強い地面では歩行速度が大幅に低下し、20°以上の登りには進入できません。Mでマップを拡大できます。</p><button id="startBtn">歩行を開始</button><p class="credit">地形・画像: NASA/JPL-Caltech/UArizona/USGS<br>MGLはPerseveranceの方式を参考にした簡略シミュレーション。</p></div></div>
+  <div id="start" class="overlay" style="display:none"><div class="card"><a class="menuLink" id="plannerLink" href="/sim.html">← ルート計画へ</a><div class="tag">MARSWALK / EVA-1</div><h1>歩行プレビュー</h1><p id="planSummary" class="lead"></p><p class="help">右下の全体マップに計画経路を表示します。マップに自分の位置は表示されません。存在可能性円を見ながら経路を辿り、必要に応じて静止して360°スキャンしてください。</p><div class="modes" role="radiogroup" aria-label="表示モード"><button type="button" role="radio" data-mode="fpv"><b>FPV</b><span>マウス・キーボード／画面のスティックで歩く</span></button><button type="button" role="radio" data-mode="ar"><b>AR</b><span>スマホを向けた方向が見える・画面を押して前進</span></button><button type="button" role="radio" data-mode="vr"><b>VR</b><span>スマホをVRゴーグルに入れて使う（試作）</span></button></div><p class="help">傾斜が強い地面では歩行速度が大幅に低下し、20°以上の登りには進入できません。Mでマップを拡大できます。</p><button id="startBtn">歩行を開始</button><p class="credit">地形・画像: NASA/JPL-Caltech/UArizona/USGS<br>MGLはPerseveranceの方式を参考にした簡略シミュレーション。</p></div></div>
   <div id="end" class="overlay" style="display:none"><div class="card"><h2 id="endTitle"></h2><p id="endLead" class="lead"></p><p id="endStats" class="help"></p><button id="againBtn">もう一度歩く</button><p class="credit"><a class="menuLink" href="/sim.html">← ルート計画へ</a></p></div></div>
   <script type="module" src="/src/game/main.ts"></script>
 </body>

@@ -127,3 +127,119 @@ button {
   z-index: 10;
   pointer-events: none;
 }
+
+/* ---------------------------------------------------------------- view modes */
+.modes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0 0 16px;
+}
+.modes button {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  padding: 10px 8px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.35;
+  color: #9ddbe5;
+  background: rgba(127, 234, 255, 0.06);
+  border: 1px solid rgba(91, 228, 252, 0.3);
+  box-shadow: none;
+}
+.modes button b {
+  font-size: 16px;
+  letter-spacing: 0.12em;
+  color: var(--cyan);
+}
+.modes button.active {
+  color: #04202a;
+  background: var(--cyan);
+  border-color: var(--cyan);
+}
+.modes button.active b {
+  color: #04202a;
+}
+#modeExit {
+  position: fixed;
+  top: max(8px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 16;
+  display: none;
+  padding: 6px 12px;
+  font-size: 12px;
+  opacity: 0.8;
+}
+body.mode-ar #modeExit,
+body.mode-vr #modeExit {
+  display: block;
+}
+/* VR: no HUD, two lenses and a short readout in each eye */
+#vrFrame,
+#vrRotate {
+  display: none;
+}
+body.mode-vr #hud {
+  visibility: hidden;
+}
+body.mode-vr #vrFrame {
+  position: fixed;
+  inset: 0;
+  z-index: 11;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  pointer-events: none;
+}
+#vrFrame .eye {
+  position: relative;
+  display: grid;
+  place-items: end center;
+  padding-bottom: 22%;
+  background: radial-gradient(ellipse 48% 56% at 50% 50%, transparent 78%, rgba(0, 0, 0, 0.92) 100%);
+  border-right: 2px solid #000;
+}
+#vrFrame .eye::before {
+  /* aim dot */
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px;
+  border-radius: 50%;
+  background: rgba(127, 234, 255, 0.8);
+}
+.vrInfo {
+  padding: 3px 8px;
+  font-size: 11px;
+  color: var(--cyan);
+  background: rgba(3, 29, 42, 0.7);
+  border: 1px solid rgba(91, 228, 252, 0.35);
+}
+@media (orientation: portrait) {
+  body.mode-vr #vrRotate {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: 24px;
+    z-index: 17;
+    display: block;
+    padding: 10px 12px;
+    font-size: 13px;
+    text-align: center;
+    color: var(--cyan);
+    background: var(--panel);
+    border: 1px solid rgba(91, 228, 252, 0.45);
+    pointer-events: none;
+  }
+}
+/* AR: the top centre holds the mission panel on a phone; sit under the speed buttons instead */
+body.mode-ar #modeExit {
+  top: calc(max(8px, env(safe-area-inset-top)) + 96px);
+  left: auto;
+  right: 8px;
+  transform: none;
+}

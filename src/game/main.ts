@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { StereoEffect } from 'three/examples/jsm/effects/StereoEffect.js';
 import { toLonLat } from '../data/frame';
 import { AREA, AREAS, areaOf } from '../data/areas';
 import { dataUrl, loadRaster } from '../data/loader';
@@ -7,7 +8,7 @@ import { nextLocalTime } from '../nav/sun';
 import type { Region } from '../nav/mgl';
 import { loadWalkPlan } from '../plan/walk-plan';
 import { getProject } from '../site/projects';
-import { Controls } from './controls';
+import { Controls, type ViewMode } from './controls';
 import { Hud, type CollectionTarget } from './hud';
 import { movementScale, SPEEDS, stormLevel, type Speed } from './mission';
 import { Nav } from './nav';
@@ -25,6 +26,15 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, low ? 1.5 : 2));
 renderer.setSize(innerWidth, innerHeight);
 $('view').appendChild(renderer.domElement);
 const camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.15, 400000);
+/** VR: the scene drawn once per eye, side by side, for a phone in a headset case */
+const stereo = new StereoEffect(renderer);
+stereo.setSize(innerWidth, innerHeight);
+const MODE_KEY = 'marswalk-view-mode';
+const HELP: Record<ViewMode, string> = {
+  fpv: 'WASD: 移動 · マウス: 見回す · M: 全域マップ',
+  ar: 'スマホを向けて見回す · 画面を押している間 前進 · MAPボタン: 全域マップ',
+  vr: '頭を動かして見回す · 画面（ゴーグルのボタン）を押している間 前進',
+};
 
 const COLLECTION_RADIUS = 7;
 /** Peak-storm unnoticed turn to the right, restored to the original 0.5°/s scale. */
@@ -84,7 +94,52 @@ async function main() {
     scanStatus = '周囲をスキャンして位置を推定'; message = ''; messageUntil = 0; terrainNoticeAt = -Infinity;
     pano.reset(); $('scanCapture').hidden = true; hud.hideLocalization(); updateSpeedButtons();
   }
+  // ------------------------------------------------------------ view modes
+  let mode: ViewMode = 'fpv';
+  try {
+    const saved = params.get('mode') ?? localStorage.getItem(MODE_KEY);
+    if (saved === 'fpv' || saved === 'ar' || saved === 'vr') mode = saved;
+    else if (controls.touch) mode = 'ar';
+  } catch { /* storage blocked: default */ }
+  function renderModes() {
+    document.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach(b => {
+      const on = b.dataset.mode === mode;
+      b.classList.toggle('active', on); b.setAttribute('aria-checked', String(on));
+    });
+  }
+  document.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach(b => b.addEventListener('click', () => {
+    mode = b.dataset.mode as ViewMode; renderModes();
+    try { localStorage.setItem(MODE_KEY, mode); } catch { /* not kept */ }
+  }));
+  renderModes();
+  /** Apply the chosen mode; runs inside the start tap so the phone can ask for its motion sensor. */
+  function enterMode() {
+    document.body.classList.toggle('mode-ar', mode === 'ar');
+    document.body.classList.toggle('mode-vr', mode === 'vr');
+    document.querySelector('#instruments .help')!.textContent = HELP[mode];
+    const sensor = controls.setMode(mode);
+    if (mode !== 'fpv') {
+      document.documentElement.requestFullscreen?.().catch(() => {});
+      if (mode === 'vr') (screen.orientation as unknown as { lock?: (o: string) => Promise<void> }).lock?.('landscape').catch(() => {});
+      void sensor.then(ok => {
+        if (!ok) say('モーションセンサーが許可されていません。ドラッグで見回してください。');
+        // no sensor event soon after: a laptop. The mouse looks around instead.
+        setTimeout(() => { if (phase === 'collect' && !controls.motion) say('モーションセンサーがありません。クリックで視点操作、左ボタンを押している間 前進。'); }, 1500);
+      });
+    }
+    onResize();
+  }
+  function leaveMode() {
+    controls.enabled = false; controls.release(); hud.toggleMap(false); hud.hideLocalization(); controls.mapOpen = false; hud.show(false);
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    document.body.classList.remove('mode-ar', 'mode-vr');
+    void controls.setMode('fpv'); onResize();
+    reset(); $('start').style.display = 'flex';
+  }
+  $('modeExit').addEventListener('click', leaveMode);
+
   function begin() {
+    enterMode();
     $('start').style.display = 'none'; $('end').style.display = 'none'; phase = 'collect'; controls.enabled = true; hud.show(true);
     if (!controls.touch) controls.capture();
     say('全体マップの計画経路を辿り、制限時間内に試料を回収してください。');
@@ -143,7 +198,7 @@ async function main() {
       const moving = fixT < 0 && Math.hypot(controls.moveX, controls.moveY) > 0.05;
       if (scanT >= 0 && moving) { scanT = -1; scanStatus = '撮影中断 · 移動を検出'; $('scanCapture').hidden = true; say('立ち止まって、もう一度スキャンしてください。'); }
       if (fixT < 0) {
-        if (moving && dust > 0.45) controls.yaw += RIGHT_VEER * dt * Math.min(1, (dust - 0.45) / 0.5);
+        if (moving && dust > 0.45) controls.turn(RIGHT_VEER * dt * Math.min(1, (dust - 0.45) / 0.5));
         const movement = player.update(dt * movementScale(speed), controls, world, plan.speedForGrade);
         if (moving && elapsed >= terrainNoticeAt) {
           if (movement.blocked) {
@@ -160,7 +215,7 @@ async function main() {
       if (phase === 'collect' && missionS >= timeLimit) finish(false, 'EVA時間切れ。安全規定により採取を中断し、隊員を強制帰還させました。');
     }
     world.worldPos(player.e, player.n, EYE_HEIGHT + (scanT >= 0 || fixT >= 0 ? 0 : Math.sin(player.bob * 1.9) * 0.05), camera.position);
-    camera.rotation.set(controls.pitch, -controls.yaw, 0, 'YXZ'); camera.updateMatrixWorld();
+    camera.rotation.set(controls.pitch, -controls.yaw, controls.roll, 'YXZ'); camera.updateMatrixWorld();
     world.setSky(startUtc + missionS * 1000, player.e, player.n, dust, camera);
     if (active && phase === 'collect' && scanT >= 0) {
       // Capture duration is real time so changing simulation speed does not corrupt the panorama.
@@ -198,11 +253,23 @@ async function main() {
       time: missionS, remaining: Math.max(0, timeLimit - missionS), total: timeLimit, dust, scan: scanStatus,
       message: elapsed < messageUntil ? message : '', heading: controls.yaw, speed: scanT >= 0 || fixT >= 0 ? 4 : speed,
     });
-    renderer.render(world.scene, camera);
+    if (mode === 'vr' && phase === 'collect') {
+      // the HUD is hidden in the headset: each eye gets a short readout instead
+      const next = targets.find(t => !t.collected);
+      const left = Math.max(0, timeLimit - missionS);
+      const text = `残り ${Math.floor(left / 60)}分 · ${next ? `${next.name} まで ${Math.round(Math.hypot(next.e - player.e, next.n - player.n))} m` : '回収完了'} · 誤差円 ${Math.ceil(nav.region.current.radius)} m`;
+      if (vrInfo[0].textContent !== text) vrInfo.forEach(el => { el.textContent = text; });
+      stereo.render(world.scene, camera);
+    } else renderer.render(world.scene, camera);
   }
+  const vrInfo = Array.from(document.querySelectorAll<HTMLElement>('.vrInfo'));
   reset(); $('loading').style.display = 'none'; $('start').style.display = 'flex';
   $('startBtn').addEventListener('click', begin); $('againBtn').addEventListener('click', () => { reset(); begin(); });
-  addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+  function onResize() {
+    camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight); stereo.setSize(innerWidth, innerHeight);
+  }
+  addEventListener('resize', onResize);
   if (params.has('debug')) (window as unknown as Record<string, unknown>).__mw = {
     world, controls, camera, renderer, targets, start, timeLimit, plan, hud, begin, scan, tick, reset, setSpeed,
     get player() { return player; }, get nav() { return nav; },
