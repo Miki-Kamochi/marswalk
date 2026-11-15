@@ -1,0 +1,9 @@
+# keep uploads to what the site build needs
+/data/
+/.venv/
+/dist/
+node_modules/
+/reports/
+/research_notes/
+.claude/
+__pycache__/
