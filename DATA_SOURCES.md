@@ -16,6 +16,7 @@ centre longitude 0 (the frame of the USGS Gale mosaics and of Curiosity's waypoi
 | 5 | Mineral layers: hematite (BD860_2), basalt sand (OLINDEX3), hydrated minerals (BD1900_2) | CRISM MTRDR targeted observation `FRT0000B6F1`, refined spectral summary parameters (`frt0000b6f1_07_sr165j_mtr3`) | MRO / CRISM imaging spectrometer, PDS Geosciences Node | 18 m | `https://pds-geosciences.wustl.edu/mro/mro-m-crism-5-rdr-mptargeted-v1/mrocr_4001/mtrdr/2008/2008_191/frt0000b6f1/` |
 | 6 | Curiosity's real path; position of every mission stop | MSL localized waypoints | Mars Science Laboratory (Curiosity) rover, JPL localization team | one point per drive | `https://mars.nasa.gov/mmgis-maps/MSL/Layers/json/MSL_waypoints.json` |
 | 7 | Weather: air and ground temperature, pressure, sunrise and sunset, UV, per sol | REMS weather feed | MSL Curiosity / REMS (Rover Environmental Monitoring Station), Centro de Astrobiología (CSIC-INTA) and JPL | one record per sol, sols 1 to 4995 | `https://mars.nasa.gov/rss/api/?feed=weather&category=msl&feedtype=json` |
+| 8 | The whole planet on the home screen (globe colours) | Viking MDIM 2.1 colourised global mosaic | Viking Orbiters 1 and 2, colourised by USGS Astrogeology | 232 m (we ship 1024 x 512, about 21 km per pixel; `scripts/globe.py`) | `https://planetarymaps.usgs.gov/mosaic/Mars_Viking_MDIM21_ClrMosaic_global_232m.tif` |
 
 ## How each one is processed
 
@@ -31,6 +32,10 @@ centre longitude 0 (the frame of the USGS Gale mosaics and of Curiosity's waypoi
   the Murray Buttes in the north are outside it.
 - **Derived layers** (not separate datasets): slope comes from dataset 1; the dark-sand mask comes
   from dataset 2 (dark, smooth patches larger than 2500 m²).
+- **Route planner grid** (`public/data/nav/nav_6m.bin`, made by `scripts/nav_layers.py`): tilt,
+  roughness and step come from dataset 1 at its full 1 m resolution (a plane fitted to every 6 m
+  cell); the localizability score comes from dataset 2 at 1 m (each 32 m patch matched against its
+  own surroundings); sand and hematite are datasets 2 and 5 resampled to the same 6 m cells.
 
 ## Notes for the submission
 

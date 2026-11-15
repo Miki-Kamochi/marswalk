@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>AresSight — Plan EVA route</title>
+    <meta name="theme-color" content="#0d0b0a" />
+    <script>
+      // pick the language before anything is drawn, so no text switches after the page appears
+      try {
+        var l = localStorage.getItem("marswalk-lang");
+        document.documentElement.dataset.lang = l === "ja" || l === "en" ? l : navigator.language.toLowerCase().indexOf("ja") === 0 ? "ja" : "en";
+      } catch (e) {
+        document.documentElement.dataset.lang = "en";
+      }
+      // Page changes. Pages sit side by side in the top bar (home, intro, how, credits) and the
+      // planner / walk preview lie one level "inside" Gale Crater, so the animation knows which
+      // way to move (see "moving between pages" in site.css). __revealed resolves when it is
+      // over; heavy 3D work waits for it.
+      window.__revealed = new Promise(function (done) {
+        addEventListener("pagereveal", function (e) {
+          var vt = e.viewTransition;
+          window.__vt = !!vt;
+          if (!vt) return done();
+          try {
+            var rank = function (u) {
+              var p = new URL(u).pathname.replace(/\/index\.html$/, "/");
+              var r = { "/": 0, "/intro.html": 1, "/how.html": 2, "/credits.html": 3, "/sim.html": 10, "/game.html": 11 }[p];
+              return r === undefined ? -1 : r;
+            };
+            var a = navigation.activation;
+            var f = a.from ? rank(a.from.url) : -1;
+            var t = rank(a.entry.url);
+            var type = f < 0 || t < 0 || f === t ? "fade" : (f / 10 | 0) !== (t / 10 | 0) ? (t > f ? "in" : "out") : t > f ? "next" : "prev";
+            vt.types.add(type);
+          } catch (err) {
+            vt.types.add("fade");
+          }
+          // a skipped transition rejects these; that is fine, the page simply appears
+          vt.ready.catch(function () {});
+          vt.updateCallbackDone.catch(function () {});
+          vt.finished.then(done, done);
+        }, { once: true });
+        setTimeout(done, 900);
+      });
+    </script>
+    <link rel="stylesheet" href="/src/site/site.css" />
+    <link rel="stylesheet" href="/src/sim/sim.css" />
+  </head>
+  <body class="planner">
+    <div id="map" aria-label="3D map of Gale Crater. Click the ground to choose a destination."></div>
+
+    <!-- ============================================================ directions card -->
+    <aside class="card" id="card">
+      <div class="card-top">
+        <a class="back" href="/" aria-label="Home">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        </a>
+        <div class="title">
+          <input id="planName" type="text" maxlength="60" spellcheck="false" aria-label="Plan name" />
+        </div>
+      </div>
+
+      <div class="od">
+        <div class="od-row">
+          <span class="tag"><span class="mk start" aria-hidden="true"></span><span data-l="en">Start</span><span data-l="ja">出発</span></span>
+          <span id="homeName"></span>
+          <button class="txt" id="changeStart"></button>
+        </div>
+        <div class="od-row">
+          <span class="tag"><span class="mk pin" aria-hidden="true"></span><span data-l="en">Goal</span><span data-l="ja">目的地</span></span>
+          <div class="field">
+            <input id="to" type="search" autocomplete="off" spellcheck="false" aria-label="Destination" aria-controls="toList" />
+            <button class="clear" id="clearTo" aria-label="Clear destination" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+            </button>
+            <ul class="suggest" id="toList" hidden></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body" id="body">
+        <p class="hint" id="hint"></p>
+        <div id="notice"></div>
+        <div id="routes"></div>
+
+        <details class="whatif">
+          <summary><span data-l="en">What if…</span><span data-l="ja">もしも…</span></summary>
+          <label class="slider">
+            <span class="top">
+              <span><span data-l="en">Oxygen at the start</span><span data-l="ja">出発時の酸素</span></span>
+              <output id="o2Val"></output>
+            </span>
+            <input type="range" id="o2" min="30" max="100" step="2" value="100" />
+          </label>
+          <label class="slider">
+            <span class="top">
+              <span><span data-l="en">Position must stay within</span><span data-l="ja">位置の誤差の上限</span></span>
+              <output id="errVal"></output>
+            </span>
+            <input type="range" id="err" min="6" max="40" step="1" value="20" />
+          </label>
+          <p class="fine">
+            <span data-l="en">Estimates from our assumptions.</span>
+            <span data-l="ja">数値は私たちの仮定による推定です。</span>
+            <a href="/how.html#assumptions"><span data-l="en">See assumptions</span><span data-l="ja">仮定を見る</span></a>
+          </p>
+        </details>
+      </div>
+    </aside>
+
+    <!-- ============================================================ map buttons -->
+    <div class="fabs" role="toolbar" aria-label="Map">
+      <button class="fab" id="layersBtn" aria-haspopup="true" aria-expanded="false" title="Layers">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /></svg>
+      </button>
+      <button class="fab label" id="flatBtn" title="2D / 3D">2D</button>
+      <button class="fab" id="fitBtn" title="Show the whole route">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></svg>
+      </button>
+      <button class="fab" id="northBtn" title="North up">
+        <svg id="needle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l4 9h-8z" fill="#ea4335" /><path d="M12 21l-4-9h8z" fill="currentColor" /></svg>
+      </button>
+      <div class="zoom">
+        <button class="fab" id="zoomIn" title="Zoom in">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+        </button>
+        <button class="fab" id="zoomOut" title="Zoom out">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+        </button>
+      </div>
+    </div>
+
+    <a class="walk-fab" id="walkPreview" href="/game.html" title="Walk preview">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4.5" r="2" fill="currentColor" /><path d="M10 21l2.2-6.5L15 17v4M9 11.5l2-3.5 3.5 1 2 3M11 8l1.2 6.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          <span data-l="en">Walk preview</span><span data-l="ja">歩行プレビュー</span>
+        </a>
+
+    <div class="pop" id="layers" hidden>
+      <p class="pop-title"><span data-l="en">Map layer</span><span data-l="ja">地図レイヤー</span></p>
+      <div class="tiles" role="radiogroup">
+        <button class="tile" data-layer="none" role="radio">
+          <span class="sw terrain"></span><span data-l="en">Terrain</span><span data-l="ja">地形</span>
+        </button>
+        <button class="tile" data-layer="safety" role="radio">
+          <span class="sw safety"></span><span data-l="en">Safety</span><span data-l="ja">安全性</span>
+        </button>
+        <button class="tile" data-layer="loc" role="radio">
+          <span class="sw loc"></span><span data-l="en">Easy to locate</span><span data-l="ja">迷いにくさ</span>
+        </button>
+        <button class="tile" data-layer="hematite" role="radio">
+          <span class="sw hem"></span><span data-l="en">Hematite</span><span data-l="ja">ヘマタイト</span>
+        </button>
+      </div>
+      <p class="pop-legend" id="layerLegend"></p>
+      <label class="tog"><input type="checkbox" id="showLimit" checked /><span data-l="en">Walk-back limit</span><span data-l="ja">歩いて帰れる範囲</span></label>
+      <label class="tog"><input type="checkbox" id="showTraverse" /><span data-l="en">Curiosity's path</span><span data-l="ja">キュリオシティの走行ルート</span></label>
+      <button class="txt more" id="layerInfo"><span data-l="en">About this layer</span><span data-l="ja">このレイヤーについて</span></button>
+    </div>
+
+    <!-- ============================================================ route profile -->
+    <section class="strip" id="strip" hidden aria-label="Route profile">
+      <button class="strip-btn" id="stripBtn" aria-expanded="false" aria-controls="profile">
+        <span class="strip-title"><span data-l="en">Profile</span><span data-l="ja">断面</span></span>
+        <span class="strip-sum" id="stripSum"></span>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      </button>
+      <canvas class="profile" id="profile"></canvas>
+    </section>
+
+    <footer class="status" id="status" aria-live="off"></footer>
+    <div class="boot" id="boot"><span data-l="en">Loading Gale Crater…</span><span data-l="ja">ゲール・クレーターを読み込み中…</span></div>
+
+    <dialog id="info">
+      <h3 id="infoTitle"></h3>
+      <div id="infoBody"></div>
+      <div class="foot">
+        <a id="infoMore" href="/how.html"></a>
+        <form method="dialog"><button class="okbtn" id="infoClose"></button></form>
+      </div>
+    </dialog>
+
+    <script type="module" src="/src/sim/main.ts"></script>
+  </body>
+</html>

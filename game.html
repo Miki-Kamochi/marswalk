@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Marswalk — 経路歩行シミュレーション</title>
+  <link rel="stylesheet" href="/src/game/game.css" />
+  <link rel="stylesheet" href="/src/game/hud.css" />
+</head>
+<body>
+  <div id="view"></div>
+  <div id="hud" style="display:none">
+    <img id="helmetHud" src="/ui/head-set-frame.png" alt="" aria-hidden="true" />
+    <div id="mission" class="panel"><div class="tag">EVA-1 / PLANNED WALK</div><strong id="missionName">計画経路を辿って帰還する</strong><div id="clock"></div><div id="targetList"></div><div id="o2"><div id="o2fill"></div><span id="o2text"></span></div></div>
+    <div id="heading" class="panel"></div>
+    <div id="weather" class="panel"></div>
+    <div id="speedControl" class="panel"><span>倍率</span><div><button data-speed="1">1×</button><button data-speed="4">4×</button><button data-speed="8">8×</button><button data-speed="16">16×</button></div><b id="speedReadout">4×</b></div>
+    <div id="alert" role="status"></div>
+    <div id="instruments" class="panel"><div class="tag">WAYFINDER / MGL</div><div id="radius"></div><div id="scanStatus" aria-live="polite"></div><button id="scanBtn">スキャン [右クリック / E]</button><div class="help">WASD: 移動 · マウス: 見回す · M: 全域マップ</div></div>
+    <div id="scanCapture" class="panel" hidden><div class="tag">NAVCAM / 360° PANORAMA</div><div id="panorama"></div></div>
+    <div id="fixOverlay" hidden><canvas id="fixMap" aria-label="高精度測位アニメーション"></canvas><div id="fixReticle"></div></div>
+    <div id="mapBox" class="panel"><button id="mapBtn" aria-label="マップを拡大・縮小">MAP [M]</button><canvas id="minimap" aria-label="計画経路とステージ全域の地図"></canvas></div>
+  </div>
+  <div id="stick"><div id="knob"></div></div>
+  <div id="loading" class="overlay">Loading…</div>
+  <div id="start" class="overlay" style="display:none"><div class="card"><a class="menuLink" id="plannerLink" href="/sim.html">← ルート計画へ</a><div class="tag">MARSWALK / EVA-1</div><h1>歩行プレビュー</h1><p id="planSummary" class="lead"></p><p class="help">右下の全体マップに計画経路を表示します。自機位置はAR投影されません。存在可能性円を見ながら経路を辿り、必要に応じて静止して右クリック / Eで360°スキャンしてください。</p><p class="help">傾斜が強い地面では歩行速度が大幅に低下し、20°以上の登りには進入できません。Mでマップを拡大できます。</p><button id="startBtn">歩行を開始</button><p class="credit">地形・画像: NASA/JPL-Caltech/UArizona/USGS<br>MGLはPerseveranceの方式を参考にした簡略シミュレーション。</p></div></div>
+  <div id="end" class="overlay" style="display:none"><div class="card"><h2 id="endTitle"></h2><p id="endLead" class="lead"></p><p id="endStats" class="help"></p><button id="againBtn">もう一度歩く</button><p class="credit"><a class="menuLink" href="/sim.html">← ルート計画へ</a></p></div></div>
+  <script type="module" src="/src/game/main.ts"></script>
+</body>
+</html>

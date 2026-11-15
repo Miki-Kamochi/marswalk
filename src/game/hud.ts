@@ -1,8 +1,9 @@
 import type { Region } from '../nav/mgl';
 import type { Nav } from './nav';
-import type { World } from './world';
+import type { World } from '../world/world';
 const $ = (id: string) => document.getElementById(id)!;
 export interface CollectionTarget { id: string; name: string; e: number; n: number; collected: boolean; index: number }
+export interface MapPoint { e: number; n: number }
 
 export class Hud {
   mapOpen = false;
@@ -10,7 +11,7 @@ export class Hud {
   private map = $('minimap') as HTMLCanvasElement;
   private fixMap = $('fixMap') as HTMLCanvasElement;
   private lastDraw = -1;
-  constructor(private world: World, url: string) {
+  constructor(private world: World, url: string, private route: MapPoint[] = [], private plannedScans: MapPoint[] = []) {
     this.imagery.onload = () => { this.lastDraw = -1; }; this.imagery.src = url;
     addEventListener('resize', () => this.resize());
   }
@@ -73,6 +74,16 @@ export class Hud {
     const imgB = this.world.meta.images.color.bounds;
     if (this.imagery.complete && this.imagery.naturalWidth) ctx.drawImage(this.imagery, X(imgB.west), Y(imgB.north), (imgB.east - imgB.west) * scale, (imgB.north - imgB.south) * scale);
     ctx.fillStyle = 'rgba(0,25,38,.38)'; ctx.fillRect(0, 0, W, H); ctx.font = `${Math.max(11, W / 65)}px ui-monospace, monospace`;
+    if (this.route.length > 1) {
+      ctx.setLineDash([]); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(2,18,24,.9)'; ctx.lineWidth = Math.max(4, W / 130); ctx.beginPath();
+      this.route.forEach((p, i) => i ? ctx.lineTo(X(p.e), Y(p.n)) : ctx.moveTo(X(p.e), Y(p.n))); ctx.stroke();
+      ctx.strokeStyle = '#ff9a58'; ctx.lineWidth = Math.max(2, W / 260); ctx.stroke();
+      for (const p of this.plannedScans) {
+        ctx.fillStyle = '#fff4bd'; ctx.strokeStyle = '#6d3b21'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(X(p.e), Y(p.n), Math.max(3, W / 180), 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      }
+    }
     const circle = (r: Region, historic: boolean, label = '') => {
       const radius = r.radius * scale; ctx.setLineDash(historic ? [4, 4] : []); ctx.strokeStyle = historic ? '#3fbad3' : '#91f2ff'; ctx.lineWidth = historic ? 1.5 : 2;
       const fill = ctx.createRadialGradient(X(r.e), Y(r.n), 0, X(r.e), Y(r.n), Math.max(0.1, radius)); fill.addColorStop(0, historic ? 'rgba(53,174,200,.13)' : 'rgba(110,225,255,.3)'); fill.addColorStop(1, 'rgba(110,225,255,0.03)');

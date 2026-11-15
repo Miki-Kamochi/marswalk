@@ -46,10 +46,10 @@ export function groundDetailMaterial(detail: THREE.Texture): THREE.MeshLambertMa
 }
 
 export function buildTerrain(grid: HeightGrid, frame: Frame, o: TerrainOptions): THREE.Group {
-  const m = grid.meta;
+  const g = grid.meta;
   const step = o.step;
-  const cols = Math.floor((m.width - 1) / step);
-  const rows = Math.floor((m.height - 1) / step);
+  const cols = Math.floor((g.width - 1) / step);
+  const rows = Math.floor((g.height - 1) / step);
   const chunk = o.chunkCells ?? Math.max(cols, rows);
   const lift = o.lift ?? 0;
   const group = new THREE.Group();
@@ -71,6 +71,9 @@ export function buildTerrain(grid: HeightGrid, frame: Frame, o: TerrainOptions):
       const q1 = Math.min(Q + chunk, cols);
       const pos = new Float32Array((r1 - R) * (q1 - Q) * 18);
       const col = new Float32Array(pos.length);
+      // world x, z of each triangle's centre, on all three of its corners (lets a shader colour whole facets)
+      const ctr = new Float32Array((pos.length / 3) * 2);
+      let m = 0;
       let k = 0;
       for (let r = R; r < r1; r++) {
         for (let q = Q; q < q1; q++) {
@@ -84,17 +87,23 @@ export function buildTerrain(grid: HeightGrid, frame: Frame, o: TerrainOptions):
             if (Number.isNaN(ev[i])) ok = false;
           }
           if (!ok) continue;
-          const half = (step * m.cell) / 2;
-          if (o.skip?.(m.west + cc[0] * m.cell + half, m.north - cr[0] * m.cell - half, half)) continue;
+          const half = (step * g.cell) / 2;
+          if (o.skip?.(g.west + cc[0] * g.cell + half, g.north - cr[0] * g.cell - half, half)) continue;
           for (let i = 0; i < 4; i++) {
-            px[i] = frame.toWorldX(m.west + cc[i] * m.cell);
-            pz[i] = frame.toWorldZ(m.north - cr[i] * m.cell);
+            px[i] = frame.toWorldX(g.west + cc[i] * g.cell);
+            pz[i] = frame.toWorldZ(g.north - cr[i] * g.cell);
             py[i] = frame.toWorldY(ev[i]) + lift - (o.curvature ? curvatureDrop(Math.hypot(px[i], pz[i])) : 0);
           }
           for (const t of TRIS) {
-            const ce = m.west + ((cc[t[0]] + cc[t[1]] + cc[t[2]]) / 3) * m.cell;
-            const cn = m.north - ((cr[t[0]] + cr[t[1]] + cr[t[2]]) / 3) * m.cell;
+            const ce = g.west + ((cc[t[0]] + cc[t[1]] + cc[t[2]]) / 3) * g.cell;
+            const cn = g.north - ((cr[t[0]] + cr[t[1]] + cr[t[2]]) / 3) * g.cell;
             o.color(ce, cn, (ev[t[0]] + ev[t[1]] + ev[t[2]]) / 3, c);
+            const cx = (px[t[0]] + px[t[1]] + px[t[2]]) / 3;
+            const cz = (pz[t[0]] + pz[t[1]] + pz[t[2]]) / 3;
+            for (let j = 0; j < 3; j++) {
+              ctr[m++] = cx;
+              ctr[m++] = cz;
+            }
             for (const i of t) {
               pos[k] = px[i];
               pos[k + 1] = py[i];
@@ -111,6 +120,7 @@ export function buildTerrain(grid: HeightGrid, frame: Frame, o: TerrainOptions):
       const geo = new THREE.BufferGeometry();
       geo.setAttribute("position", new THREE.BufferAttribute(pos.subarray(0, k), 3));
       geo.setAttribute("color", new THREE.BufferAttribute(col.subarray(0, k), 3));
+      geo.setAttribute("center", new THREE.BufferAttribute(ctr.subarray(0, m), 2));
       geo.computeVertexNormals(); // non-indexed: one normal per face, which gives the faceted look
       group.add(new THREE.Mesh(geo, o.material ?? terrainMaterial));
     }

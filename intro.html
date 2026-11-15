@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AresSight — Introduction</title>
+    <meta name="theme-color" content="#000000" />
+    <script>
+      // pick the language before anything is drawn, so no text switches after the page appears
+      try {
+        var l = localStorage.getItem("marswalk-lang");
+        document.documentElement.dataset.lang = l === "ja" || l === "en" ? l : navigator.language.toLowerCase().indexOf("ja") === 0 ? "ja" : "en";
+      } catch (e) {
+        document.documentElement.dataset.lang = "en";
+      }
+      // Page changes. Pages sit side by side in the top bar (home, intro, how, credits) and the
+      // planner / walk preview lie one level "inside" Gale Crater, so the animation knows which
+      // way to move (see "moving between pages" in site.css). __revealed resolves when it is
+      // over; heavy 3D work waits for it.
+      window.__revealed = new Promise(function (done) {
+        addEventListener("pagereveal", function (e) {
+          var vt = e.viewTransition;
+          window.__vt = !!vt;
+          if (!vt) return done();
+          try {
+            var rank = function (u) {
+              var p = new URL(u).pathname.replace(/\/index\.html$/, "/");
+              var r = { "/": 0, "/intro.html": 1, "/how.html": 2, "/credits.html": 3, "/sim.html": 10, "/game.html": 11 }[p];
+              return r === undefined ? -1 : r;
+            };
+            var a = navigation.activation;
+            var f = a.from ? rank(a.from.url) : -1;
+            var t = rank(a.entry.url);
+            var type = f < 0 || t < 0 || f === t ? "fade" : (f / 10 | 0) !== (t / 10 | 0) ? (t > f ? "in" : "out") : t > f ? "next" : "prev";
+            vt.types.add(type);
+          } catch (err) {
+            vt.types.add("fade");
+          }
+          // a skipped transition rejects these; that is fine, the page simply appears
+          vt.ready.catch(function () {});
+          vt.updateCallbackDone.catch(function () {});
+          vt.finished.then(done, done);
+        }, { once: true });
+        setTimeout(done, 900);
+      });
+    </script>
+    <link rel="stylesheet" href="/src/site/site.css" />
+    <link rel="stylesheet" href="/src/site/doc.css" />
+  </head>
+  <body class="read">
+    <header class="bar">
+      <a class="logo" href="/">AresSight</a>
+      <nav class="links" aria-label="Pages">
+        <a href="/intro.html" aria-current="page"><span data-l="en">Introduction</span><span data-l="ja">初めに</span><i class="mark" aria-hidden="true"></i></a>
+        <a href="/how.html"><span data-l="en">How it works</span><span data-l="ja">仕組み</span></a>
+        <a href="/credits.html"><span data-l="en">Credits</span><span data-l="ja">クレジット</span></a>
+        <button class="lang" data-toggle-lang aria-label="Language"><span data-l="en">日本語</span><span data-l="ja">EN</span></button>
+      </nav>
+    </header>
+
+    <main class="page">
+      <h1><span data-l="en">Introduction</span><span data-l="ja">初めに</span></h1>
+      <p class="lead"><span data-l="en">Why we built AresSight.</span><span data-l="ja">なぜAresSightを作ったのか。</span></p>
+      <section id="intro" class="intro-page">
+        
+        <p class="intro-big">
+          <span data-l="en">One day, people will walk on Mars. When they step away from the habitat, one question decides whether they come back: <b>where am I?</b></span>
+          <span data-l="ja">いつか、人が火星を歩く日が来ます。基地から歩き出した宇宙飛行士が無事に帰れるかどうかは、ひとつの問いにかかっています。<b>「自分は今、どこにいるのか？」</b></span>
+        </p>
+        <div class="intro">
+          <p>
+            <span data-l="en">On Earth, a phone answers that in a second. On Mars there is no GPS, a compass does not work, and a message to Earth takes up to 22 minutes. The suit carries only so much oxygen, so getting lost is not an inconvenience: it is a life-or-death problem.</span>
+            <span data-l="ja">地球ならスマートフォンが一瞬で答えてくれます。でも火星にはGPSがなく、方位磁針も使えず、地球への通信には最大22分かかります。宇宙服の酸素には限りがあるので、迷うことは「不便」ではなく、命に関わる問題です。</span>
+          </p>
+          <p>
+            <span data-l="en">It has happened before. In 1971, the Apollo 14 crew walked the Moon with a map in hand and still could not find the crater rim they were looking for. They turned back about 30 m short.</span>
+            <span data-l="ja">実際に起きたことがあります。1971年、アポロ14号の飛行士は地図を手に月面を歩きましたが、目指していたクレーターの縁を見つけられず、約30 m手前で引き返しました。</span>
+          </p>
+          <p>
+            <span data-l="en">Robots on Mars already have an answer. NASA's Perseverance rover finds its own position by matching photos of the ground to maps made from orbit. But that only works where the ground looks unique. So we asked: <b>what if astronauts on foot had the same tool, and a map that shows in advance where it will work?</b></span>
+            <span data-l="ja">火星のロボットは、すでに答えを持っています。NASAの探査車パーサヴィアランスは、地面の写真を軌道からの地図と照合して、自分の位置を出しています。ただし、それが使えるのは見分けのつく地面だけです。そこで私たちは考えました。<b>歩く宇宙飛行士も同じ方法を使えて、しかも「どこならそれが使えるか」が事前に分かる地図があったら？</b></span>
+          </p>
+          <p>
+            <span data-l="en">AresSight is that map. Built from real NASA data of Gale Crater, it plans walks that stay on safe ground, where your position can always be checked, and always with enough oxygen to walk home.</span>
+            <span data-l="ja">それがAresSightです。ゲール・クレーターの本物のNASAデータから、安全な地面を通り、いつでも自分の位置を確かめられて、必ず歩いて帰れる酸素が残るルートを計画します。</span>
+          </p>
+        </div>
+      </section>
+      <p class="next">
+        <a href="/how.html"><span data-l="en">How it works →</span><span data-l="ja">仕組みへ →</span></a>
+      </p>
+    </main>
+    <script type="module" src="/src/site/page.ts"></script>
+  </body>
+</html>

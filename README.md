@@ -1,77 +1,190 @@
-# Marswalk — 最遠地点採取ミッション
+# AresSight
 
-NASAのゲール・クレーター地形と画像を使ったブラウザゲーム。マップ右下から出発し、最も遠い既存地点Murray Buttesへ向かって試料を回収します。制限時間は直線距離÷最速歩行ペース+15分で算出し、現在の配置では61分19秒です。時間切れになると安全規定による強制帰還でゲームオーバーです。
+(Repository name: marswalk.)
 
-## 遊び方
+NASA Space Apps Challenge 2026, "Interplanetary Survival Guide: Martian Map".
 
-- WASD / 矢印キー: 歩く。マウス: 見回す。Esc: マウスを解放。
-- 静止して右クリック / E / スキャンボタン: 360°パノラマ撮影とMGL方式を参考にした位置照合。
-- M / マップボタン: 右下のマップをその場で拡大・縮小。拡大中も移動、時計、スキャンは継続。
-- 1× / 4× / 8× / 16×: シミュレーション倍率。歩行速度とゲーム内時計を同時に変更。
-- スキャン撮影中と高精度測位アニメーション中: 選択倍率に関係なくゲーム時計を4×へ固定。
-- タッチ: 左側で移動、右側で見回す。スキャン・マップは画面ボタン。
+A layered map of Gale Crater that plans walks for astronauts on Mars, where there is no GPS and no
+compass: where the ground is safe, where you can check your position, and which route gets you
+home. Built on real NASA data. Runs in a browser with no backend.
 
-右下の地図は常にステージ全域を北向きで表示します。自機の点や矢印はありません。明るい青の存在可能性円は移動すると拡大し、スキャンで十分な情報が得られた場合だけ縮小します。暗い青の番号つき円は撮影時点の記録で、その後も動きません。円の中心が正しい現在位置ではありません。
+| Page | What it is |
+|---|---|
+| `/` | Home: a faceted pixel Mars between "Ares" and "Sight", one search bar with New plan, and a History menu (saved plans, science targets) |
+| `/intro.html` | Introduction: why we built it (used in the presentation) |
+| `/sim.html` | **Route simulator**: pick a destination on the 2D map or in 3D, compare four routes |
+| `/how.html` | How it works: the problem, the layers, the route rules, every assumption |
+| `/game.html` | Walk preview: the earlier first-person prototype (see below), opened from the planner |
+| `/credits.html` | Data, methods and software |
+| `/dev/` | Data check pages for developers |
 
-採取地点には旗を置かず、地面の回収円と試料だけを表示します。円の7 m以内へ入ると自動回収し、地図の明青色の番号ピンが緑のチェックに変わります。柔らかい砂では歩行速度が65%になります。
+Every page except the walk preview is in English and Japanese. The original project vision is in [CLAUDE.md](CLAUDE.md);
+the simulator is where the idea went after that.
 
-砂嵐はゲーム時間15分周期。8分間の安定、2分の悪化、3分のピーク、2分の回復で繰り返します。ピークでは数百m先の地表も見えにくくなります。
-太陽円盤は砂嵐の最中も常に表示され、方角を判断する基準として使えます。
+## How the route simulator works
 
-砂塵が濃い間に歩くと、気づかない右旋回が最大0.5度/秒で加わります。位置推定側にも約1.4–2.6°の右向き方位バイアスがあり、歩行に伴って存在可能性円の中心がずれます。
+**Three map layers, three kinds of NASA data**
 
-## 実行
+- **Destination** (spectral): hematite from the CRISM band depth at 0.86 µm.
+- **Safety** (topographic, plus optical for sand): the structure of JPL's GESTALT rover hazard
+  check. A plane is fitted to every 6 m cell of the HiRISE elevation data; tilt, roughness and step
+  are scored and the worst one counts. Dark sand lowers the score and the slope limits.
+- **Localizability** (optical): predicts where matching a ground photo to the orbital image would
+  work, the principle of Perseverance's Mars Global Localization. Each 32 m patch of the HiRISE
+  image is slid over its own surroundings: `score = texture × uniqueness`.
 
-Node 24推奨（TypeScriptのNodeテストを直接実行します）。
+**Three rules for every route**
 
-```powershell
-npm.cmd install
-npm.cmd run dev
+1. Never enter a no-go cell.
+2. The position error from step counting (3 % of the distance) never exceeds the limit. A photo
+   fix resets it, so a route may only cross a limited stretch of ground where no fix works.
+3. From every point there is enough oxygen to walk home with 20 % of a tank in reserve (the Apollo
+   walk-back rule).
+
+**Four routes**: shortest, least oxygen (Tobler speed, Pandolf energy scaled to Mars gravity),
+easiest to locate, and balanced.
+
+The planner is in `src/plan/`: A* over (cell, metres since the last possible photo fix) on the
+6 m grid, with moves to the 16 nearest cells, and a Dijkstra "energy to walk home" map for rule 3.
+`npm test` runs it on synthetic grids and on the real Gale data. Every threshold is an assumption
+of ours, kept in `src/plan/config.ts` and shown in the app; none is a NASA value.
+
+## How the game works
+
+The game is the earlier prototype. It uses an older idea (matching the skyline) and a dust storm
+that is far thicker than anything recorded at Gale, so treat it as a story, not as the method.
+
+You have an orbital map of Gale Crater but no "you are here": Mars has no GPS and no global
+magnetic field. **Wayfinder**, the suit's navigator, puts a dot on the map and always shows how
+sure it is (the circle around the dot).
+
+- **Always on:** it counts steps and turns (dead reckoning). Cheap, but it drifts, so the circle grows.
+- **Horizon scan (E / Scan button):** the suit's camera reads the skyline all around and matches it
+  with skylines computed from NASA's HiRISE elevation map. The dot snaps to the true position and
+  the circle shrinks. Each scan costs suit power, and it only works if you can see far enough.
+- **Sun compass:** automatic while the sun is visible; keeps the heading true.
+
+The mission: walk 700 m from the rover to Vera Rubin Ridge and collect hematite. A forecast dust
+front arrives on the way back: the rover link drops, the horizon disappears and scans fail.
+Wayfinder brings you home along your recorded path; when the dust thins, a scan corrects the drift.
+The end map compares your real path, Wayfinder's estimate and the path you would have walked
+without it.
+
+Wayfinder (`src/nav/`) is a particle filter that only receives simulated sensor readings, never the
+true position. Horizon matching is in `src/nav/horizon.ts`. `npm test` checks drift, the sun compass,
+horizon matching (position, heading, failure in dust) and the line-of-sight maths.
+
+### What it is based on
+
+- Apollo 14 (1971): with a map in hand, the crew stopped about 30 m short of Cone Crater's rim,
+  unsure of their position.
+- The Apollo Lunar Roving Vehicle navigated by directional gyro, odometer and a sun-shadow device:
+  dead reckoning plus a sun compass.
+- NASA Goddard is developing horizon-based positioning (skyline vs. orbital elevation maps) as backup
+  navigation for explorers on the Moon.
+- Souman et al. (Current Biology, 2009): people walk in circles when they cannot see the sun.
+- The 2018 global dust storm ended Opportunity's mission; Curiosity recorded its thickest haze in Gale.
+- Sun position: NASA GISS Mars24 algorithm (Allison & McEwen 2000), tested against its published example.
+
+## Run it
+
+Needs Node 20 or newer.
+
+```
+npm install
+npm run dev
 ```
 
-表示されたローカルURLを開きます。PowerShellの実行ポリシーにより npm.ps1 が拒否される場合は、上記の npm.cmd を使ってください。
+Open http://localhost:5173. The processed data is committed in `public/data`, so nothing else
+is needed.
 
-```powershell
-npm.cmd run build
-npm.cmd run preview
-npm.cmd test
+| Page | What it checks |
+|---|---|
+| `/dev/terrain.html` | The real terrain in 3D: play area, Mount Sharp, crater rim, places, Curiosity's path |
+| `/dev/map.html` | The 2D layered map: imagery, slope, minerals, sand, route |
+| `/dev/sensors.html` | Phone sensors: turn the phone to look around, step counter |
+
+### Test on a phone before deploying
+
+Phone motion sensors only work on secure (HTTPS) pages. This serves the site over HTTPS on your
+Wi-Fi with a self-signed certificate:
+
+```
+npm run dev:phone
 ```
 
-加工済みデータとSTLは public/ に同梱。バックエンドは不要です。スマートフォンのセンサー確認用HTTPSサーバーは npm.cmd run dev:phone。
+Open the `Network:` address it prints (for example `https://192.168.1.20:5173`) on a phone that
+is on the same Wi-Fi. The browser warns about the certificate; choose "Advanced", then "Proceed".
+On iPhone, tap "Enable motion sensors" and allow the prompt.
 
-## MGLとデータ
+## Build and deploy
 
-[MGL_requirements.md](MGL_requirements.md) に、一次資料で確認した要件、実機との違い、ゲームの品質判定と数値をまとめています。
+```
+npm run build      # type-check, then build the static site into dist/
+npm run preview    # serve dist/ locally
+```
 
-MGLはJPLフライトコードの移植ではありません。実際に3Dシーンの5方向のステレオ画像を描画しますが、照合入力のステレオ復元はNASA画像・DEMから生成した理想化観測です。マスクつき濃淡比較と標高照合を行い、識別が不十分なら円を縮めません。同じ位置での連打による精度稼ぎも防ぎます。
+The output is a plain static site with no backend. To deploy to Vercel:
 
-遠景は更新版のユーザー提供 `public/models/Mars_view.stl` を使用。元ファイルは `C:/Users/takoy/Mars_view.stl`。地理参照・単位情報がないため遠景として演出配置し、測位と歩行には従来のNASA DEMを使用します。[データ出典](DATA_SOURCES.md)
+```
+vercel             # preview deployment
+vercel --prod      # production deployment
+```
 
-ヘッドセットHUDはユーザー提供の `C:/Users/takoy/head-set.jpg` からグリーンバックだけを透明化した `public/ui/head-set-frame.png` をそのまま視界へ重ねています。約10%拡大して中央の視野を確保し、既存の青系UIパネルはフレーム内側に配置します。
+Vercel detects Vite automatically (build command `npm run build`, output `dist`).
 
-MGLの照合結果は弱いが一意性のある観測で約100 m、良好な観測で十数〜数十mまで連続的に変化します。半径40 m以下へ位置を絞れた場合は地図がポップアップし、測位地点へズームしながら、移動で広がった円から測位結果へ収束するアニメーションを表示します。
+## Rebuild the data
 
-スキャンが失敗した場合は、視野範囲、砂塵による暗さ、地面のコントラスト、似た地形の多さ、衛星写真との不一致など、失敗した判定に応じた具体的な理由を表示します。
+Only needed if you change the play area or the processing. Needs Python 3.12 or newer.
 
-足元の地形には `public/models/brown_mud_dry_diff_2k.jpg` を3.2 m周期で繰り返し、元の衛星画像由来の頂点色へ明暗だけを重ねています。100 mほど先から徐々に薄くなるため、遠景の模様は維持されます。素材はユーザー提供の `C:/Users/takoy/mud_textures/` からコピーしました。
+```
+python -m venv .venv
+.venv\Scripts\python -m pip install -r scripts/requirements.txt
+npm run data:download     # about 190 MB into data/raw/ (not committed), takes about 10 minutes
+npm run data:process      # writes public/data/ and re-checks all positions
+```
 
-## 構成
+- `scripts/config.py`: play-area bounds and dataset URLs.
+- `scripts/download_data.py`: fetches the raw data. The two big USGS mosaics are never downloaded
+  whole; only our window is read over HTTP.
+- `scripts/process_data.py`: raw data to web-ready terrain, imagery and layers.
+- `scripts/home_images.py`: the natural-colour map swatch in the planner's layer menu
+  (`public/img/home/surface.jpg`).
+- `scripts/globe.py`: the home screen's Mars globe texture (`public/img/home/mars.jpg`) from the
+  Viking MDIM 2.1 colour mosaic, read remotely.
+- `scripts/nav_layers.py`: the route planner's 6 m grid (`public/data/nav/`): tilt, roughness, step,
+  sand, hematite and the localizability score. Run it after `process_data.py`; takes about 2 minutes.
+- `scripts/positions.py`: picks the base, stops and landmarks from the data and verifies each one
+  (elevation, slope, sand, hematite signal, line of sight from the base).
+- `scripts/preview.py`, `scripts/zoom.py`: small check images in `data/interim/`.
 
-- src/game/: 最遠地点採取ミッション、速度倍率、操作、固定地図、パノラマ撮影、STL遠景。
-- src/nav/mgl.ts: 観測と軌道地図だけで行う位置候補の照合。
-- src/nav/region.ts: 存在可能性円の移動・拡大・保存。
-- src/nav/mgl.test.ts: 品質、照合、曖昧な地形、真値の包含、履歴固定のテスト。
-- src/nav/wayfinder.ts 等: 旧ナビゲーションの研究・回帰テスト用。新ゲームでは使用しません。
-- src/data/: 座標系とデータ読み込み。
-- scripts/: Pythonデータ加工。scripts/browser-smoke.mjs は独立したヘッドレスChromiumでの操作・画面確認用。
-- /dev.html: 地形・地図・センサーの開発用確認ページ。
+Datasets and credits are listed in [DATA_SOURCES.md](DATA_SOURCES.md).
 
-ブラウザースモークテスト: 開発サーバーを起動し、MARSWALK_URL にそのURL、必要に応じて CHROME_PATH にインストール済みChromiumの実行パスを指定して node scripts/browser-smoke.mjs を実行します。既定URLは http://127.0.0.1:5174。ユーザーのブラウザープロファイルとは接続しません。
+## Layout
 
-Windowsでは `node scripts/verify-mgl.mjs` で、同梱の実画像・DEMを使った5地点の照合、円への真値の包含、同地点での再スキャン抑制を検証できます。画像の読み取りにはWindows標準のSystem.Drawingを使用します。
+```
+index.html, intro.html, how.html, credits.html, sim.html, game.html   the pages (Vite multi-page)
+dev/                      data check pages
+src/data/                 frame.ts (coordinates), loader.ts (typed loaders for public/data)
+src/plan/                 route planner: config, grid, energy model, search (no browser code)
+src/sim/                  route simulator: 2D map, 3D view, panel, text in two languages
+src/site/                 shared styles, top bar, language switch, home globe, saved plans, reading pages
+src/world/                the 3D Gale Crater terrain, shared by the simulator and the game
+src/game/, src/nav/       the game prototype and its navigator
+src/dev/                  scripts of the data check pages
+public/data/              processed NASA data (see meta.json for a description of every file)
+scripts/                  Python data pipeline
+data/raw/, data/interim/  downloaded source data and intermediate files (git-ignored)
+```
 
-この変更の検証: 型チェック・本番ビルド、ユニットテスト14件、実データ5地点の数値検証は成功。実画面のスモークテストは実行環境のブラウザー/GPUプロセス制限で未完了です。
+## Coordinates
 
-?debug で開発用の window.__mw、?manual で自動フレーム更新の停止、?low で軽量地形を有効にできます。通常画面には真の位置を表示しません。
+- **Map frame**: Mars equirectangular metres, sphere radius 3 396 190 m. `easting = R × longitude`,
+  `northing = R × latitude` (radians). Same frame as the USGS Gale mosaics and Curiosity's waypoints.
+- **World frame** (three.js): metres from the centre of the play area. x = east, y = up, z = south.
+- Height grids are `uint16`, row 0 = north, `elevation = zMin + (value − 1) × zScale`, 0 = no data.
 
-CLAUDE.md は初期企画の記録です。現行のゲーム仕様はこのREADMEとMGL_requirements.mdを優先してください。
+## Play area
+
+3.0 × 3.6 km at the foot of Mount Sharp, centred on 4.709°S 137.364°E, covering Curiosity's route
+from the Murray Buttes across the Bagnold Dunes to Vera Rubin Ridge (sols 1352 to 2804).

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AresSight — Credits</title>
+    <meta name="theme-color" content="#000000" />
+    <script>
+      // pick the language before anything is drawn, so no text switches after the page appears
+      try {
+        var l = localStorage.getItem("marswalk-lang");
+        document.documentElement.dataset.lang = l === "ja" || l === "en" ? l : navigator.language.toLowerCase().indexOf("ja") === 0 ? "ja" : "en";
+      } catch (e) {
+        document.documentElement.dataset.lang = "en";
+      }
+      // Page changes. Pages sit side by side in the top bar (home, intro, how, credits) and the
+      // planner / walk preview lie one level "inside" Gale Crater, so the animation knows which
+      // way to move (see "moving between pages" in site.css). __revealed resolves when it is
+      // over; heavy 3D work waits for it.
+      window.__revealed = new Promise(function (done) {
+        addEventListener("pagereveal", function (e) {
+          var vt = e.viewTransition;
+          window.__vt = !!vt;
+          if (!vt) return done();
+          try {
+            var rank = function (u) {
+              var p = new URL(u).pathname.replace(/\/index\.html$/, "/");
+              var r = { "/": 0, "/intro.html": 1, "/how.html": 2, "/credits.html": 3, "/sim.html": 10, "/game.html": 11 }[p];
+              return r === undefined ? -1 : r;
+            };
+            var a = navigation.activation;
+            var f = a.from ? rank(a.from.url) : -1;
+            var t = rank(a.entry.url);
+            var type = f < 0 || t < 0 || f === t ? "fade" : (f / 10 | 0) !== (t / 10 | 0) ? (t > f ? "in" : "out") : t > f ? "next" : "prev";
+            vt.types.add(type);
+          } catch (err) {
+            vt.types.add("fade");
+          }
+          // a skipped transition rejects these; that is fine, the page simply appears
+          vt.ready.catch(function () {});
+          vt.updateCallbackDone.catch(function () {});
+          vt.finished.then(done, done);
+        }, { once: true });
+        setTimeout(done, 900);
+      });
+    </script>
+    <link rel="stylesheet" href="/src/site/site.css" />
+    <link rel="stylesheet" href="/src/site/doc.css" />
+  </head>
+  <body class="read">
+    <header class="bar">
+      <a class="logo" href="/">AresSight</a>
+      <nav class="links" aria-label="Pages">
+        <a href="/intro.html"><span data-l="en">Introduction</span><span data-l="ja">初めに</span></a>
+        <a href="/how.html"><span data-l="en">How it works</span><span data-l="ja">仕組み</span></a>
+        <a href="/credits.html" aria-current="page"><span data-l="en">Credits</span><span data-l="ja">クレジット</span><i class="mark" aria-hidden="true"></i></a>
+        <button class="lang" data-toggle-lang aria-label="Language"><span data-l="en">日本語</span><span data-l="ja">EN</span></button>
+      </nav>
+    </header>
+
+    <main class="page plain">
+      <h1><span data-l="en">Credits</span><span data-l="ja">クレジット</span></h1>
+      <p class="lead">
+        <span data-l="en">Made for the NASA Space Apps Challenge 2026, “Interplanetary Survival Guide: Martian Map”.</span>
+        <span data-l="ja">NASA Space Apps Challenge 2026「Interplanetary Survival Guide: Martian Map」のために作りました。</span>
+      </p>
+
+      <section>
+        <h2><span data-l="en">Data</span><span data-l="ja">データ</span></h2>
+        <ul>
+          <li>
+            <b>MRO HiRISE</b> —
+            <a href="https://planetarymaps.usgs.gov/mosaic/Mars/MSL/" target="_blank" rel="noopener">MSL Gale DEM &amp; Orthophoto Mosaics</a>,
+            <a href="https://www.uahirise.org/PSP_009650_1755" target="_blank" rel="noopener">PSP_009650_1755</a>
+            <span class="what"><span data-l="en">Terrain, safety, easy-to-locate</span><span data-l="ja">地形、安全性、迷いにくさ</span></span>
+          </li>
+          <li>
+            <b>MRO CRISM</b> —
+            <a href="https://pds-geosciences.wustl.edu/mro/mro-m-crism-5-rdr-mptargeted-v1/" target="_blank" rel="noopener">MTRDR FRT0000B6F1</a>
+            <span class="what"><span data-l="en">Hematite</span><span data-l="ja">ヘマタイト</span></span>
+          </li>
+          <li>
+            <b>Viking Orbiters</b> —
+            <a href="https://planetarymaps.usgs.gov/mosaic/" target="_blank" rel="noopener">MDIM 2.1 colour mosaic</a>
+            <span class="what"><span data-l="en">The globe on the home screen</span><span data-l="ja">ホーム画面の火星</span></span>
+          </li>
+          <li>
+            <b>MGS MOLA</b> —
+            <a href="https://planetarymaps.usgs.gov/mosaic/" target="_blank" rel="noopener">MEGDR global elevation</a>
+            <span class="what"><span data-l="en">The far landscape</span><span data-l="ja">遠くの地形</span></span>
+          </li>
+          <li>
+            <b>Curiosity (MSL)</b> —
+            <a href="https://mars.nasa.gov/mmgis-maps/MSL/Layers/json/MSL_waypoints.json" target="_blank" rel="noopener">localized waypoints</a>,
+            <a href="https://mars.nasa.gov/rss/api/?feed=weather&amp;category=msl&amp;feedtype=json" target="_blank" rel="noopener">REMS weather</a>
+            <span class="what"><span data-l="en">The rover's path, the science targets, weather</span><span data-l="ja">探査車の道、科学目標、天気</span></span>
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2><span data-l="en">Methods</span><span data-l="ja">手法</span></h2>
+        <ul>
+          <li>
+            <a href="https://www.jpl.nasa.gov/news/nasas-perseverance-now-autonomously-pinpoints-its-location-on-mars/" target="_blank" rel="noopener">Perseverance self-localization</a>
+            (NASA JPL)
+          </li>
+          <li>GESTALT — Goldberg, Maimone &amp; Matthies, 2002</li>
+          <li>Tobler, 1993 · Pandolf, Givoni &amp; Goldman, 1977</li>
+          <li>Prentice &amp; Roy, 2009 · Apollo Lunar Surface Journal</li>
+          <li><a href="https://www.giss.nasa.gov/tools/mars24/" target="_blank" rel="noopener">Mars24</a> (NASA GISS)</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2><span data-l="en">Software</span><span data-l="ja">ソフトウェア</span></h2>
+        <ul>
+          <li>
+            <a href="https://threejs.org" target="_blank" rel="noopener">Three.js</a> ·
+            <a href="https://vite.dev" target="_blank" rel="noopener">Vite</a> ·
+            <a href="https://www.typescriptlang.org" target="_blank" rel="noopener">TypeScript</a> ·
+            <a href="https://rasterio.readthedocs.io" target="_blank" rel="noopener">rasterio</a> ·
+            <a href="https://numpy.org" target="_blank" rel="noopener">NumPy</a>
+          </li>
+          <li>
+            <a href="https://fonts.google.com/specimen/Space+Grotesk" target="_blank" rel="noopener">Space Grotesk</a> ·
+            <a href="https://www.jetbrains.com/lp/mono/" target="_blank" rel="noopener">JetBrains Mono</a>
+          </li>
+          <li><span data-l="en">Built with Claude Code (Anthropic)</span><span data-l="ja">Claude Code（Anthropic）を使って制作</span></li>
+        </ul>
+      </section>
+
+      <p class="foot-note">
+        <span data-l="en">Imagery: NASA/JPL-Caltech/University of Arizona/USGS, NASA/JPL-Caltech/JHUAPL, NASA/JPL/USGS, NASA/GSFC. NASA does not endorse this project. Download details: DATA_SOURCES.md in the repository.</span>
+        <span data-l="ja">画像：NASA/JPL-Caltech/University of Arizona/USGS、NASA/JPL-Caltech/JHUAPL、NASA/JPL/USGS、NASA/GSFC。このプロジェクトはNASAの公認ではありません。ダウンロード先はリポジトリのDATA_SOURCES.mdにあります。</span>
+      </p>
+    </main>
+    <script type="module" src="/src/site/page.ts"></script>
+  </body>
+</html>

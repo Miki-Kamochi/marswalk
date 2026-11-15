@@ -1,0 +1,6 @@
+# Keep LF line endings in the working copy on every OS (stops the CRLF warnings on Windows)
+* text=auto eol=lf
+*.u16 binary
+*.bin binary
+*.png binary
+*.jpg binary

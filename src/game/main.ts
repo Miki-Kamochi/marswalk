@@ -1,18 +1,19 @@
 import * as THREE from 'three';
 import { toLonLat } from '../data/frame';
-import { dataUrl, loadRaster, type Place } from '../data/loader';
+import { dataUrl, loadRaster } from '../data/loader';
 import { bearing } from '../nav/rng';
 import { nextLocalTime } from '../nav/sun';
 import type { Region } from '../nav/mgl';
+import { loadWalkPlan } from '../plan/walk-plan';
 import { Controls } from './controls';
 import { Hud, type CollectionTarget } from './hud';
-import { movementScale, SPEEDS, stormLevel, timeLimitForDistance, type Speed } from './mission';
+import { movementScale, SPEEDS, stormLevel, type Speed } from './mission';
 import { Nav } from './nav';
 import { Panorama } from './panorama';
 import { EYE_HEIGHT, Player } from './player';
 import { makeSampleSite, setSampleCollected } from './props';
 import { scanFeedback } from './scan-feedback';
-import { World } from './world';
+import { World } from '../world/world';
 
 const $ = (id: string) => document.getElementById(id)!;
 const params = new URLSearchParams(location.search);
@@ -29,52 +30,51 @@ const RIGHT_VEER = Math.PI / 360;
 
 async function main() {
   const world = await World.load(m => $('loading').textContent = m, low);
-  const [sand, orbital] = await Promise.all([
+  const [sand, orbital, plan] = await Promise.all([
     loadRaster(world.meta.layers.sand.raw, world.meta.layers.sand.bounds),
     loadRaster(world.meta.images.ortho.file, world.meta.images.ortho.bounds),
+    loadWalkPlan(world, params.get('project')),
   ]);
   const controls = new Controls(renderer.domElement);
-  // Keep only the existing site farthest from the south-east starting point.
-  const stopPlaces = ['stop_murray_buttes'].map(id => world.place(id));
-  const targets: CollectionTarget[] = stopPlaces.map((p, index) => ({
-    id: p.id, name: p.name.replace(/ \(.+\)$/, ''), e: p.easting, n: p.northing, collected: false, index,
-  }));
-  const start = {
-    e: world.meta.frame.play.east - 110,
-    n: world.meta.frame.play.south + 110,
-  };
-  const timeLimit = timeLimitForDistance(Math.hypot(targets[0].e - start.e, targets[0].n - start.n));
+  const targets: CollectionTarget[] = [{
+    id: 'planned-target', name: plan.target.name, e: plan.target.e, n: plan.target.n, collected: false, index: 0,
+  }];
+  const start = plan.start;
+  const timeLimit = plan.timeLimit;
   const startUtc = nextLocalTime(Date.UTC(2041, 5, 1), toLonLat(start.e, start.n).lon, 14.5);
-  const sites = stopPlaces.map((place: Place, index) => {
+  const sites = targets.map((target, index) => {
     const site = makeSampleSite(index);
-    world.worldPos(place.easting, place.northing, 0, site.position);
+    world.worldPos(target.e, target.n, 0, site.position);
     world.scene.add(site);
     return site;
   });
-  const hud = new Hud(world, dataUrl(world.meta.images.color.file));
+  const hud = new Hud(world, dataUrl(world.meta.images.color.file), plan.points, plan.plannedScans);
+  $('missionName').textContent = `${plan.target.name}へ戻る`;
+  $('planSummary').textContent = `${plan.project?.name || '既定の計画'} · ${Math.round(plan.route.stats.distance)} m · 計画所要 ${Math.ceil(timeLimit / 60)}分 · ${plan.route.stats.photoCount}回の測位を想定`;
+  if (plan.project) $('plannerLink').setAttribute('href', `/sim.html?project=${encodeURIComponent(plan.project.id)}`);
   const pano = new Panorama();
   $('panorama').appendChild(pano.canvas);
   let player: Player, nav: Nav;
   let phase: 'brief' | 'collect' | 'done' = 'brief';
   let missionS = 0, elapsed = 0, dust = 0.25, scanT = -1, fixT = -1, speed: Speed = 4;
   let fixFrom: Region | null = null, fixTo: Region | null = null;
-  let scanStatus = '周囲をスキャンして位置を推定', message = '', messageUntil = 0;
+  let scanStatus = '周囲をスキャンして位置を推定', message = '', messageUntil = 0, terrainNoticeAt = -Infinity;
 
   function say(text: string, seconds = 8) { message = text; messageUntil = elapsed + seconds; }
   function reset() {
     player = new Player(); player.e = start.e; player.n = start.n;
     controls.yaw = bearing(start.e, start.n, targets[0].e, targets[0].n); controls.pitch = 0;
     controls.mapOpen = false; hud.toggleMap(false);
-    nav = new Nav(world, sand, orbital, player, Math.floor(Math.random() * 1e6) + 1);
+    nav = new Nav(world, sand, orbital, player, Math.floor(Math.random() * 1e6) + 1, plan.localizability);
     targets.forEach((target, i) => { target.collected = false; setSampleCollected(sites[i], false); });
     missionS = elapsed = 0; dust = 0.25; scanT = fixT = -1; fixFrom = fixTo = null; speed = 4; phase = 'brief';
-    scanStatus = '周囲をスキャンして位置を推定'; message = ''; messageUntil = 0;
+    scanStatus = '周囲をスキャンして位置を推定'; message = ''; messageUntil = 0; terrainNoticeAt = -Infinity;
     pano.reset(); $('scanCapture').hidden = true; hud.hideLocalization(); updateSpeedButtons();
   }
   function begin() {
     $('start').style.display = 'none'; $('end').style.display = 'none'; phase = 'collect'; controls.enabled = true; hud.show(true);
     if (!controls.touch) controls.capture();
-    say('制限時間内にマップ上の最遠地点へ向かい、試料を回収してください。');
+    say('全体マップの計画経路を辿り、制限時間内に帰還してください。');
   }
   function toggleMap() {
     if (phase !== 'collect' || fixT >= 0) return;
@@ -106,8 +106,8 @@ async function main() {
 
   function finish(success: boolean, reason = '') {
     phase = 'done'; scanT = fixT = -1; controls.enabled = false; controls.release(); hud.toggleMap(false); hud.hideLocalization(); controls.mapOpen = false; hud.show(false);
-    $('endTitle').textContent = success ? '試料の採取を完了。' : '強制帰還';
-    $('endLead').textContent = success ? '全試料を制限時間内に確保しました。' : reason;
+    $('endTitle').textContent = success ? '帰還完了。' : '強制帰還';
+    $('endLead').textContent = success ? '計画経路の帰還地点へ制限時間内に到着しました。' : reason;
     $('endStats').textContent = `回収 ${targets.filter(t => t.collected).length}/${targets.length} · 歩行 ${Math.round(player.walked)} m · 経過 ${Math.floor(missionS / 60)}分${String(Math.floor(missionS % 60)).padStart(2, '0')}秒 · スキャン ${nav.region.pins.length} 回`;
     $('end').style.display = 'flex';
   }
@@ -116,7 +116,7 @@ async function main() {
       if (target.collected || Math.hypot(player.e - target.e, player.n - target.n) > COLLECTION_RADIUS) continue;
       target.collected = true; setSampleCollected(sites[target.index], true);
       const count = targets.filter(t => t.collected).length;
-      say(`${target.name}：試料回収完了（${count}/${targets.length}）`);
+      say(`${target.name}：到着（${count}/${targets.length}）`);
       if (count === targets.length) finish(true);
     }
   }
@@ -129,9 +129,17 @@ async function main() {
       const moving = fixT < 0 && Math.hypot(controls.moveX, controls.moveY) > 0.05;
       if (scanT >= 0 && moving) { scanT = -1; scanStatus = '撮影中断 · 移動を検出'; $('scanCapture').hidden = true; say('立ち止まって、もう一度スキャンしてください。'); }
       if (fixT < 0) {
-        const terrainFactor = nav.isSand(player.e, player.n) ? 0.65 : 1;
         if (moving && dust > 0.45) controls.yaw += RIGHT_VEER * dt * Math.min(1, (dust - 0.45) / 0.5);
-        player.update(dt * movementScale(speed) * terrainFactor, controls, world);
+        const movement = player.update(dt * movementScale(speed), controls, world, plan.speedForGrade);
+        if (moving && elapsed >= terrainNoticeAt) {
+          if (movement.blocked) {
+            say(`進入不可：登り傾斜 ${Math.round(movement.slopeDeg)}°（上限 20°）`, 2.5);
+            terrainNoticeAt = elapsed + 2.5;
+          } else if (movement.slopeDeg >= 12) {
+            say(`急傾斜 ${Math.round(movement.slopeDeg)}°：歩行速度が低下しています`, 2.5);
+            terrainNoticeAt = elapsed + 3;
+          }
+        }
         nav.update(player); collectNearby();
       }
       dust = stormLevel(missionS);
@@ -182,7 +190,7 @@ async function main() {
   $('startBtn').addEventListener('click', begin); $('againBtn').addEventListener('click', () => { reset(); begin(); });
   addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
   if (params.has('debug')) (window as unknown as Record<string, unknown>).__mw = {
-    world, controls, camera, renderer, targets, start, timeLimit, hud, begin, scan, tick, reset, setSpeed,
+    world, controls, camera, renderer, targets, start, timeLimit, plan, hud, begin, scan, tick, reset, setSpeed,
     get player() { return player; }, get nav() { return nav; },
     get state() { return { phase, missionS, dust, elapsed, scanT, fixT, speed, collected: targets.filter(t => t.collected).length }; },
   };

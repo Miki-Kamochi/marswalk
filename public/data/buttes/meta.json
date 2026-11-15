@@ -208,5 +208,57 @@
    "elevation": -4317.8,
    "note": "suggested local origin: x = E - easting, z = -(N - northing), y = elev - elevation"
   }
+ },
+ "nav": {
+  "grid": {
+   "file": "nav/nav_6m.bin",
+   "width": 500,
+   "height": 600,
+   "cell": 6,
+   "west": 8140703.0,
+   "north": -277303.0,
+   "encoding": "uint8, one full grid per channel in the order listed, row 0 = north",
+   "channels": [
+    {
+     "name": "tilt",
+     "encoding": "degrees * 4",
+     "description": "slope of the plane fitted to each 6 m patch"
+    },
+    {
+     "name": "rough",
+     "encoding": "metres * 250",
+     "description": "RMS distance of the 1 m elevation samples from that plane"
+    },
+    {
+     "name": "step",
+     "encoding": "metres * 100",
+     "description": "largest height difference between neighbouring 1 m samples, plane removed"
+    },
+    {
+     "name": "sand",
+     "encoding": "fraction * 255",
+     "description": "share of the cell covered by dark sand"
+    },
+    {
+     "name": "loc",
+     "encoding": "score * 255",
+     "description": "predicted success of matching a ground photo to the orbital image"
+    },
+    {
+     "name": "hematite",
+     "encoding": "0 = no CRISM coverage; 1..255 = relative band depth",
+     "description": "CRISM BD860_2, 0.86 um band depth (hematite)"
+    }
+   ],
+   "localizability": {
+    "templateM": 32,
+    "searchM": 24,
+    "excludeM": 5,
+    "noiseDN": 6.0,
+    "imageMetersPerPixel": 1,
+    "formula": "sqrt(var / (var + noise^2)) * (1 - highest correlation with another spot)"
+   },
+   "source": "MSL Gale Merged DEM 1 m v3 and Orthophoto Mosaic v3 resampled to 1 m (USGS; MRO HiRISE); MRO CRISM FRT0000B6F1"
+  }
  }
 }

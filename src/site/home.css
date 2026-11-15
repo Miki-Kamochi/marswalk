@@ -1,0 +1,546 @@
+/* Home: black space, a faceted pixel Mars in the middle, "Ares" and "Sight" either side,
+   one search bar and a row of cards below. --globe-d / --globe-y come from globe.ts. */
+:root {
+  --globe-x: 50vw;
+  --globe-d: min(calc(100vh - 346px), 60vw);
+  --globe-y: calc(32px + (100vh - 274px) / 2);
+}
+body.home {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  color: var(--ui-text);
+  background: #000;
+}
+#globe {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.6s var(--ease);
+}
+#globe.ready {
+  opacity: 1;
+}
+#globe canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  cursor: grab;
+  touch-action: pan-y;
+}
+#globe canvas:active {
+  cursor: grabbing;
+}
+/* a faint warm haze at the bottom, the way dust lights the Martian horizon */
+body.home::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 26vh;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(120, 50, 20, 0.2), rgba(120, 50, 20, 0));
+}
+
+/* a soft warm glow behind the planet, so its outline reads against black even on the night side */
+.halo {
+  position: absolute;
+  left: calc(var(--globe-x) - var(--globe-d) * 0.7);
+  top: calc(var(--globe-y) - var(--globe-d) * 0.7);
+  width: calc(var(--globe-d) * 1.4);
+  height: calc(var(--globe-d) * 1.4);
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 120, 60, 0.2) 34%, rgba(255, 110, 50, 0.07) 46%, rgba(255, 100, 40, 0) 68%);
+}
+
+/* the label that follows Gale Crater on the globe (moved by home.ts) */
+.spot {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  will-change: transform;
+}
+.spot > span {
+  position: absolute;
+  right: 14px;
+  top: 0;
+  transform: translateY(-50%);
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  background: var(--glass);
+  border: 1px solid rgba(255, 107, 44, 0.7);
+  border-radius: 99px;
+}
+
+/* ---------------------------------------------------------------- title around the globe */
+.title {
+  margin: 0;
+  font-size: var(--title-size, clamp(46px, 7.5vw, 124px));
+  line-height: 1;
+  letter-spacing: -0.03em;
+  pointer-events: none;
+}
+.title span {
+  position: absolute;
+  z-index: 2;
+  top: var(--globe-y);
+  transform: translateY(-50%);
+}
+.title .w1 {
+  right: calc(100% - var(--globe-x) + var(--globe-d) / 2 + var(--title-size, 80px) * 0.22);
+  font-weight: 600;
+}
+.title .w2 {
+  left: calc(var(--globe-x) + var(--globe-d) / 2 + var(--title-size, 80px) * 0.22);
+  font-weight: 300;
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---------------------------------------------------------------- search */
+.start {
+  position: absolute;
+  z-index: 3;
+  left: var(--globe-x);
+  bottom: calc(var(--edge) + 24px);
+  transform: translateX(-50%);
+  width: min(620px, calc(100vw - 32px));
+}
+/* one bar: icon, input, and the New plan button inside on the right */
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 56px;
+  padding: 0 6px 0 20px;
+  border: 1px solid transparent;
+  border-radius: 28px;
+  background:
+    linear-gradient(var(--glass-strong), var(--glass-strong)) padding-box,
+    linear-gradient(100deg, rgba(255, 107, 44, 0.8), rgba(255, 178, 122, 0.22) 45%, rgba(255, 107, 44, 0.55)) border-box;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+}
+.search:focus-within {
+  background:
+    linear-gradient(var(--glass-strong), var(--glass-strong)) padding-box,
+    linear-gradient(100deg, #ff6b2c, #ffb27a 50%, #ff6b2c) border-box;
+}
+.search:not(:focus-within) .suggest {
+  display: none;
+}
+.search .ico {
+  width: 19px;
+  height: 19px;
+  flex: none;
+  color: rgba(236, 228, 218, 0.6);
+}
+.search input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 16px;
+  color: var(--ui-text);
+  background: none;
+  border: none;
+  outline: none;
+}
+.search input::placeholder {
+  color: rgba(236, 228, 218, 0.45);
+}
+.search input::-webkit-search-cancel-button {
+  display: none;
+}
+.new {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 44px;
+  padding: 0 18px 0 14px;
+  font-size: 14.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #1a0b04;
+  background: var(--accent);
+  border-radius: 22px;
+  text-decoration: none;
+  transition:
+    background 0.15s,
+    transform 0.15s;
+}
+.new:hover {
+  background: #ff8148;
+}
+.new:active {
+  transform: scale(0.97);
+}
+.new svg {
+  width: 16px;
+  height: 16px;
+}
+.suggest {
+  position: absolute;
+  z-index: 10;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 8px);
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--glass-menu);
+  border: 1px solid var(--glass-line);
+  border-radius: 20px;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.8);
+}
+.suggest li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  cursor: pointer;
+  font-size: 14.5px;
+}
+.suggest li:hover,
+.suggest li[aria-selected="true"] {
+  background: rgba(236, 228, 218, 0.08);
+}
+.suggest li.none {
+  color: var(--ui-text-2);
+  cursor: default;
+}
+.suggest .pin {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--ui-text-2);
+}
+.suggest li.stop .pin {
+  background: var(--stop);
+}
+.suggest li.camp .pin {
+  background: var(--base);
+}
+.suggest .nm {
+  flex: 1;
+  min-width: 0;
+}
+.suggest .kd {
+  font-size: 12px;
+  color: var(--ui-text-2);
+}
+
+/* ---------------------------------------------------------------- cards below the search */
+/* recent plans / science targets: a dropdown at the bottom right, on the search bar's line,
+   opening upward, closed at first */
+.dd {
+  position: absolute;
+  z-index: 4;
+  right: var(--edge);
+  bottom: calc(var(--edge) + 24px + 5px);
+}
+.dd-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 16px 0 15px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ui-text);
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  border-radius: 99px;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.dd-btn:hover,
+.dd-btn[aria-expanded="true"] {
+  border-color: rgba(255, 107, 44, 0.6);
+  background: var(--glass);
+}
+.dd-btn .ico {
+  width: 16px;
+  height: 16px;
+  color: var(--accent);
+}
+.dd-count {
+  min-width: 18px;
+  padding: 0 5px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  color: #1a0b04;
+  background: var(--accent);
+  border-radius: 99px;
+}
+.dd-count:empty {
+  display: none;
+}
+.dd-btn .chev {
+  width: 15px;
+  height: 15px;
+  color: var(--ui-text-2);
+  transition: transform 0.2s var(--ease);
+}
+.dd-btn[aria-expanded="true"] .chev {
+  transform: rotate(180deg);
+}
+.below {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + var(--gap));
+  width: 320px;
+  max-height: min(62vh, 520px);
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: 14px 12px 12px;
+  background: var(--glass-menu);
+  border: 1px solid var(--glass-line);
+  border-radius: 24px;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+  transform-origin: 100% 100%;
+  animation: dd-open 0.22s var(--ease) both;
+}
+.below::-webkit-scrollbar {
+  display: none;
+}
+.below[hidden] {
+  display: none;
+}
+@keyframes dd-open {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+}
+.below .cards {
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+  animation: none;
+}
+.below .card {
+  background: rgba(255, 255, 255, 0.03);
+}
+.below .head {
+  display: flex;
+  align-items: baseline;
+  margin: 0 6px 12px;
+}
+.below h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(236, 228, 218, 0.6);
+}
+.below [role="tab"] {
+  margin-right: 18px;
+  padding: 2px 0 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(236, 228, 218, 0.5);
+  background: none;
+  border: none;
+  border-bottom: 1.5px solid transparent;
+}
+.below [role="tab"]:hover {
+  color: var(--ui-text);
+}
+.below [role="tab"][aria-selected="true"] {
+  color: var(--ui-text);
+  border-bottom-color: var(--accent);
+}
+.below .count {
+  margin-left: auto;
+  font-size: 12px;
+  color: rgba(236, 228, 218, 0.45);
+}
+.cards {
+  animation: fade 0.35s var(--ease) both;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.card {
+  position: relative;
+  background: rgba(236, 228, 218, 0.04);
+  border: 1px solid var(--glass-line);
+  border-radius: 18px;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    transform 0.15s;
+}
+.card:hover {
+  border-color: rgba(255, 107, 44, 0.55);
+  background: rgba(236, 228, 218, 0.08);
+  transform: translateY(-2px);
+}
+.card a {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 9px;
+  row-gap: 3px;
+  padding: 14px 16px 13px;
+  color: var(--ui-text);
+  text-decoration: none;
+}
+.card .dot {
+  align-self: center;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--stop);
+}
+.card .dot.plan {
+  background: var(--accent);
+}
+.card .dot.bad {
+  background: var(--danger);
+}
+.card .nm {
+  min-width: 0;
+  padding-right: 18px;
+  font-size: 14.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card .sub,
+.card .meta {
+  grid-column: 1 / -1;
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: rgba(236, 228, 218, 0.7);
+}
+.card .meta {
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: rgba(236, 228, 218, 0.42);
+  font-variant-numeric: tabular-nums;
+}
+.card .del {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  color: var(--ui-text-2);
+  background: none;
+  border: none;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.card:hover .del,
+.card .del:focus-visible {
+  opacity: 1;
+}
+.card .del:hover {
+  color: #fff;
+  background: rgba(236, 228, 218, 0.1);
+}
+.card .del svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ---------------------------------------------------------------- footer */
+.foot {
+  position: absolute;
+  z-index: 2;
+  inset: auto 0 0;
+  padding: 0 var(--edge) var(--gap);
+  text-align: center;
+  font-size: 11px;
+  color: rgba(236, 228, 218, 0.38);
+}
+
+/* no WebGL: a still Mars disc from the same texture */
+body.no-globe #globe {
+  opacity: 1;
+}
+body.no-globe #globe::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--globe-x) - var(--globe-d) / 2);
+  top: calc(var(--globe-y) - var(--globe-d) / 2);
+  width: var(--globe-d);
+  height: var(--globe-d);
+  border-radius: 50%;
+  background: url("/img/home/mars.jpg") 40% 50% / 200% 100%;
+  box-shadow: inset -40px 0 80px #000;
+}
+
+/* ---------------------------------------------------------------- small or short screens */
+@media (max-width: 720px) {
+  .bar .links > a {
+    display: none;
+  }
+  .title {
+    position: absolute;
+    z-index: 2;
+    left: 0;
+    right: 0;
+    top: 70px;
+    text-align: center;
+  }
+  .title span {
+    position: static;
+    transform: none;
+  }
+  .new span {
+    display: none;
+  }
+  .new {
+    padding: 0 13px;
+  }
+  .cards {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .card .sub {
+    display: none;
+  }
+  .foot {
+    display: none;
+  }
+}
+
+
+/* narrow screens: the search bar takes the width, so the button sits just above its right end */
+@media (max-width: 1000px) {
+  .dd {
+    bottom: calc(var(--edge) + 24px + 56px + var(--gap));
+  }
+}

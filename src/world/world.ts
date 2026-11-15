@@ -15,7 +15,7 @@ import {
 } from "../data/loader";
 import { sunPosition } from "../nav/sun";
 import { buildTerrain, elevationTint, facetHeight, groundDetailMaterial, rasterColor } from "./terrainMesh";
-import { loadBackdrop } from './backdrop';
+import { loadBackdrop } from '../game/backdrop';
 
 export const HAZE = new THREE.Color(0xd4a076);
 const CLEAR_FOG = 0.00002;
@@ -32,6 +32,8 @@ export class World {
   private sunDisc: THREE.Sprite;
   /** current sun direction in the sky */
   sun = { azimuth: 0, elevation: 45 };
+  /** Drawn play-area terrain; the planner view recolours this group with analysis layers. */
+  playMesh = new THREE.Group();
 
   private constructor(
     readonly meta: Meta,
@@ -52,7 +54,7 @@ export class World {
     this.scene.add(this.sunDisc);
   }
 
-  static async load(onProgress: (msg: string) => void, lowDetail: boolean): Promise<World> {
+  static async load(onProgress: (msg: string) => void, lowDetail: boolean, facet?: number): Promise<World> {
     onProgress("Loading map of Gale Crater…");
     const meta = await loadMeta();
     const frame = new Frame(meta.frame.origin);
@@ -77,13 +79,14 @@ export class World {
     const groundMaterial = groundDetailMaterial(groundDetail);
     onProgress("Building terrain…");
     await new Promise((r) => setTimeout(r, 0));
-    const step = lowDetail ? 6 : 3; // 12 m or 6 m triangles
+    const step = facet ?? (lowDetail ? 6 : 3); // 2 m samples per step
     const w = new World(meta, frame, play, surround, mid, far, positions, traverse, step);
     const playB = meta.frame.play;
     const fetchB = meta.frame.fetch;
     const k = lowDetail ? 2 : 1;
+    w.playMesh = buildTerrain(play, frame, { step, color: rasterColor(color, elevationTint), chunkCells: 48, material: groundMaterial });
     w.scene.add(
-      buildTerrain(play, frame, { step, color: rasterColor(color, elevationTint), chunkCells: 48, material: groundMaterial }),
+      w.playMesh,
       buildTerrain(surround, frame, {
         step: 2 * k,
         color: rasterColor(surroundImg, elevationTint),

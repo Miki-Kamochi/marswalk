@@ -1,0 +1,331 @@
+/* Self-hosted fonts, loaded with the stylesheet so text never switches font after it appears. */
+@import "./font-inline.css";
+
+/* Shared look of every page: design tokens, spacing, the top bar, page changes, glass. */
+:root {
+  color-scheme: dark;
+  /* design tokens (DESIGN.md section 3) */
+  --bg: #0b0908;
+  --surface-1: #151210;
+  --surface-2: #1e1916;
+  --text: #f4ede6;
+  --text-2: #a39a92;
+  --accent: #ff6b2c;
+  --accent-glow: #ffb27a;
+  --ok: #5fd3a0;
+  --warn: #ffc75a;
+  --danger: #ff5a5a;
+  --font: "Space Grotesk Variable", "Space Grotesk", system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", "Noto Sans JP", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  /* tool surfaces: warm near-black panels with hairline edges (DESIGN.md section 0) */
+  --ui-bg: #14110f;
+  --ui-surface: #1b1714;
+  --ui-surface-2: #241f1b;
+  --ui-hover: #2e2722;
+  --ui-line: #3a322b;
+  --ui-text: #ece4da;
+  --ui-text-2: #a39a8f;
+  --ui-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --ui-act: #ffb27a;
+  --ui-r: 12px;
+  --stop: #ffd166;
+  --base: #7cc8ff;
+  /* older names, still used */
+  --panel: var(--surface-2);
+  --amber: #ffb86b;
+  --cyan: #7fe3ff;
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+}
+a {
+  color: var(--amber);
+}
+:root[data-lang="en"] [data-l="ja"],
+:root[data-lang="ja"] [data-l="en"] {
+  display: none !important;
+}
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+/* reduced motion: nothing animates */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ---------------------------------------------------------------- spacing rule (every page)
+   --edge  distance from any screen edge: the top bar, panels, buttons, the search bar
+   --gap   space between floating things (a button and its dropdown, two panels)
+   --bar-h height of the top bar */
+:root {
+  --edge: clamp(16px, 2.2vw, 28px);
+  --gap: 12px;
+  --bar-h: 64px;
+}
+
+/* ---------------------------------------------------------------- the one top bar (home, How it works, Credits) */
+header.bar {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  height: var(--bar-h);
+  padding: 0 var(--edge);
+}
+.bar .logo {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ui-text);
+  text-decoration: none;
+}
+.bar .links {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 2.4vw, 34px);
+  margin-left: auto;
+}
+.bar .links > a,
+.bar .lang {
+  padding: 4px 0;
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(236, 228, 218, 0.75);
+  text-decoration: none;
+  background: none;
+  border: none;
+  transition: color 0.15s;
+}
+.bar .links > a:hover,
+.bar .links > a[aria-current="page"],
+.bar .lang:hover {
+  color: #fff;
+}
+.bar .lang {
+  padding: 4px 12px;
+  border: 1px solid rgba(236, 228, 218, 0.22);
+  border-radius: 99px;
+  font-size: 12.5px;
+}
+
+/* ---------------------------------------------------------------- moving between pages
+   Cross-document view transitions, "out-in": the old page leaves completely before the new one
+   arrives, so the two never overlap (no doubled text, no layout jump). The motion says where you
+   are going:
+   - next / prev: the top-bar pages sit side by side (home, intro, how, credits); the old page
+     slips out one way and the new one comes in from the other.
+   - in / out: the planner lies "inside" Gale Crater; going in, the old page grows a little as it
+     fades and the new one settles up from slightly small; going out is the reverse.
+   - fade: anything else (reloads, unknown pages).
+   The head script on each page picks the type from the URL you came from, so browser back plays
+   the reverse. The top bar does not move; an orange mark under the current page glides between
+   the links. Browsers without view transitions simply load the page. */
+@view-transition {
+  navigation: auto;
+}
+:root {
+  --vt-out: 0.17s; /* old page leaving */
+  --vt-in: 0.38s; /* new page arriving, starts when the old one is gone */
+  --vt-ease-out: cubic-bezier(0.4, 0, 1, 1);
+  --vt-ease-in: cubic-bezier(0.22, 1, 0.36, 1);
+}
+header.bar {
+  view-transition-name: topbar;
+}
+.bar .links a {
+  position: relative;
+}
+.bar .mark {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  view-transition-name: navmark;
+}
+
+::view-transition-image-pair(root) {
+  isolation: auto;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+  z-index: 0;
+  animation: vt-fade-out var(--vt-out) var(--vt-ease-out) both;
+}
+::view-transition-new(root) {
+  z-index: 1;
+  animation: vt-fade-in var(--vt-in) var(--vt-ease-in) var(--vt-out) both;
+}
+html:active-view-transition-type(next)::view-transition-old(root) {
+  animation-name: vt-out-left;
+}
+html:active-view-transition-type(next)::view-transition-new(root) {
+  animation-name: vt-in-right;
+}
+html:active-view-transition-type(prev)::view-transition-old(root) {
+  animation-name: vt-out-right;
+}
+html:active-view-transition-type(prev)::view-transition-new(root) {
+  animation-name: vt-in-left;
+}
+html:active-view-transition-type(in)::view-transition-old(root) {
+  animation-name: vt-out-grow;
+}
+html:active-view-transition-type(in)::view-transition-new(root) {
+  animation-name: vt-in-grow;
+}
+html:active-view-transition-type(out)::view-transition-old(root) {
+  animation-name: vt-out-shrink;
+}
+html:active-view-transition-type(out)::view-transition-new(root) {
+  animation-name: vt-in-shrink;
+}
+
+/* the top bar stays put between pages that both have it ... */
+::view-transition-group(topbar) {
+  animation: none;
+}
+::view-transition-old(topbar) {
+  display: none;
+}
+::view-transition-new(topbar) {
+  animation: none;
+}
+/* ... and leaves / arrives with the page when only one side has it (planner) */
+::view-transition-old(topbar):only-child {
+  display: block;
+  animation: vt-fade-out var(--vt-out) var(--vt-ease-out) both;
+}
+::view-transition-new(topbar):only-child {
+  animation: vt-fade-in var(--vt-in) var(--vt-ease-in) var(--vt-out) both;
+}
+
+/* the current-page mark glides from link to link; it grows in when coming from home and fades
+   out when going home (home has no mark) */
+::view-transition-group(navmark) {
+  z-index: 2;
+  animation-duration: calc(var(--vt-out) + var(--vt-in));
+  animation-timing-function: var(--vt-ease-in);
+}
+::view-transition-new(navmark):only-child {
+  animation: vt-mark-in var(--vt-in) var(--vt-ease-in) var(--vt-out) both;
+}
+::view-transition-old(navmark):only-child {
+  animation: vt-fade-out var(--vt-out) var(--vt-ease-out) both;
+}
+
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes vt-out-left {
+  to {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+}
+@keyframes vt-out-right {
+  to {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+@keyframes vt-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+}
+@keyframes vt-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+}
+@keyframes vt-out-grow {
+  to {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+@keyframes vt-in-grow {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+@keyframes vt-out-shrink {
+  to {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+@keyframes vt-in-shrink {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+@keyframes vt-mark-in {
+  from {
+    transform: scaleX(0);
+  }
+}
+/* reduced motion: a short cross-fade, nothing moves */
+@media (prefers-reduced-motion: reduce) {
+  html::view-transition-group(*) {
+    animation: none !important;
+  }
+  html::view-transition-old(*) {
+    animation: vt-fade-out 0.16s ease both !important;
+  }
+  html::view-transition-new(*) {
+    animation: vt-fade-in 0.16s ease both !important;
+  }
+}
+
+/* ---------------------------------------------------------------- glass: dark, see-through panels used everywhere */
+:root {
+  /* one value for every panel, button, bar and menu (85% opaque) */
+  --glass: rgba(16, 13, 11, 0.85);
+  --glass-strong: var(--glass);
+  --glass-menu: var(--glass);
+  --glass-line: rgba(236, 228, 218, 0.14);
+  --glass-blur: blur(12px) saturate(1.2);
+}

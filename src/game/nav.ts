@@ -3,7 +3,7 @@ import { matchTerrain, type Match, type Observation, type Surface } from '../nav
 import { PositionRegion } from '../nav/region';
 import { Rng } from '../nav/rng';
 import type { Player } from './player';
-import type { World } from './world';
+import type { World } from '../world/world';
 
 /** Sensor simulation boundary; the matcher never receives the player's coordinates. */
 export class Nav {
@@ -11,7 +11,14 @@ export class Nav {
   readonly surface: Surface;
   lastMatch: Match | null = null;
   private lastScan: { e: number; n: number; match: Match } | null = null;
-  constructor(world: World, private sand: Raster, orbital: Raster, player: Player, seed: number) {
+  constructor(
+    world: World,
+    private sand: Raster,
+    orbital: Raster,
+    player: Player,
+    seed: number,
+    private localizability: (e: number, n: number) => number = () => 1,
+  ) {
     this.region = new PositionRegion(player, seed);
     this.surface = {
       intensity: (e, n) => { const i = orbital.index(e, n); return i < 0 ? NaN : orbital.rgba[i] / 255; },
@@ -40,8 +47,11 @@ export class Nav {
     }
     const mean = samples.reduce((v, p) => v + p.intensity, 0) / Math.max(1, samples.length);
     const variance = samples.reduce((v, p) => v + (p.intensity - mean) ** 2, 0) / Math.max(1, samples.length);
+    const mapSignal = Math.max(0, Math.min(1, this.localizability(player.e, player.n)));
     return { samples, coverage: samples.length / attempted, contrast: Math.min(1, Math.sqrt(variance) / 0.07),
-      clarity: 1 - dust * 0.3, orientation: Math.max(0.3, 1 - this.region.current.radius / 1300) };
+      // The planner's localizability layer now drives how much useful terrain structure a scan yields.
+      clarity: (1 - dust * 0.3) * (0.25 + 0.75 * mapSignal),
+      orientation: Math.max(0.3, 1 - this.region.current.radius / 1300) };
   }
   scan(player: Player, dust: number, time: number) {
     const observation = this.observe(player, dust);

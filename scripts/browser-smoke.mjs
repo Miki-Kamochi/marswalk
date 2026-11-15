@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 const executable=process.env.CHROME_PATH ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 assert(existsSync(executable),'Set CHROME_PATH to an installed Chromium executable');
 const profile=await mkdtemp(join(tmpdir(),'marswalk-smoke-'));
-const browser=spawn(executable,['--headless=new','--use-gl=angle','--use-angle=swiftshader','--in-process-gpu','--disable-gpu-shader-disk-cache','--remote-debugging-port=0',`--user-data-dir=${profile}`,'--no-first-run','--no-default-browser-check','--window-size=1280,800','about:blank'],{stdio:['ignore','ignore','pipe'],windowsHide:true});
+const browser=spawn(executable,['--headless=new','--use-gl=angle','--use-angle=swiftshader','--in-process-gpu','--disable-gpu-shader-disk-cache','--remote-debugging-port=0','--remote-allow-origins=*',`--user-data-dir=${profile}`,'--no-first-run','--no-default-browser-check','--window-size=1280,800','about:blank'],{stdio:['ignore','ignore','pipe'],windowsHide:true});
 let browserLog='';browser.stderr.on('data',d=>browserLog+=d.toString());
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 let socket;
@@ -25,14 +25,15 @@ try {
   const send=(method,params={})=>new Promise((resolve,reject)=>{const key=++id;const timeout=setTimeout(()=>{pending.delete(key);reject(new Error(`CDP timeout: ${method}`));},20000);pending.set(key,{resolve:r=>{clearTimeout(timeout);resolve(r);},reject:e=>{clearTimeout(timeout);reject(e);}});socket.send(JSON.stringify({id:key,method,params}));});
   const evaluate=async expression=>{const r=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});if(r.exceptionDetails)throw new Error(JSON.stringify(r.exceptionDetails));return r.result.value;};
   await send('Runtime.enable');await send('Page.enable');
-  await send('Page.navigate',{url:`${process.env.MARSWALK_URL??'http://127.0.0.1:5174'}/?debug&manual&low`});
+  await send('Page.navigate',{url:`${process.env.MARSWALK_URL??'http://127.0.0.1:5174'}/game.html?debug&manual&low`});
   for(let i=0;i<120;i++){if(await evaluate('!!window.__mw'))break;await delay(250);}
   assert(await evaluate('!!window.__mw'),'Game failed to load');
   const summary=await evaluate(`(() => {
     const g=window.__mw,check=(condition,name)=>{if(!condition)throw Error(name)};
     g.begin();g.tick(0);
     check(g.state.phase==='collect','collection mission start');
-    check(Math.hypot(g.player.e-g.start.e,g.player.n-g.start.n)<.01,'spawn at lower-right start');
+    check(Math.hypot(g.player.e-g.start.e,g.player.n-g.start.n)<.01,'spawn at planned start');
+    check(g.plan.points.length>2&&g.timeLimit===Math.ceil(g.plan.route.stats.duration),'planner route drives preview');
     check(!!g.world.scene.getObjectByName('Mars_view_STL_backdrop'),'STL loaded');
     const initial=g.nav.region.current.radius;
     dispatchEvent(new KeyboardEvent('keydown',{code:'KeyW'}));
