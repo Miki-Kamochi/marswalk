@@ -53,7 +53,13 @@ button {
   border: 1px solid var(--glass-line);
   border-radius: 22px;
   box-shadow: var(--ui-shadow);
-  overflow: hidden;
+  /* the whole panel scrolls as one, so many stops never push the routes out of reach */
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.card::-webkit-scrollbar {
+  display: none;
 }
 .card-top {
   display: flex;
@@ -313,12 +319,9 @@ button {
 
 /* body */
 .card-body {
-  flex: 1;
-  min-height: 0;
+  flex: 1 0 auto;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  scrollbar-width: none;
   padding: 0 0 14px;
 }
 .hint {
@@ -792,9 +795,6 @@ button {
   margin: 2px -6px 0;
 }
 
-.card-body::-webkit-scrollbar {
-  display: none;
-}
 
 /* ---------------------------------------------------------------- profile strip: closed until tapped */
 .strip {
@@ -1147,5 +1147,14 @@ dialog#info a {
   color: var(--ui-text-2);
 }
 .more-stops .chiprow.add {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
   margin: 0 0 2px 82px;
+}
+.more-stops .chiprow.add button {
+  height: 28px;
+  padding: 0 11px;
+  font-size: 12.5px;
+  font-weight: 500;
 }
