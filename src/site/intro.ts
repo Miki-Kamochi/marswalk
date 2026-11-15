@@ -314,10 +314,13 @@ function drawRover(svg: SVGSVGElement) {
     <rect x="96" y="132" width="230" height="10" rx="4" class="rv-deck"/>
     <path d="M326 140 L360 128 L366 150 L330 164 Z" class="rv-rtg"/>
     <path d="M128 132 L128 54" class="rv-mast"/>
-    <rect x="106" y="30" width="48" height="26" rx="5" class="rv-head"/>
-    <circle cx="120" cy="43" r="5" class="rv-eye"/><circle cx="140" cy="43" r="5" class="rv-eye"/>
     <path d="M96 160 L66 150 L48 176" class="rv-arm"/>
-    <path d="M154 43 L260 4 L260 82 Z" class="rv-beam"/>`;
+    <g class="rv-headg">
+      <path d="M154 43 L270 0 L270 86 Z" class="rv-beam"/>
+      <rect x="106" y="30" width="48" height="26" rx="5" class="rv-head"/>
+      <circle cx="120" cy="43" r="5" class="rv-eye"/><circle cx="140" cy="43" r="5" class="rv-eye"/>
+      <circle cx="150" cy="43" r="7" class="rv-flash"/>
+    </g>`;
 }
 async function robot(ctx: SlideCtx) {
   const el = ctx.el;
@@ -352,9 +355,14 @@ async function robot(ctx: SlideCtx) {
   path.push([tx, ty]);
   const S = W / MW;
   let started = -1;
+  let shotAt = -1;
+  const SHOOT_MS = 2000; // the camera turns and takes three pictures (see .rv-headg in intro.css)
   void ctx.frames((t) => {
-    const phase = el.classList.contains("match") ? 2 : el.classList.contains("shoot") ? 1 : 0;
-    if (phase === 2 && started < 0) started = t;
+    let phase = el.classList.contains("match") ? 2 : el.classList.contains("shoot") ? 1 : 0;
+    if (phase >= 1 && shotAt < 0) shotAt = ctx.reduced ? t - SHOOT_MS : t;
+    if (phase === 1 && t - shotAt < SHOOT_MS) phase = 0;
+    if (phase === 2 && started < 0) started = Math.max(t, shotAt + SHOOT_MS);
+    if (phase === 2 && t < started) phase = 1;
     c.drawImage(img, sx, sy, MW, MH, 0, 0, W, H);
     c.fillStyle = "rgba(10,8,6,0.25)";
     c.fillRect(0, 0, W, H);
@@ -370,6 +378,12 @@ async function robot(ctx: SlideCtx) {
       c.strokeStyle = "#f4ede6";
       c.lineWidth = 2;
       c.strokeRect(16, 16, 130, 130);
+      // a white flash as the photo lands
+      const since = t - shotAt - SHOOT_MS;
+      if (since >= 0 && since < 400) {
+        c.fillStyle = `rgba(255,255,255,${0.7 * (1 - since / 400)})`;
+        c.fillRect(16, 16, 130, 130);
+      }
       c.fillStyle = "#f4ede6";
       c.fillText(tr("Rover's photo", "探査車の写真"), 20, 166);
     }

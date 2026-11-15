@@ -698,17 +698,71 @@
   border: 1px solid rgba(255, 107, 44, 0.35);
   border-radius: 12px;
 }
+/* the drawing and the map share the height, so both always fit */
 .robot-stage {
-  display: grid;
-  justify-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 10px;
   width: min(720px, 100%);
+  height: 100%;
+  min-height: 0;
 }
 .rover-svg {
-  width: min(380px, 80%);
+  flex: 0 1 auto;
+  width: auto;
+  height: 34%;
+  max-width: 100%;
+  min-height: 0;
 }
 .robot-cv {
-  width: 100%;
+  flex: 0 1 auto;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 60%;
+  min-height: 0;
+}
+/* taking pictures: the head turns left and right and flashes three times */
+.rv-headg {
+  transform-box: view-box;
+  transform-origin: 128px 54px;
+}
+.slide.shoot .rv-headg {
+  animation: rv-pan 2s ease-in-out;
+}
+@keyframes rv-pan {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(-14deg);
+  }
+  60% {
+    transform: rotate(10deg);
+  }
+}
+.rv-flash {
+  fill: #fff;
+  opacity: 0;
+}
+.slide.shoot .rv-flash {
+  animation: rv-flash 2s linear;
+}
+@keyframes rv-flash {
+  10%,
+  40%,
+  75% {
+    opacity: 0;
+  }
+  15%,
+  45%,
+  80% {
+    opacity: 1;
+    filter: drop-shadow(0 0 10px #fff);
+  }
 }
 .rv-shadow {
   fill: rgba(0, 0, 0, 0.45);
