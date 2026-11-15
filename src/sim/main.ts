@@ -5,7 +5,7 @@
  */
 import { AREA, AREAS, areaOf } from "../data/areas";
 import { toLonLat } from "../data/frame";
-import { dataUrl, loadGrid, loadJson, loadMeta, type Place, type Positions } from "../data/loader";
+import { dataUrl, loadGrid, loadJson, loadMeta, type Place, type Positions, type Traverse } from "../data/loader";
 import { DEFAULTS, type PlanConfig } from "../plan/config";
 import { cellElevations, decodeNav, NavGrid } from "../plan/grid";
 import { Planner, type Profile, type Route } from "../plan/planner";
@@ -36,6 +36,19 @@ const O2_COLORS = { before: "#3c4043", out: "#8ab4f8", work: "#c58af9", back: "#
 /** recommended first, then the alternatives */
 const ORDER: Profile[] = ["mix", "short", "o2", "found"];
 
+/** a walk without a plan, measured with the same model as the planned routes */
+interface Naive {
+  id: "line" | "rover";
+  cells: number[];
+  duration: number;
+  distance: number;
+  /** metres on ground the planner never enters */
+  unsafe: number;
+  /** oxygen there, at work, and back the same way, as a share of a full tank */
+  o2: number;
+  o2Ok: boolean;
+}
+
 async function main() {
   initLang();
   const params = new URLSearchParams(location.search);
@@ -49,13 +62,14 @@ async function main() {
   // the data loads during the page-change animation; the heavy work waits until it is over
   const meta = await loadMeta();
   const nav = meta.nav.grid;
-  const [play, navBuf, positions] = await Promise.all([
+  const [play, navBuf, positions, traverse] = await Promise.all([
     loadGrid(meta.grids.play),
     fetch(dataUrl(nav.file)).then((r) => {
       if (!r.ok) throw new Error(`${nav.file}: HTTP ${r.status}`);
       return r.arrayBuffer();
     }),
     loadJson<Positions>("positions.json"),
+    loadJson<Traverse>("traverse.json"),
   ]);
   const grid = new NavGrid(nav, { ...decodeNav(nav, new Uint8Array(navBuf)), elev: cellElevations(meta.grids.play, play.data, nav) }, cfg);
   const planner = new Planner(grid, cfg);
@@ -85,6 +99,8 @@ async function main() {
     o2: 1,
     pickStart: false,
     beyond: 0,
+    /** the same walk without a plan: a straight line, and Curiosity's own path where it passes both ends */
+    naive: [] as Naive[],
     /** the selected route's details dropdown, and the profile strip, both closed at first */
     detailsOpen: false,
     stripOpen: false,
@@ -147,6 +163,7 @@ async function main() {
   };
   const pushRoutes = () => {
     view?.setRoutes(state.routes, state.selected, state.back);
+    view?.setNaive(state.naive.map((n) => n.cells));
     view?.setEnds(state.home, state.dest);
   };
   const fit = () => {
@@ -159,6 +176,7 @@ async function main() {
   async function replan(fitAfter = true) {
     const my = ++token;
     state.routes = [];
+    state.naive = [];
     state.back = [];
     state.problem = undefined;
     state.moved = false;
@@ -187,6 +205,9 @@ async function main() {
       pushRoutes();
       if (p === state.selected && fitAfter) fit();
     }
+    computeNaive();
+    renderRoutes();
+    pushRoutes();
     renderStrip();
     save();
   }
@@ -203,6 +224,7 @@ async function main() {
     state.dest = -1;
     state.destName = "";
     state.routes = [];
+    state.naive = [];
     state.back = [];
     state.problem = undefined;
     state.moved = false;
@@ -239,6 +261,67 @@ async function main() {
     renderStrip();
     pushRoutes();
     save();
+  }
+
+  // ---------------------------------------------------------------- without a plan
+  /** Grid cells along a polyline of map positions. */
+  function cellsAlong(pts: [number, number][]): number[] {
+    const cells: number[] = [];
+    for (let k = 0; k < pts.length - 1; k++) {
+      const [a, b] = [pts[k], pts[k + 1]];
+      const steps = Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / (grid.cell / 2));
+      for (let i = 0; i <= steps; i++) {
+        const c = grid.index(a[0] + ((b[0] - a[0]) * i) / steps, a[1] + ((b[1] - a[1]) * i) / steps);
+        if (c >= 0 && c !== cells[cells.length - 1]) cells.push(c);
+      }
+    }
+    return cells;
+  }
+  /** Curiosity's path between the two ends, if it passes within 150 m of both. */
+  function roverPath(from: [number, number], to: [number, number]): [number, number][] | null {
+    const wp = traverse.waypoints;
+    const nearest = (p: [number, number]) => {
+      let best = -1;
+      let bestD = 150;
+      wp.forEach((w, i) => {
+        const d = Math.hypot(w[1] - p[0], w[2] - p[1]);
+        if (d < bestD) {
+          bestD = d;
+          best = i;
+        }
+      });
+      return best;
+    };
+    const i = nearest(from);
+    const j = nearest(to);
+    if (i < 0 || j < 0 || Math.abs(i - j) < 2) return null;
+    const seg = (i < j ? wp.slice(i, j + 1) : wp.slice(j, i + 1).reverse()).map((w) => [w[1], w[2]] as [number, number]);
+    return [from, ...seg, to];
+  }
+  function computeNaive() {
+    state.naive = [];
+    if (state.home < 0 || state.dest < 0 || !state.routes.length) return;
+    const from: [number, number] = [grid.east(state.home), grid.northOf(state.home)];
+    const to: [number, number] = [grid.east(state.dest), grid.northOf(state.dest)];
+    const paths: [Naive["id"], [number, number][] | null][] = [
+      ["line", [from, to]],
+      ["rover", roverPath(from, to)],
+    ];
+    for (const [id, pts] of paths) {
+      if (!pts) continue;
+      const cells = cellsAlong(pts);
+      if (cells.length < 2) continue;
+      const out = planner.evaluate(cells, "short", state.o2);
+      const back = planner.evaluate([...cells].reverse(), "short", state.o2);
+      let unsafe = 0;
+      for (let i = 1; i < cells.length; i++) {
+        if (grid.blocked[cells[i]] || grid.blocked[cells[i - 1]]) {
+          unsafe += Math.hypot(grid.east(cells[i]) - grid.east(cells[i - 1]), grid.northOf(cells[i]) - grid.northOf(cells[i - 1]));
+        }
+      }
+      const o2 = out.stats.o2Out + out.stats.o2Work + back.stats.o2Out;
+      state.naive.push({ id, cells, duration: out.stats.duration, distance: out.stats.distance, unsafe, o2, o2Ok: o2 <= state.o2 - cfg.reserve });
+    }
   }
 
   // ---------------------------------------------------------------- names
@@ -352,7 +435,25 @@ async function main() {
       if (r) html += option(r);
     }
     if (state.busy) html += `<p class="busy">${esc(t("calculating"))}</p>`;
+    else if (state.naive.length) html += naiveBlock();
     $("routes").innerHTML = html;
+  }
+
+  /** The same walk without a plan, against the selected route. */
+  function naiveBlock(): string {
+    const sel = state.routes.find((r) => r.profile === state.selected);
+    if (!sel) return "";
+    const name = { line: tr("Straight line", "まっすぐ歩く"), rover: tr("Curiosity's path", "キュリオシティの道") };
+    const rows = state.naive.map((n) => {
+      const dt = Math.round((n.duration - sel.stats.duration) / 60);
+      const delta = dt ? ` <em>${dt > 0 ? "+" : "−"}${Math.abs(dt)} ${esc(tr("min", "分"))}</em>` : "";
+      const warn: string[] = [];
+      if (n.unsafe >= 10) warn.push(tr(`${Math.round(n.unsafe)} m on unsafe ground`, `危険な地面を${Math.round(n.unsafe)} m`));
+      if (!n.o2Ok) warn.push(tr("not enough O₂ to get back", "帰りの酸素が足りない"));
+      return `<li><span class="sw ${n.id}" aria-hidden="true"></span><span class="nm">${esc(name[n.id])}</span>
+        <span class="f">${esc(dur(n.duration))}${delta} · O₂ ${pc(n.o2)}</span>${warn.length ? `<span class="w">${esc(warn.join(" · "))}</span>` : ""}</li>`;
+    });
+    return `<section class="naive"><h3>${esc(tr("Without a plan", "計画なしの場合"))}</h3><ul>${rows.join("")}</ul></section>`;
   }
 
   function renderStrip() {
@@ -532,6 +633,7 @@ async function main() {
     requestAnimationFrame(() => {
       o2Queued = false;
       state.routes = state.routes.map((r) => planner.evaluate(r.cells, r.profile, state.o2));
+      computeNaive();
       pushLimit();
       renderRoutes();
       save();

@@ -18,6 +18,21 @@ centre longitude 0 (the frame of the USGS Gale mosaics and of Curiosity's waypoi
 | 7 | Weather: air and ground temperature, pressure, sunrise and sunset, UV, per sol | REMS weather feed | MSL Curiosity / REMS (Rover Environmental Monitoring Station), Centro de Astrobiología (CSIC-INTA) and JPL | one record per sol, sols 1 to 4995 | `https://mars.nasa.gov/rss/api/?feed=weather&category=msl&feedtype=json` |
 | 8 | The whole planet on the home screen (globe colours) | Viking MDIM 2.1 colourised global mosaic | Viking Orbiters 1 and 2, colourised by USGS Astrogeology | 232 m (we ship 1024 x 512, about 21 km per pixel; `scripts/globe.py`) | `https://planetarymaps.usgs.gov/mosaic/Mars_Viking_MDIM21_ClrMosaic_global_232m.tif` |
 
+## Map areas
+
+Datasets 1 and 2 are read for two windows on Curiosity's route (bounds in `scripts/config.py`, data in
+`public/data/<area>/`):
+
+| Area | Window shipped | Curiosity sols inside | Ground |
+|---|---|---|---|
+| `buttes`: Murray Buttes, Bagnold Dunes, Vera Rubin Ridge | 3.0 × 3.6 km, 4.74–4.84° S | 1352–2804 | 404 m relief, 3 % steeper than 15° |
+| `gediz`: Greenheugh pediment, Marker Band valley, Gediz Vallis ridge and channel | 3.0 × 3.6 km, just south of it | 3143–4552 | 667 m relief, 39 % steeper than 15° |
+
+Dataset 5 (CRISM) covers only the `buttes` area, so `gediz` has no mineral layers. The `gediz` stops
+are Curiosity's logged position on the sol NASA/JPL reported for each place: Marker Band valley
+(panorama sol 3684, nearest logged sol 3687), Gediz Vallis ridge (reached sol 3923), the sulfur
+stones (sol 4200).
+
 ## How each one is processed
 
 - **1, 2**: these mosaics are far too large to download (the orthophoto is about 23 GB), so the

@@ -1001,3 +1001,56 @@ dialog#info a {
     bottom: calc(52vh + var(--gap));
   }
 }
+
+/* the same walk without a plan: straight line and Curiosity's path, measured the same way */
+.naive {
+  margin: 14px 2px 0;
+}
+.naive h3 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ui-text-2);
+}
+.naive ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.naive li {
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  align-items: baseline;
+  column-gap: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  border: 1px dashed var(--glass-line);
+  border-radius: 14px;
+}
+.naive .sw {
+  align-self: center;
+  height: 0;
+  border-top: 2.5px dashed #ff6464;
+}
+.naive .sw.rover {
+  border-top-color: #7cc8ff;
+}
+.naive .nm {
+  font-weight: 600;
+}
+.naive .f {
+  color: var(--ui-text-2);
+  font-variant-numeric: tabular-nums;
+}
+.naive em {
+  font-style: normal;
+  color: var(--warn);
+}
+.naive .w {
+  grid-column: 2 / -1;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--danger);
+}

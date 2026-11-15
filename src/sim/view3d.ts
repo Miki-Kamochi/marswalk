@@ -20,6 +20,9 @@ const LIFT = 4;
 const FACET = 8;
 const ACCENT = "#ff6b2c";
 const ALT = "#cdbfae";
+/** the same walk without a plan (sim.css .naive uses the same colours) */
+const NAIVE_LINE = "#ff6464";
+const NAIVE_ROVER = "#7cc8ff";
 const SPACE = new THREE.Color(0x0d0b0a);
 const TILT_3D = 0.95; // radians from straight down
 
@@ -128,6 +131,7 @@ export class View3D {
   private ends = new THREE.Group();
   private places = new THREE.Group();
   private traverse = new THREE.Group();
+  private naive = new THREE.Group();
   private pending = false;
   private utc: number;
   private el: HTMLElement;
@@ -180,7 +184,7 @@ export class View3D {
     world.playMesh.traverse((o) => {
       if (o instanceof THREE.Mesh) o.material = mat;
     });
-    world.scene.add(this.routes, this.ends, this.places, this.traverse);
+    world.scene.add(this.routes, this.naive, this.ends, this.places, this.traverse);
 
     for (const p of world.positions.places) {
       if (p.kind !== "stop") continue;
@@ -434,6 +438,13 @@ export class View3D {
         this.routes.add(s);
       }
     }
+    this.request();
+  }
+
+  /** The same walk without a plan, dashed: a straight line (red) and Curiosity's path (blue). */
+  setNaive(paths: number[][]): void {
+    this.clear(this.naive);
+    paths.forEach((cells, i) => this.naive.add(this.line(this.pathPoints(cells), i === 0 ? NAIVE_LINE : NAIVE_ROVER, 2.5, { opacity: 0.9, dashed: true, order: 4 })));
     this.request();
   }
 
