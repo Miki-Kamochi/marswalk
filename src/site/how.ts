@@ -9,7 +9,7 @@ import { Planner, type Profile, type Route } from "../plan/planner";
 import { HEMATITE, locStops, NO_GO, ramp, SAFETY, type Stop } from "../sim/overlays";
 import { profileName } from "../sim/text";
 import { initLang, tr } from "./lang";
-import { cellPixel, cropGray, match, pickCells, playMatch } from "./matcher";
+import { PATCH, REACH, cellPixel, cropGray, match, pickCells, playMatch, type Match } from "./matcher";
 import { drawStars } from "./stars";
 import { clamp01, ease, startDeck, type SlideCtx } from "./steps";
 
@@ -134,6 +134,36 @@ async function sweep(cv: HTMLCanvasElement, base: CanvasImageSource | null, top:
       gr.addColorStop(1, "rgba(255,178,122,0.9)");
       c.fillStyle = gr;
       c.fillRect(0, y - 18, L.W, 20);
+    }
+    return k < 1;
+  });
+}
+
+/** A closer, faster sweep over the hazard cluster in the north-west of the map. */
+async function sweepRisk(cv: HTMLCanvasElement, base: CanvasImageSource, top: CanvasImageSource, ctx: SlideCtx, alpha = 0.88) {
+  const L = await ready;
+  const sx = 0;
+  const sy = 0;
+  const sw = Math.round(L.W * 0.5);
+  const sh = Math.round(L.H * 0.46);
+  cv.width = sw;
+  cv.height = sh;
+  const c = cv.getContext("2d")!;
+  c.imageSmoothingEnabled = false;
+  await ctx.frames((t) => {
+    const k = ctx.reduced ? 1 : ease(clamp01(t / 850));
+    const y = Math.round(k * sh);
+    c.clearRect(0, 0, sw, sh);
+    c.drawImage(base, sx, sy, sw, sh, 0, 0, sw, sh);
+    c.globalAlpha = alpha;
+    if (y > 0) c.drawImage(top, sx, sy, sw, y, 0, 0, sw, y);
+    c.globalAlpha = 1;
+    if (k < 1) {
+      const gr = c.createLinearGradient(0, y - 20, 0, y + 2);
+      gr.addColorStop(0, "rgba(255,196,112,0)");
+      gr.addColorStop(1, "rgba(255,196,112,0.95)");
+      c.fillStyle = gr;
+      c.fillRect(0, y - 20, sw, 22);
     }
     return k < 1;
   });
@@ -329,63 +359,142 @@ function demoCell(L: Layers, want: "tilt" | "rough"): number {
   return best;
 }
 
-async function cell3d(cv: HTMLCanvasElement, f: CellFit, mode: "tilt" | "rough", label: string, ctx: SlideCtx) {
+type Point3 = [number, number, number];
+
+function polygon(c: CanvasRenderingContext2D, pts: [number, number][], fill: string, stroke = "rgba(255,255,255,0.14)") {
+  c.beginPath();
+  pts.forEach((p, i) => (i ? c.lineTo(...p) : c.moveTo(...p)));
+  c.closePath();
+  c.fillStyle = fill;
+  c.fill();
+  c.strokeStyle = stroke;
+  c.lineWidth = 1;
+  c.stroke();
+}
+
+/** Draw a solid square column, instead of the old floating point. */
+function prism(
+  c: CanvasRenderingContext2D,
+  P: (x: number, y: number, z: number) => [number, number],
+  x: number,
+  y: number,
+  bottom: number,
+  top: number,
+  half: number,
+) {
+  const a = P(x - half, y - half, top);
+  const b = P(x + half, y - half, top);
+  const d = P(x - half, y + half, top);
+  const e = P(x + half, y + half, top);
+  const bb = P(x + half, y - half, bottom);
+  const db = P(x - half, y + half, bottom);
+  const eb = P(x + half, y + half, bottom);
+  polygon(c, [b, e, eb, bb], "#765746");
+  polygon(c, [d, e, eb, db], "#594033");
+  polygon(c, [a, b, e, d], "#d7c6b7", "rgba(255,240,220,0.42)");
+}
+
+/** Page 4: columns fall from the back rows, pause, then the wide-area mean plane lands. */
+async function wideSlopeColumns(cv: HTMLCanvasElement, f: CellFit, ctx: SlideCtx) {
   const dpr = Math.min(2, devicePixelRatio);
-  const W = 360;
-  const H = 300;
+  const W = 390;
+  const H = 320;
   cv.width = W * dpr;
   cv.height = H * dpr;
   const c = cv.getContext("2d")!;
   c.scale(dpr, dpr);
-  const kx = 22;
-  const kz = mode === "rough" ? 60 : 22; // heights are stretched for roughness (they are centimetres)
-  const P = (x: number, y: number, z: number): [number, number] => [W / 2 + (x - y) * kx * 0.87, H / 2 + 20 + (x + y) * kx * 0.5 - z * kz];
+  const P = (x: number, y: number, z: number): [number, number] => [W / 2 + (x - y) * 22, H / 2 + 50 + (x + y) * 11 - z * 25];
   const [a, b] = f.plane;
   const pz = (x: number, y: number) => a * x + b * y;
+  const pts = [...f.pts].sort((p, q2) => p[0] + p[1] - (q2[0] + q2[1]));
+  const floor = Math.min(...pts.map((p) => p[2])) - 1.15;
   await ctx.frames((t) => {
-    const k = ctx.reduced ? 1 : clamp01(t / 2200);
     c.clearRect(0, 0, W, H);
-    // the points drop in, then the plane appears
-    const drop = ease(clamp01(k / 0.55));
-    const plane = ease(clamp01((k - 0.5) / 0.4));
+    for (const [x, y, z] of pts) {
+      const row = x + y + 6;
+      const land = ctx.reduced ? 1 : ease(clamp01((t - row * 55) / 340));
+      if (land <= 0) continue;
+      const lift = (1 - land) * 5.5;
+      prism(c, P, x, y, floor + lift, z + lift, 0.37);
+    }
+    // One clear beat after the last row, then the broad average plane settles from above.
+    const plane = ctx.reduced ? 1 : ease(clamp01((t - 1450) / 620));
     if (plane > 0) {
-      c.globalAlpha = 0.45 * plane;
-      c.fillStyle = "#ffb27a";
-      c.beginPath();
-      for (const [x, y] of [[-3.4, -3.4], [3.4, -3.4], [3.4, 3.4], [-3.4, 3.4]] as const) c.lineTo(...P(x, y, pz(x, y)));
-      c.closePath();
-      c.fill();
-      c.globalAlpha = plane;
-      c.strokeStyle = "#ffb27a";
-      c.stroke();
+      const lift = (1 - plane) * 5;
+      c.globalAlpha = 0.18 + plane * 0.5;
+      polygon(
+        c,
+        ([[-3.65, -3.65], [3.65, -3.65], [3.65, 3.65], [-3.65, 3.65]] as const).map(([x, y]) => P(x, y, pz(x, y) + 0.48 + lift)),
+        "#ffb348",
+        "#ffd37d",
+      );
       c.globalAlpha = 1;
     }
-    const sorted = [...f.pts].sort((p, q2) => p[0] + p[1] - (q2[0] + q2[1]));
-    for (const [x, y, z] of sorted) {
-      const zz = z + (1 - drop) * 3;
-      if (mode === "rough" && plane > 0) {
-        const res = z - pz(x, y);
-        c.strokeStyle = Math.abs(res) > 0.08 ? "rgba(255,90,90,0.9)" : "rgba(124,200,255,0.8)";
-        c.lineWidth = 2;
-        c.beginPath();
-        c.moveTo(...P(x, y, pz(x, y)));
-        c.lineTo(...P(x, y, pz(x, y) + res * plane));
-        c.stroke();
-      }
-      c.fillStyle = "#f4ede6";
-      c.beginPath();
-      c.arc(...P(x, y, zz), 3.2, 0, Math.PI * 2);
-      c.fill();
-    }
-    c.fillStyle = "rgba(236,228,218,0.7)";
+    c.fillStyle = "rgba(236,228,218,0.68)";
     c.font = "12px ui-monospace, monospace";
-    c.fillText(tr("one cell · 6 × 6 m", "1マス · 6 × 6 m"), 12, 20);
+    c.fillText(tr("wide-area terrain sample", "広域の地形サンプル"), 12, 20);
     if (plane >= 1) {
-      c.fillStyle = "#ffb27a";
-      c.font = "700 22px system-ui, sans-serif";
-      c.fillText(label, 12, H - 16);
+      c.fillStyle = "#ffd166";
+      c.font = "700 21px system-ui, sans-serif";
+      c.fillText(tr(`mean slope ${f.tilt.toFixed(1)}°`, `広域平均の傾斜 ${f.tilt.toFixed(1)}°`), 12, H - 14);
     }
-    return k < 1;
+    return ctx.reduced ? false : t < 2100;
+  });
+}
+
+/** Page 5: a 4×4 close-up; yellow links expose the height change to each neighbour. */
+async function localSlopeColumns(cv: HTMLCanvasElement, f: CellFit, ctx: SlideCtx) {
+  const dpr = Math.min(2, devicePixelRatio);
+  const W = 390;
+  const H = 320;
+  cv.width = W * dpr;
+  cv.height = H * dpr;
+  const c = cv.getContext("2d")!;
+  c.scale(dpr, dpr);
+  const chosen = new Set([-3, -1, 1, 3]);
+  const pts = f.pts.filter(([x, y]) => chosen.has(x) && chosen.has(y)).map(([x, y, z]) => [x / 2, y / 2, z] as Point3);
+  const lookup = new Map(pts.map((p) => [`${p[0]},${p[1]}`, p]));
+  const sorted = [...pts].sort((p, q2) => p[0] + p[1] - (q2[0] + q2[1]));
+  const P = (x: number, y: number, z: number): [number, number] => [W / 2 + (x - y) * 42, H / 2 + 48 + (x + y) * 21 - z * 72];
+  const floor = Math.min(...pts.map((p) => p[2])) - 0.5;
+  const links: [Point3, Point3][] = [];
+  for (const p of pts) {
+    for (const [dx, dy] of [[1, 0], [0, 1]] as const) {
+      const n = lookup.get(`${p[0] + dx},${p[1] + dy}`);
+      if (n) links.push([p, n]);
+    }
+  }
+  await ctx.frames((t) => {
+    c.clearRect(0, 0, W, H);
+    sorted.forEach(([x, y, z], i) => {
+      const land = ctx.reduced ? 1 : ease(clamp01((t - i * 45) / 300));
+      if (land <= 0) return;
+      const lift = (1 - land) * 3.8;
+      prism(c, P, x, y, floor + lift, z + lift, 0.39);
+    });
+    links.forEach(([p, n], i) => {
+      const show = ctx.reduced ? 1 : ease(clamp01((t - 900 - i * 28) / 230));
+      if (show <= 0) return;
+      const fall = (1 - show) * 55;
+      const a = P(p[0], p[1], p[2] + 0.28);
+      const b = P(n[0], n[1], n[2] + 0.28);
+      c.strokeStyle = Math.abs(p[2] - n[2]) > 0.14 ? "#ffb020" : "#ffe08a";
+      c.lineWidth = Math.abs(p[2] - n[2]) > 0.14 ? 4.5 : 2.5;
+      c.lineCap = "round";
+      c.beginPath();
+      c.moveTo(a[0], a[1] - fall);
+      c.lineTo(b[0], b[1] - fall);
+      c.stroke();
+    });
+    c.fillStyle = "rgba(236,228,218,0.68)";
+    c.font = "12px ui-monospace, monospace";
+    c.fillText(tr("4 × 4 close-up", "4 × 4 拡大図"), 12, 20);
+    if (t > 1450 || ctx.reduced) {
+      c.fillStyle = "#ffd166";
+      c.font = "700 19px system-ui, sans-serif";
+      c.fillText(tr("yellow = slope to neighbour", "黄色 = 隣との傾斜"), 12, H - 14);
+    }
+    return ctx.reduced ? false : t < 1650;
   });
 }
 
@@ -393,8 +502,8 @@ async function tilt(ctx: SlideCtx) {
   const L = await ready;
   if (!ctx.alive()) return;
   const f = fitCell(L, demoCell(L, "tilt"));
-  void cell3d(q(ctx.el, ".cell3d"), f, "tilt", tr(`slope ${f.tilt.toFixed(1)}°`, `傾き ${f.tilt.toFixed(1)}°`), ctx);
-  await sweep(q(ctx.el, ".m-tilt"), L.hill, L.score.tilt, 1800, ctx, 0.85);
+  void wideSlopeColumns(q(ctx.el, ".cell3d"), f, ctx);
+  await sweepRisk(q(ctx.el, ".m-tilt"), L.hill, L.score.tilt, ctx);
 }
 
 async function rough(ctx: SlideCtx) {
@@ -402,16 +511,8 @@ async function rough(ctx: SlideCtx) {
   if (!ctx.alive()) return;
   const i = demoCell(L, "rough");
   const f = fitCell(L, i);
-  const Ly = L.d.grid.layers;
-  void cell3d(q(ctx.el, ".cell3d"), f, "rough", tr(`roughness ${Ly.rough[i].toFixed(2)} m · step ${Ly.step[i].toFixed(2)} m`, `でこぼこ ${Ly.rough[i].toFixed(2)} m · 段差 ${Ly.step[i].toFixed(2)} m`), ctx);
-  const map = q<HTMLCanvasElement>(ctx.el, ".m-rough");
-  const chips = all<HTMLButtonElement>(ctx.el, "[data-m]");
-  const show = (m: "rough" | "step") => {
-    chips.forEach((b) => b.classList.toggle("on", b.dataset.m === m));
-    void sweep(map, L.hill, L.score[m], 1200, ctx, 0.85);
-  };
-  chips.forEach((b) => (b.onclick = () => show(b.dataset.m as "rough" | "step")));
-  show("rough");
+  void localSlopeColumns(q(ctx.el, ".cell3d"), f, ctx);
+  await sweepRisk(q(ctx.el, ".m-rough"), L.hill, L.score.step, ctx);
 }
 
 async function sand(ctx: SlideCtx) {
@@ -421,68 +522,48 @@ async function sand(ctx: SlideCtx) {
   o.width = L.W;
   o.height = L.H;
   o.getContext("2d")!.drawImage(L.ortho, 0, 0);
-  await sweep(q(ctx.el, ".m-sand"), L.ortho, L.score.sand, 1800, ctx, 0.9);
+  await sweep(q(ctx.el, ".m-sand"), L.ortho, L.score.sand, 900, ctx, 0.9);
 }
 
-// ------------------------------------------------------------ 7: four scores → one safety map
-async function safety(ctx: SlideCtx) {
-  const L = await ready;
-  if (!ctx.alive()) return;
-  const box = q(ctx.el, ".combine");
-  box.classList.remove("merge");
-  const set = (sel: string, src: HTMLCanvasElement) => {
-    const cv = q<HTMLCanvasElement>(ctx.el, sel);
-    cv.width = L.W;
-    cv.height = L.H;
-    const c = cv.getContext("2d")!;
-    c.drawImage(L.hill, 0, 0);
-    c.globalAlpha = 0.85;
-    c.drawImage(src, 0, 0);
-  };
-  set(".c-tilt", L.score.tilt);
-  set(".c-rough", L.score.rough);
-  set(".c-step", L.score.step);
-  set(".c-sand", L.score.sand);
-  const safe = q<HTMLCanvasElement>(ctx.el, ".c-safe");
-  safe.width = L.W;
-  safe.height = L.H;
-  safe.getContext("2d")!.clearRect(0, 0, L.W, L.H);
-  const g = L.d.grid;
-  let blocked = 0;
-  for (let i = 0; i < g.size; i++) blocked += g.blocked[i];
-  q(ctx.el, ".s-read").textContent = tr(`No-go: ${((blocked / g.size) * 100).toFixed(1)}% of the cells`, `通行不可：全体の ${((blocked / g.size) * 100).toFixed(1)}%`);
-  if (!(await ctx.wait(1200))) return;
-  box.classList.add("merge");
-  if (!(await ctx.wait(700))) return;
-  await sweep(safe, L.hill, L.safety, 1400, ctx, 0.85);
+// ------------------------------------------------------------ 7: easy to locate, with good and bad ground shown together
+function drawBestMatch(cv: HTMLCanvasElement, m: Match) {
+  cv.width = cv.height = PATCH;
+  const c = cv.getContext("2d")!;
+  const img = c.createImageData(PATCH, PATCH);
+  const x0 = REACH + m.bestAt[0];
+  const y0 = REACH + m.bestAt[1];
+  for (let y = 0; y < PATCH; y++)
+    for (let x = 0; x < PATCH; x++) {
+      const v = m.gray[(y0 + y) * (PATCH + 2 * REACH) + x0 + x];
+      img.data.set([v, v, v, 255], (y * PATCH + x) * 4);
+    }
+  c.putImageData(img, 0, 0);
+  c.strokeStyle = m.best > 0.6 ? "#ff5a5a" : "#ffd166";
+  c.lineWidth = 2;
+  c.strokeRect(1, 1, PATCH - 2, PATCH - 2);
 }
 
-// ------------------------------------------------------------ 8: easy to locate, matched live
 async function loc(ctx: SlideCtx) {
   const L = await ready;
   if (!ctx.alive()) return;
-  const view = q<HTMLCanvasElement>(ctx.el, ".l-view");
-  const heat = q<HTMLCanvasElement>(ctx.el, ".l-heat");
-  const read = q(ctx.el, ".l-read");
-  const chips = all<HTMLButtonElement>(ctx.el, "[data-cell]");
-  let run = 0;
   const show = async (which: "rock" | "dune") => {
-    const my = ++run;
-    chips.forEach((b) => b.classList.toggle("on", b.dataset.cell === which));
     const i = L.cells[which];
     const m = match(cropGray(L.img, ...cellPixel(L.d.grid, i)));
-    read.textContent = "";
-    await playMatch(view, heat, m, ctx.reduced ? 0 : 1400, () => ctx.alive() && my === run);
-    if (my !== run || !ctx.alive()) return;
+    const view = q<HTMLCanvasElement>(ctx.el, `.l-${which}-view`);
+    const heat = q<HTMLCanvasElement>(ctx.el, `.l-${which}-heat`);
+    const look = q<HTMLCanvasElement>(ctx.el, `.l-${which}-look`);
+    const read = q(ctx.el, `.l-${which}-read`);
+    read.textContent = tr("comparing…", "比較中…");
+    await playMatch(view, heat, m, ctx.reduced ? 0 : 1400, ctx.alive);
+    if (!ctx.alive()) return;
+    drawBestMatch(look, m);
     read.innerHTML = tr(
-      `Closest look-alike ${m.best.toFixed(2)} · score of this cell <b>${L.d.grid.layers.loc[i].toFixed(2)}</b>`,
-      `一番似た別の場所 ${m.best.toFixed(2)} · このマスの点数 <b>${L.d.grid.layers.loc[i].toFixed(2)}</b>`,
+      `closest ${m.best.toFixed(2)} · uniqueness <b>${L.d.grid.layers.loc[i].toFixed(2)}</b>`,
+      `最類似 ${m.best.toFixed(2)} · 独特さ <b>${L.d.grid.layers.loc[i].toFixed(2)}</b>`,
     );
-    ctx.done();
   };
-  chips.forEach((b) => (b.onclick = () => void show(b.dataset.cell as "rock" | "dune")));
-  void show("rock");
-  await sweep(q(ctx.el, ".m-loc"), L.hill, L.loc, 2000, ctx, 0.85);
+  await Promise.all([show("rock"), show("dune"), sweep(q(ctx.el, ".m-loc"), L.hill, L.loc, 2000, ctx, 0.85)]);
+  if (ctx.alive()) ctx.done();
 }
 
 // ------------------------------------------------------------ 9: hematite, and what CRISM sees
@@ -890,7 +971,6 @@ startDeck({
   tilt: { enter: (c) => void tilt(c) },
   rough: { enter: (c) => void rough(c) },
   sand: { enter: (c) => void sand(c) },
-  safety: { enter: (c) => void safety(c) },
   loc: { enter: (c) => void loc(c) },
   hem: { enter: (c) => void hem(c) },
   energy: { enter: energy },

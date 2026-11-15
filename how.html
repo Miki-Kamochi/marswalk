@@ -127,18 +127,13 @@
       <section class="slide" data-slide="tilt">
         <div class="cap">
           <p class="kicker"><span data-l="en">Indicator 1 · Slope</span><span data-l="ja">指標① · 傾き</span></p>
-          <h2><span data-l="en">Fit a flat plane to each cell. How tilted is it?</span><span data-l="ja">マスに平らな板を当てる。どれだけ傾いている？</span></h2>
-          <p>
-            <span data-l="en">Up to <b>15°</b> counts as fine. From <b>20°</b> it is no-go: too steep to walk in a suit. On sand the limits are lower.</span>
-            <span data-l="ja"><b>15°</b>までは問題なし。<b>20°</b>からは通行不可（宇宙服では登れない）。砂地ではもっと低くなります。</span>
-          </p>
-          <p class="formula">score = 1 (≤15°) … 0 (≥20°)</p>
-          <p class="src"><span data-l="en">Same structure as GESTALT, the hazard check NASA's rovers used to drive themselves (Goldberg et al. 2002).</span><span data-l="ja">NASAの探査車が自動走行に使った危険判定GESTALTと同じ作り（Goldberg ほか 2002）。</span></p>
+          <h2><span data-l="en">GESTALT safety limits.<br>Wide-area slope.</span><span data-l="ja">GESTALTの安全基準、<br>広域の傾斜度</span></h2>
+          <p class="short-points"><span data-l="en">See the whole surface first.<br><b>20° or more = no-go.</b></span><span data-l="ja">地形全体の傾きを、まず見る。<br><b>20°以上は通行不可。</b></span></p>
         </div>
         <div class="vis">
           <div class="duo">
-            <canvas class="cell3d"></canvas>
-            <div class="mapbox"><canvas class="pix map m-tilt"></canvas><div class="legend"><span>no-go</span><i class="lg-safety"></i><span>OK</span></div></div>
+            <canvas class="cell3d tilt-columns"></canvas>
+            <div class="mapbox risk-map"><canvas class="pix map zoom-risk m-tilt"></canvas><div class="legend legend-big"><span>NO-GO</span><i class="lg-safety"></i><span>GO</span></div></div>
           </div>
         </div>
       </section>
@@ -146,20 +141,14 @@
       <!-- 5 -->
       <section class="slide" data-slide="rough">
         <div class="cap">
-          <p class="kicker"><span data-l="en">Indicators 2 and 3 · Roughness and steps</span><span data-l="ja">指標②③ · でこぼこ・段差</span></p>
-          <h2><span data-l="en">How far does the ground stray from the plane?</span><span data-l="ja">地面は板からどれだけずれている？</span></h2>
-          <p>
-            <span data-l="en"><b>Roughness</b> is the average gap between the ground and the plane: rocks and ridges you trip on. <b>Step</b> is the biggest jump between neighbouring points: a ledge you cannot step down.</span>
-            <span data-l="ja"><b>でこぼこ</b>は、地面と板のずれの平均。つまずく岩や起伏です。<b>段差</b>は、となり合う点の高さの最大の差。降りられない段です。</span>
-          </p>
-          <p class="formula">roughness: 0.1 m OK … 0.3 m no-go
-step:      0.3 m OK … 0.6 m no-go</p>
-          <div class="chips" data-interactive><button class="chip on" data-m="rough" type="button"><span data-l="en">Roughness</span><span data-l="ja">でこぼこ</span></button><button class="chip" data-m="step" type="button"><span data-l="en">Step</span><span data-l="ja">段差</span></button></div>
+          <p class="kicker"><span data-l="en">Indicators 2 and 3 · Local slope</span><span data-l="ja">指標②③ · 短距離の傾き</span></p>
+          <h2><span data-l="en">Compare each block with its neighbour.</span><span data-l="ja">隣の地面との、高さの差を見る。</span></h2>
+          <p class="short-points"><span data-l="en">A yellow bar is one local height difference.<br>Large jumps mean a ledge or rough ground.</span><span data-l="ja">黄色い棒が、隣との高低差。<br>差が大きい場所は、段差・でこぼこ。</span></p>
         </div>
         <div class="vis">
           <div class="duo">
-            <canvas class="cell3d"></canvas>
-            <div class="mapbox"><canvas class="pix map m-rough"></canvas><div class="legend"><span>no-go</span><i class="lg-safety"></i><span>OK</span></div></div>
+            <canvas class="cell3d local-columns"></canvas>
+            <div class="mapbox risk-map"><canvas class="pix map zoom-risk m-rough"></canvas><div class="legend legend-big"><span>NO-GO</span><i class="lg-safety"></i><span>GO</span></div></div>
           </div>
         </div>
       </section>
@@ -168,11 +157,8 @@ step:      0.3 m OK … 0.6 m no-go</p>
       <section class="slide" data-slide="sand">
         <div class="cap">
           <p class="kicker"><span data-l="en">Indicator 4 · Sand</span><span data-l="ja">指標④ · 砂地</span></p>
-          <h2><span data-l="en">Dark sand, found in the image.</span><span data-l="ja">画像から、黒っぽい砂地を見つける。</span></h2>
-          <p>
-            <span data-l="en">The Bagnold Dunes are dark basalt sand. Soft sand costs energy and you can sink in, so a sandy cell scores lower, and its slope limits drop to 8° / 15°.</span>
-            <span data-l="ja">バグノルド砂丘は黒い玄武岩の砂。やわらかい砂は体力を使い、足が沈むので、砂地のマスは点数が下がり、傾きの上限も8° / 15°に下がります。</span>
-          </p>
+          <h2><span data-l="en">Black ground covered in sand<br>→ a place that traps your feet</span><span data-l="ja">砂が積もった黒い箇所<br>→足を取られる危険地帯</span></h2>
+          <ul class="plain-points"><li><span data-l="en">Stricter GESTALT limits</span><span data-l="ja">GESTALTを強化</span></li><li><span data-l="en">Slopes only up to 15°</span><span data-l="ja">斜面は15°まで</span></li><li><span data-l="en">Safety score reduced</span><span data-l="ja">安全性減点</span></li></ul>
         </div>
         <div class="vis">
           <div class="duo">
@@ -183,45 +169,19 @@ step:      0.3 m OK … 0.6 m no-go</p>
       </section>
 
       <!-- 7 -->
-      <section class="slide" data-slide="safety">
-        <div class="cap">
-          <p class="kicker"><span data-l="en">Combine · Safety</span><span data-l="ja">まとめる · 安全度</span></p>
-          <h2><span data-l="en">A cell is only as safe as its worst number.</span><span data-l="ja">マスの安全度は、一番悪い指標で決まる。</span></h2>
-          <p>
-            <span data-l="en">A gentle slope does not make up for a ledge. So the safety of a cell is the <b>lowest</b> of its four scores. Cells at 0 are <b>no-go</b>: no route ever crosses them.</span>
-            <span data-l="ja">ゆるい坂でも、段差があれば危ない。だからマスの安全度は4つの点数の<b>最小値</b>。0のマスは<b>通行不可</b>で、どのルートも通りません。</span>
-          </p>
-          <p class="formula">safety = min(slope, roughness, step, sand)</p>
-          <p class="readout s-read"></p>
-        </div>
-        <div class="vis">
-          <div class="combine">
-            <canvas class="pix c4 c-tilt"></canvas>
-            <canvas class="pix c4 c-rough"></canvas>
-            <canvas class="pix c4 c-step"></canvas>
-            <canvas class="pix c4 c-sand"></canvas>
-            <canvas class="pix c-safe"></canvas>
-          </div>
-        </div>
-      </section>
-
-      <!-- 8 -->
       <section class="slide" data-slide="loc">
         <div class="cap">
           <p class="kicker"><span data-l="en">Indicator 5 · Easy to locate</span><span data-l="ja">指標⑤ · 迷いにくさ</span></p>
-          <h2><span data-l="en">Can a photo of the ground tell you where you are?</span><span data-l="ja">足元の写真で、位置が分かるか？</span></h2>
-          <p>
-            <span data-l="en">For every cell, cut the 32 m patch a suit camera would see and slide it over its surroundings, up to 24 m away. Good ground has <b>texture</b> and <b>no look-alike</b> nearby.</span>
-            <span data-l="ja">マスごとに、宇宙服のカメラに写る32 m四方を切り出し、周り24 mまでずらして重ねます。<b>模様があって</b>、近くに<b>似た場所がない</b>ほど良い場所です。</span>
-          </p>
-          <p class="formula">score = texture × (1 − best look-alike)
-photo fix works from 0.4</p>
-          <div class="chips" data-interactive><button class="chip on" data-cell="rock" type="button"><span data-l="en">Rock</span><span data-l="ja">岩</span></button><button class="chip" data-cell="dune" type="button"><span data-l="en">Dunes</span><span data-l="ja">砂丘</span></button></div>
+          <h2><span data-l="en">Is this pattern unique?</span><span data-l="ja">その模様は、ここにしかないか？</span></h2>
+          <ul class="plain-points"><li><span data-l="en">Take one cell</span><span data-l="ja">一マス抜粋</span></li><li><span data-l="en">Compare its pattern with the surroundings</span><span data-l="ja">周囲と模様を比較</span></li><li><span data-l="en">Score how distinctive it is</span><span data-l="ja">独特さを採点</span></li></ul>
           <p class="src"><span data-l="en">Our idea, using the same principle as Perseverance's localization (template matching). A prediction from the orbital image only.</span><span data-l="ja">私たちの提案。パーサヴィアランスの位置推定と同じ原理（テンプレートマッチング）。軌道からの画像だけによる予測です。</span></p>
         </div>
         <div class="vis">
           <div class="trio">
-            <div class="mt"><canvas class="pix l-view"></canvas><canvas class="pix l-heat"></canvas><p class="readout l-read"></p></div>
+            <div class="loc-compare">
+              <article class="loc-case rock"><h3><span data-l="en">Distinct rock</span><span data-l="ja">理想的な岩石</span></h3><div class="loc-images"><figure><canvas class="pix l-rock-view"></canvas><figcaption><span data-l="en">search</span><span data-l="ja">周囲を探索</span></figcaption></figure><figure><canvas class="pix l-rock-heat"></canvas><figcaption><span data-l="en">similarity</span><span data-l="ja">類似度</span></figcaption></figure><figure><canvas class="pix l-rock-look"></canvas><figcaption><span data-l="en">closest match</span><span data-l="ja">最類似地点</span></figcaption></figure></div><p class="readout l-rock-read"></p></article>
+              <article class="loc-case dune"><h3><span data-l="en">Repetitive dune</span><span data-l="ja">駄目な砂丘</span></h3><div class="loc-images"><figure><canvas class="pix l-dune-view"></canvas><figcaption><span data-l="en">search</span><span data-l="ja">周囲を探索</span></figcaption></figure><figure><canvas class="pix l-dune-heat"></canvas><figcaption><span data-l="en">similarity</span><span data-l="ja">類似度</span></figcaption></figure><figure><canvas class="pix l-dune-look"></canvas><figcaption><span data-l="en">closest match</span><span data-l="ja">最類似地点</span></figcaption></figure></div><p class="readout l-dune-read"></p></article>
+            </div>
             <div class="mapbox"><canvas class="pix map m-loc"></canvas><div class="legend"><span><span data-l="en">easy to get lost</span><span data-l="ja">迷いやすい</span></span><i class="lg-loc"></i><span><span data-l="en">easy to locate</span><span data-l="ja">迷いにくい</span></span></div></div>
           </div>
         </div>
