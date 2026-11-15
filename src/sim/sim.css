@@ -5,8 +5,25 @@ body.planner {
   inset: 0;
   overflow: hidden;
   color: var(--ui-text);
-  background: var(--ui-bg);
+  /* block view: the home screen's look, a warm glow behind the block and Mars-red haze at the bottom */
+  background:
+    radial-gradient(ellipse 46% 52% at calc(50% + var(--panel-w) / 2) 55%, rgba(255, 112, 52, 0.13), rgba(255, 112, 52, 0) 70%),
+    linear-gradient(to top, rgba(120, 50, 20, 0.28), rgba(120, 50, 20, 0) 38%),
+    #000;
   --panel-w: 384px;
+}
+/* surroundings view: the 3D scene fills the screen with its own background */
+body.planner.scene-land .stars {
+  display: none;
+}
+/* the home screen's pixel stars around the block */
+.stars {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  image-rendering: pixelated;
 }
 #map {
   position: absolute;
@@ -1053,4 +1070,32 @@ dialog#info a {
   font-size: 12px;
   font-weight: 600;
   color: var(--danger);
+}
+
+/* view: block or surroundings */
+.scene-seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin: 0 0 10px;
+  padding: 3px;
+  background: rgba(236, 228, 218, 0.05);
+  border-radius: 99px;
+}
+.scene-seg button {
+  padding: 6px 10px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ui-text-2);
+  background: none;
+  border: 0;
+  border-radius: 99px;
+}
+.scene-seg button:hover {
+  color: var(--ui-text);
+}
+.scene-seg button[aria-checked="true"] {
+  color: var(--ui-text);
+  background: var(--ui-hover);
+  box-shadow: inset 0 0 0 1px rgba(255, 107, 44, 0.55);
 }

@@ -13,6 +13,7 @@ import { nextLocalTime } from "../nav/sun";
 import type { NavGrid } from "../plan/grid";
 import type { Profile, Route } from "../plan/planner";
 import { World } from "../world/world";
+import { buildBlock } from "./block";
 
 /** routes float this far above the ground, metres (the facets are 16 m wide) */
 const LIFT = 4;
@@ -23,7 +24,13 @@ const ALT = "#cdbfae";
 /** the same walk without a plan (sim.css .naive uses the same colours) */
 const NAIVE_LINE = "#ff6464";
 const NAIVE_ROVER = "#7cc8ff";
-const SPACE = new THREE.Color(0x0d0b0a);
+/** what the far terrain fades into: the near-black of the page behind the stars (block view) */
+const SPACE = new THREE.Color(0x050403);
+/** the background of the surroundings view: the land fades into a warm near-black */
+const DUSK = new THREE.Color(0x0d0b0a);
+
+/** How the map sits on screen: a cut block in space, or with the land around it out to the crater rim. */
+export type SceneMode = "block" | "land";
 const TILT_3D = 0.95; // radians from straight down
 
 export interface ViewEvents {
@@ -132,6 +139,9 @@ export class View3D {
   private places = new THREE.Group();
   private traverse = new THREE.Group();
   private naive = new THREE.Group();
+  private block = new THREE.Group();
+  private mode: SceneMode = "block";
+  private landBg = new THREE.Color();
   private pending = false;
   private utc: number;
   private el: HTMLElement;
@@ -152,7 +162,8 @@ export class View3D {
     this.world = world;
     this.grid = grid;
     this.ev = ev;
-    const renderer = (this.renderer = new THREE.WebGLRenderer({ antialias: !low, logarithmicDepthBuffer: true }));
+    // transparent: the page's star field shows around the block
+    const renderer = (this.renderer = new THREE.WebGLRenderer({ antialias: !low, alpha: true, logarithmicDepthBuffer: true }));
     renderer.setPixelRatio(Math.min(devicePixelRatio, low ? 1.5 : 2));
     el.appendChild(renderer.domElement);
     this.camera = new THREE.PerspectiveCamera(40, 1, 2, 400000);
@@ -184,7 +195,10 @@ export class View3D {
     world.playMesh.traverse((o) => {
       if (o instanceof THREE.Mesh) o.material = mat;
     });
-    world.scene.add(this.routes, this.naive, this.ends, this.places, this.traverse);
+    this.block = buildBlock(world.play, world.frame, FACET);
+    world.scene.add(this.block, this.routes, this.naive, this.ends, this.places, this.traverse);
+    world.sunDisc.visible = false;
+    this.setScene("block");
 
     for (const p of world.positions.places) {
       if (p.kind !== "stop") continue;
@@ -210,10 +224,12 @@ export class View3D {
     controls.maxDistance = 11000;
     controls.zoomToCursor = true;
     controls.addEventListener("change", () => this.request());
-    // start north-up over the middle of the map
-    const c = world.worldPos(base.easting + 600, base.northing - 1300, 0);
+    // start with the whole block in view, turned a little so two of its sides show
+    const pb = world.meta.frame.play;
+    const c = world.worldPos((pb.west + pb.east) / 2, (pb.north + pb.south) / 2, 0);
+    c.y = world.frame.toWorldY(world.meta.frame.origin.elevation);
     controls.target.copy(c);
-    this.camera.position.copy(this.offset(c, 3600, TILT_3D, 0));
+    this.camera.position.copy(this.offset(c, 6400, TILT_3D, -0.45));
 
     // a click that is not a drag picks the ground under the pointer
     let down: { x: number; y: number } | null = null;
@@ -448,6 +464,14 @@ export class View3D {
     this.request();
   }
 
+  /** Block (the area alone, cut out, in space) or land (with its surroundings out to the crater rim). */
+  setScene(mode: SceneMode): void {
+    this.mode = mode;
+    this.block.visible = mode === "block";
+    this.world.backdrop.visible = mode === "land";
+    this.request();
+  }
+
   setEnds(home: number, dest: number): void {
     this.clear(this.ends);
     const at = (cell: number, s: THREE.Sprite) => {
@@ -471,6 +495,11 @@ export class View3D {
     if (!w || !h) return;
     this.renderer.setSize(w, h);
     this.camera.aspect = w / h;
+    // centre the map in the space right of the plan panel (on phones the panel is a bottom sheet)
+    const card = document.getElementById("card");
+    const shift = card && w > 760 ? card.getBoundingClientRect().right / 2 : 0;
+    if (shift) this.camera.setViewOffset(w, h, -shift, 0, w, h);
+    else this.camera.clearViewOffset();
     this.camera.updateProjectionMatrix();
     this.request();
   }
@@ -502,11 +531,19 @@ export class View3D {
     const g = this.world.groundElevation(f.toEasting(cam.x), f.toNorthing(cam.z));
     if (!Number.isNaN(g)) cam.y = Math.max(cam.y, f.toWorldY(g) + 12);
     this.world.setSky(this.utc, f.toEasting(cam.x), f.toNorthing(cam.z), 0, this.camera);
-    // the planner floats the terrain in the same near-black as the home screen, not in sky haze
-    (this.world.scene.background as THREE.Color).copy(SPACE);
-    this.world.fog.color.copy(SPACE);
-    // thicker than the walk preview's haze: the far backdrop fades out, the planning area stays clear
-    this.world.fog.density = 0.0001;
+    if (this.mode === "block") {
+      // the block sits in space, like the home screen's globe; a touch of fog darkens its far side
+      this.world.scene.background = null;
+      this.world.fog.color.copy(SPACE);
+      this.world.fog.density = 0.00006;
+    } else {
+      // the land around the area fades out with distance; the planning area stays clear
+      // our own colour object: setSky above writes into whatever Color the background holds
+      this.landBg.copy(DUSK);
+      this.world.scene.background = this.landBg;
+      this.world.fog.color.copy(DUSK);
+      this.world.fog.density = 0.0001;
+    }
     this.renderer.render(this.world.scene, this.camera);
     this.ev.onCamera(this.heading(), this.flat);
     if (moving || busy) this.request();

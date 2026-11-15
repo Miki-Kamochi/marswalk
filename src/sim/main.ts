@@ -10,13 +10,14 @@ import { DEFAULTS, type PlanConfig } from "../plan/config";
 import { cellElevations, decodeNav, NavGrid } from "../plan/grid";
 import { Planner, type Profile, type Route } from "../plan/planner";
 import { initLang, tr } from "../site/lang";
+import { drawStars } from "../site/stars";
 import { attachPlaceSearch, searchable } from "../site/placeSearch";
 import { revealed } from "../site/reveal";
 import { getProject, newProjectId, saveProject, type Project } from "../site/projects";
 import { HEMATITE, makeCanvas, NO_GO, paintLimit, paintOverlay, SAFETY, css, locStops, type OverlayId } from "./overlays";
 import { drawProfile } from "./profile";
 import { INFO, limiterName, placeName, profileName, t } from "./text";
-import { View3D } from "./view3d";
+import { View3D, type SceneMode } from "./view3d";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
@@ -51,6 +52,7 @@ interface Naive {
 
 async function main() {
   initLang();
+  drawStars();
   const params = new URLSearchParams(location.search);
   const cfg: PlanConfig = { ...DEFAULTS };
   // a saved plan opens in its own area
@@ -678,6 +680,32 @@ async function main() {
   const hemTile = document.querySelector<HTMLElement>('.tile[data-layer="hematite"]');
   if (hemTile && !meta.layers.hematite) hemTile.hidden = true;
 
+  // ---------------------------------------------------------------- view: block or surroundings
+  // remembered per browser; a convenience only, so storage failures just fall back to the block
+  let scene: SceneMode = "block";
+  try {
+    if (localStorage.getItem("marswalk-scene") === "land") scene = "land";
+  } catch {
+    // no storage: start with the block
+  }
+  function renderScene() {
+    document.body.classList.toggle("scene-land", scene === "land");
+    for (const b of document.querySelectorAll<HTMLElement>("[data-scene]")) b.setAttribute("aria-checked", String(b.dataset.scene === scene));
+    view?.setScene(scene);
+  }
+  for (const b of document.querySelectorAll<HTMLElement>("[data-scene]")) {
+    b.addEventListener("click", () => {
+      scene = b.dataset.scene as SceneMode;
+      try {
+        localStorage.setItem("marswalk-scene", scene);
+      } catch {
+        // the choice lasts for this page only
+      }
+      renderScene();
+    });
+  }
+  renderScene();
+
   // ---------------------------------------------------------------- start
   renderSliders();
   renderLayers();
@@ -703,6 +731,7 @@ async function main() {
     return;
   }
   $("boot").remove();
+  renderScene();
   // sim.html?layer=safety|loc|hematite opens with that heat map
   const layer = params.get("layer");
   if (layer === "safety" || layer === "loc" || (layer === "hematite" && meta.layers.hematite)) state.overlay = layer;

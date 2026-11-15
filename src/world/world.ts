@@ -28,11 +28,13 @@ export class World {
   readonly fog = new THREE.FogExp2(HAZE, CLEAR_FOG);
   readonly sunLight = new THREE.DirectionalLight(0xfff0dc, 2.6);
   readonly skyLight = new THREE.HemisphereLight(0xe9c7a4, 0x5c3b28, 1.0);
-  private sunDisc: THREE.Sprite;
+  readonly sunDisc: THREE.Sprite;
   /** current sun direction in the sky */
   sun = { azimuth: 0, elevation: 45 };
   /** the drawn play-area terrain (the route simulator recolours it with map layers) */
   playMesh = new THREE.Group();
+  /** the land around it out to the crater rim (the planner can hide it and show a block instead) */
+  readonly backdrop = new THREE.Group();
 
   private constructor(
     readonly meta: Meta,
@@ -79,8 +81,8 @@ export class World {
     const fetchB = meta.frame.fetch;
     const k = lowDetail ? 2 : 1;
     w.playMesh = buildTerrain(play, frame, { step, color: rasterColor(color, elevationTint), chunkCells: 48 });
-    w.scene.add(
-      w.playMesh,
+    w.scene.add(w.playMesh, w.backdrop);
+    w.backdrop.add(
       buildTerrain(surround, frame, {
         step: 2 * k,
         color: rasterColor(surroundImg, elevationTint),
@@ -169,7 +171,7 @@ export class World {
     // haze: clear-day view of tens of km down to a few tens of metres in the storm
     this.fog.density = CLEAR_FOG * Math.pow(0.045 / CLEAR_FOG, dust);
     const sky = HAZE.clone().multiplyScalar(0.35 + 0.65 * day).lerp(new THREE.Color(0x8a5a36), dust * 0.75);
-    (this.scene.background as THREE.Color).copy(sky);
+    if (this.scene.background instanceof THREE.Color) this.scene.background.copy(sky);
     this.fog.color.copy(sky);
   }
 }
