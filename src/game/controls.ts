@@ -16,6 +16,8 @@ const sensorEuler = new THREE.Euler();
 const sensorQuat = new THREE.Quaternion();
 const screenQuat = new THREE.Quaternion();
 const lookEuler = new THREE.Euler();
+const candQuat = new THREE.Quaternion();
+const candEuler = new THREE.Euler();
 
 /**
  * First-person input. Desktop: click to capture the mouse, WASD / arrows to walk.
@@ -138,10 +140,23 @@ export class Controls {
   private onOrient = (e: DeviceOrientationEvent) => {
     if (this.mode === "fpv" || e.alpha === null || e.beta === null || e.gamma === null) return;
     this.motion = true;
-    const angle = screen.orientation?.angle ?? Number((window as unknown as { orientation?: number }).orientation ?? 0);
+    // How the screen is turned in the device. iPad Safari reports this wrongly (it acts as a desktop
+    // browser), so it is not asked: from the shape of the window there are two possibilities
+    // (portrait: 0° or 180°, landscape: 90° or 270°), and the right one is the one that keeps the
+    // horizon level. They differ only by a half turn about the view direction, so heading and
+    // tilt are the same either way; only which way is "up" on the screen changes.
     sensorEuler.set(e.beta * DEG, e.alpha * DEG, -e.gamma * DEG, "YXZ");
-    sensorQuat.setFromEuler(sensorEuler).multiply(SENSOR_TILT).multiply(screenQuat.setFromAxisAngle(Z_AXIS, -angle * DEG));
-    lookEuler.setFromQuaternion(sensorQuat, "YXZ");
+    sensorQuat.setFromEuler(sensorEuler).multiply(SENSOR_TILT);
+    const base = innerWidth > innerHeight ? 90 : 0;
+    let best = Infinity;
+    for (const angle of [base, base + 180]) {
+      candQuat.copy(sensorQuat).multiply(screenQuat.setFromAxisAngle(Z_AXIS, -angle * DEG));
+      candEuler.setFromQuaternion(candQuat, "YXZ");
+      if (Math.abs(candEuler.z) < best) {
+        best = Math.abs(candEuler.z);
+        lookEuler.copy(candEuler);
+      }
+    }
     const raw = -lookEuler.y;
     if (this.recentreNext) {
       this.yawOffset = this.yaw - raw;
