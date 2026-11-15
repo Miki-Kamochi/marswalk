@@ -118,9 +118,18 @@ export function startDeck(slides: Record<string, Slide>): void {
   function next() {
     const p = pending();
     if (p.length) {
-      p[0].classList.add("shown");
-      const all = Array.from(els[index].querySelectorAll("[data-reveal]"));
-      slides[els[index].dataset.slide ?? ""]?.reveal?.(all.indexOf(p[0]), ctx!);
+      // elements sharing a data-reveal value appear together (a picture and its line of text)
+      const key = p[0].dataset.reveal;
+      const group = key ? p.filter((e) => e.dataset.reveal === key) : [p[0]];
+      group.forEach((e) => e.classList.add("shown"));
+      // reveal(i): i counts groups, in the order they appear
+      const keys: string[] = [];
+      for (const e of els[index].querySelectorAll<HTMLElement>("[data-reveal]")) {
+        const k = e.dataset.reveal || `#${keys.length}`;
+        if (!keys.includes(k)) keys.push(k);
+        if (e === p[0]) break;
+      }
+      slides[els[index].dataset.slide ?? ""]?.reveal?.(keys.length - 1, ctx!);
       renderBar();
       return;
     }

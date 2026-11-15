@@ -24,7 +24,10 @@ main.deck {
   grid-template-columns: minmax(280px, 400px) minmax(0, 1fr);
   gap: clamp(20px, 4vw, 56px);
   align-items: center;
-  padding: 8px max(var(--edge), 3vw) 8px;
+  /* centred, with room on both sides */
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 8px max(var(--edge), 6vw) 8px;
   visibility: hidden;
   opacity: 0;
 }
@@ -71,6 +74,8 @@ main.deck {
   line-height: 1.18;
   letter-spacing: -0.02em;
   text-wrap: balance;
+  /* Japanese breaks between phrases, not inside words */
+  word-break: auto-phrase;
 }
 .cap p {
   margin: 0 0 12px;

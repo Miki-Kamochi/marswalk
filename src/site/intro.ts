@@ -10,15 +10,10 @@ import { clamp01, ease, startDeck, type SlideCtx } from "./steps";
 initLang();
 drawStars();
 
-const q = <T extends Element = HTMLElement>(root: ParentNode, sel: string) => root.querySelector<T & Element>(sel) as T;
+const q = <T extends Element = HTMLElement>(root: ParentNode, sel: string) => root.querySelector(sel) as unknown as T;
 const SVG = "http://www.w3.org/2000/svg";
 
-// ------------------------------------------------------------ shared data, loaded once in the background
-/** time "spent working out where you are" on the slides before the oxygen one, in mission minutes */
-let lostMinutes = 0;
-let lostFrom = 0;
-let callMinutes = 0;
-
+// ------------------------------------------------------------ data loaded once in the background
 const ortho = new Promise<HTMLImageElement>((resolve, reject) => {
   const img = new Image();
   img.onload = () => resolve(img);
@@ -34,183 +29,129 @@ const navGrid = (async () => {
 })();
 const cells = navGrid.then(pickCells);
 
-// ------------------------------------------------------------ 2: the phone finds no satellites
-function phone(ctx: SlideCtx) {
-  lostFrom = performance.now();
-  const el = ctx.el;
-  const btn = q<HTMLButtonElement>(el, ".ph-btn");
-  const status = q(el, ".ph-status");
-  const ring = q(el, ".ph-ring");
-  el.classList.remove("searching", "failed");
-  status.textContent = tr("Ready", "待機中");
-  btn.disabled = false;
-  btn.onclick = async () => {
-    btn.disabled = true;
-    el.classList.add("searching");
-    for (let s = 0; s <= 6; s++) {
-      status.textContent = tr(`Searching for satellites… ${s * 5}s`, `衛星を探しています… ${s * 5}秒`);
-      if (!(await ctx.wait(450))) return;
-    }
-    el.classList.remove("searching");
-    el.classList.add("failed");
-    ring.textContent = "";
-    status.textContent = tr("No signal · 0 satellites found", "圏外 · 見つかった衛星 0機");
-    btn.disabled = false;
-    revealNext(el);
-    ctx.done();
-  };
-}
-
-/** show the slide's next hidden line (the same thing the Next button does first) */
+/** Show the slide's next hidden group (what the Next button does first). */
 function revealNext(el: HTMLElement) {
-  el.querySelector("[data-reveal]:not(.shown)")?.classList.add("shown");
-}
-
-// ------------------------------------------------------------ 3: a compass with nothing to point at
-function compass(ctx: SlideCtx) {
-  const el = ctx.el;
-  const svg = q<SVGSVGElement>(el, "svg.compass");
-  const dial = q<SVGGElement>(el, ".cp-dial");
-  const needle = q<SVGGElement>(el, ".cp-needle");
-  const read = q(el, ".cp-read");
-  const ticks = q<SVGGElement>(el, ".cp-ticks");
-  if (!ticks.childElementCount) {
-    for (let a = 0; a < 360; a += 10) {
-      const l = document.createElementNS(SVG, "line");
-      const r1 = a % 90 === 0 ? 112 : 118;
-      l.setAttribute("x1", String(r1 * Math.sin((a * Math.PI) / 180)));
-      l.setAttribute("y1", String(-r1 * Math.cos((a * Math.PI) / 180)));
-      l.setAttribute("x2", String(126 * Math.sin((a * Math.PI) / 180)));
-      l.setAttribute("y2", String(-126 * Math.cos((a * Math.PI) / 180)));
-      ticks.appendChild(l);
-    }
-  }
-  let heading = 0;
-  let turned = 0;
-  let dragging = false;
-  let lastA = 0;
-  const angleAt = (e: PointerEvent) => {
-    const r = svg.getBoundingClientRect();
-    return (Math.atan2(e.clientX - (r.left + r.width / 2), -(e.clientY - (r.top + r.height / 2))) * 180) / Math.PI;
-  };
-  svg.onpointerdown = (e) => {
-    dragging = true;
-    lastA = angleAt(e);
-    svg.setPointerCapture(e.pointerId);
-  };
-  svg.onpointermove = (e) => {
-    if (!dragging) return;
-    const a = angleAt(e);
-    let d = a - lastA;
-    if (d > 180) d -= 360;
-    if (d < -180) d += 360;
-    heading += d;
-    turned += Math.abs(d);
-    lastA = a;
-    if (turned > 120) {
-      revealNext(el);
-      ctx.done();
-    }
-  };
-  svg.onpointerup = () => (dragging = false);
-  // the needle drifts at random: there is no field to line up with
-  let n = 0;
-  let nv = 0;
-  void ctx.frames((t) => {
-    nv += (Math.sin(t / 900) * 0.6 + Math.sin(t / 377) * 0.9 + (Math.random() - 0.5) * 2) * 0.08;
-    nv *= 0.96;
-    n += nv;
-    dial.setAttribute("transform", `rotate(${-heading})`);
-    needle.setAttribute("transform", `rotate(${n})`);
-    read.textContent = tr("Needle: no steady direction", "針：一定の方向を指さない");
+  const first = el.querySelector<HTMLElement>("[data-reveal]:not(.shown)");
+  if (!first) return;
+  const key = first.dataset.reveal;
+  el.querySelectorAll<HTMLElement>("[data-reveal]:not(.shown)").forEach((e) => {
+    if (e === first || (key && e.dataset.reveal === key)) e.classList.add("shown");
   });
 }
 
-// ------------------------------------------------------------ 4: a message to Earth and back
-function earth(ctx: SlideCtx) {
-  const el = ctx.el;
-  const au = q<HTMLInputElement>(el, ".call-au");
-  const mars = q<SVGCircleElement>(el, ".call-mars");
-  const marsT = q<SVGTextElement>(el, ".call-mars-t");
-  const line = q<SVGLineElement>(el, ".call-line");
-  const dot = q<SVGCircleElement>(el, ".call-dot");
-  const delayEl = q(el, ".call-delay");
-  const clock = q(el, ".call-clock");
-  const state = q(el, ".call-state");
-  const send = q<HTMLButtonElement>(el, ".call-send");
-  const x = () => 150 + ((Number(au.value) - 0.38) / (2.67 - 0.38)) * 420;
-  const delay = () => (Number(au.value) * 499) / 60; // light minutes
-  const fmt = (min: number) => `${String(Math.floor(min)).padStart(2, "0")}:${String(Math.floor((min % 1) * 60)).padStart(2, "0")}`;
-  const layout = () => {
-    const mx = x();
-    mars.setAttribute("cx", String(mx));
-    marsT.setAttribute("x", String(mx));
-    line.setAttribute("x2", String(mx));
-    dot.setAttribute("cx", String(mx));
-    delayEl.textContent = tr(`${Number(au.value).toFixed(2)} AU · one way ${delay().toFixed(1)} min`, `${Number(au.value).toFixed(2)} 天文単位 · 片道 ${delay().toFixed(1)} 分`);
-  };
-  au.oninput = layout;
-  layout();
-  clock.textContent = "00:00";
-  state.textContent = "";
-  send.disabled = false;
-  send.onclick = async () => {
-    send.disabled = true;
-    au.disabled = true;
-    const d = delay();
-    // 1 second on screen = 3 minutes
-    const each = (d / 3) * 1000;
-    const mx = x();
-    await ctx.frames((t) => {
-      const k = Math.min(2, t / each);
-      const pos = k <= 1 ? mx + (70 - mx) * k : 70 + (mx - 70) * (k - 1);
-      dot.setAttribute("cx", String(pos));
-      clock.textContent = fmt(k * d);
-      state.textContent = k < 1 ? tr("Your message is on its way to Earth…", "メッセージが地球へ向かっている…") : k < 2 ? tr("Earth answers. Waiting for the reply…", "地球が返信。返事を待っている…") : "";
-      return k < 2;
-    });
-    if (!ctx.alive()) return;
-    callMinutes = 2 * d;
-    state.textContent = tr(`Reply received after ${fmt(2 * d)}. You have walked on since asking.`, `返事が届いたのは ${fmt(2 * d)} 後。聞いたときの場所から、もう歩いている。`);
-    send.disabled = false;
-    au.disabled = false;
-    revealNext(el);
-    ctx.done();
-  };
+function ticks(g: SVGGElement, r0: number, r1: number, every = 30) {
+  if (g.childElementCount) return;
+  for (let a = 0; a < 360; a += every) {
+    const l = document.createElementNS(SVG, "line");
+    const s = Math.sin((a * Math.PI) / 180);
+    const c = Math.cos((a * Math.PI) / 180);
+    l.setAttribute("x1", String(r0 * s));
+    l.setAttribute("y1", String(-r0 * c));
+    l.setAttribute("x2", String(r1 * s));
+    l.setAttribute("y2", String(-r1 * c));
+    g.appendChild(l);
+  }
 }
 
-// ------------------------------------------------------------ 5: the oxygen used while being unsure
-function oxygen(ctx: SlideCtx) {
-  if (lostFrom) lostMinutes = (performance.now() - lostFrom) / 1000;
-  // what the walk-through cost: every real second counted as a mission minute, plus the call
-  const minutes = Math.round(Math.min(150, Math.max(20, lostMinutes + callMinutes)));
-  const tankMin = (DEFAULTS.tankJoules / 250 / 60) | 0; // a full tank at a steady walk, minutes
-  const share = minutes / tankMin;
+// ------------------------------------------------------------ 2: four problems, each animates when it appears
+function problems(ctx: SlideCtx) {
   const el = ctx.el;
-  const fill = q<SVGCircleElement>(el, ".g-fill");
-  const num = q<SVGTextElement>(el, ".g-num");
-  const C = 2 * Math.PI * 92;
-  fill.style.strokeDasharray = `${C}`;
-  q(el, ".ox-text").innerHTML = tr(
-    `Working out where you are just took you about <b>${minutes} minutes</b>. A full suit tank lasts about ${Math.round(tankMin / 60)} hours of walking: that is <b>${Math.round(share * 100)}%</b> of it gone.`,
-    `ここまで位置を確かめようとして、約<b>${minutes}分</b>かかった。宇宙服の酸素は歩き続けて約${Math.round(tankMin / 60)}時間分。その<b>${Math.round(share * 100)}%</b>を使ったことになる。`,
-  );
+  const phone = q(el, ".mini-phone");
+  phone.classList.remove("searching", "failed");
+  q(el, ".mp-status").textContent = "";
+  ticks(q<SVGGElement>(el, ".cp-ticks"), 46, 52);
+  q(el, ".mg-num").textContent = "100%";
+  const fill = q<SVGCircleElement>(el, ".q-o2 .g-fill");
+  fill.style.strokeDasharray = `${2 * Math.PI * 48}`;
+  fill.style.strokeDashoffset = "0";
+}
+function problemsReveal(i: number, ctx: SlideCtx) {
+  const el = ctx.el;
+  if (i === 0) {
+    // the phone searches, and finds nothing
+    const phone = q(el, ".mini-phone");
+    const status = q(el, ".mp-status");
+    phone.classList.add("searching");
+    void ctx.frames((t) => {
+      if (t < 2600) status.textContent = tr(`Searching… ${Math.floor(t / 400) * 5}s`, `衛星を探索中… ${Math.floor(t / 400) * 5}秒`);
+      else {
+        phone.classList.remove("searching");
+        phone.classList.add("failed");
+        status.textContent = tr("0 satellites", "衛星 0機");
+        return false;
+      }
+    });
+  } else if (i === 1) {
+    // the needle wanders: there is no field to line up with
+    const needle = q<SVGGElement>(el, ".mc-needle");
+    let n = 0;
+    let v = 0;
+    void ctx.frames((t) => {
+      v += (Math.sin(t / 800) * 0.6 + Math.sin(t / 333) + (Math.random() - 0.5) * 2) * 0.1;
+      v *= 0.95;
+      n += v;
+      needle.setAttribute("transform", `rotate(${n})`);
+    });
+  } else if (i === 2) {
+    // a message out and back; 1 second on screen = 3 minutes (12.5 min each way at 1.5 AU)
+    const dot = q<SVGCircleElement>(el, ".mc-dot");
+    const clock = q<SVGTextElement>(el, ".mc-clock");
+    const each = 12.5;
+    const msEach = (each / 3) * 1000;
+    void ctx.frames((t) => {
+      const k = (t / msEach) % 2.6;
+      const x = k <= 1 ? 196 - 172 * k : k <= 2 ? 24 + 172 * (k - 1) : 196;
+      dot.setAttribute("cx", String(x));
+      const min = Math.min(2, k) * each;
+      clock.textContent = `${String(Math.floor(min)).padStart(2, "0")}:${String(Math.floor((min % 1) * 60)).padStart(2, "0")}${k > 2 ? tr(" reply", " 返信") : ""}`;
+    });
+  } else if (i === 3) {
+    // the tank keeps draining while you are unsure
+    const fill = q<SVGCircleElement>(el, ".q-o2 .g-fill");
+    const num = q<SVGTextElement>(el, ".mg-num");
+    const C = 2 * Math.PI * 48;
+    void ctx.frames((t) => {
+      const left = 1 - 0.3 * clamp01(t / 12000);
+      fill.style.strokeDashoffset = `${C * (1 - left)}`;
+      fill.style.stroke = left < 0.8 ? "#ffc75a" : "#5fd3a0";
+      num.textContent = `${Math.round(left * 100)}%`;
+    });
+  }
+}
+
+// ------------------------------------------------------------ 3: Apollo 14, from Earth to the Moon
+function apolloIntro(ctx: SlideCtx) {
+  const svg = q<SVGSVGElement>(ctx.el, ".rocket-svg");
+  const stars = Array.from({ length: 40 }, (_, i) => `<circle cx="${(i * 97) % 400}" cy="${(i * 53) % 420}" r="${i % 7 === 0 ? 1.6 : 0.9}" class="rk-star"/>`).join("");
+  svg.innerHTML = `${stars}
+    <circle cx="70" cy="336" r="44" class="rk-earth"/>
+    <path d="M84 294 C 130 190 230 150 290 112" class="rk-path"/>
+    <circle cx="330" cy="78" r="38" class="rk-moon"/>
+    <circle cx="318" cy="70" r="7" class="rk-crater"/><circle cx="342" cy="92" r="5" class="rk-crater"/>
+    <g class="rk-ship"><path d="M0 -22 C7 -14 8 -2 7 12 L-7 12 C-8 -2 -7 -14 0 -22 Z" class="rk-body"/><path d="M-7 6 L-13 16 L-7 14 Z M7 6 L13 16 L7 14 Z" class="rk-fin"/><path d="M-4 13 L0 26 L4 13 Z" class="rk-flame"/></g>
+    <text x="70" y="404" class="rk-t">${tr("Earth", "地球")}</text>
+    <text x="330" y="136" class="rk-t">${tr("Moon", "月")}</text>
+    <text x="200" y="22" class="rk-t rk-date">${tr("Launch 31 Jan 1971 → on the Moon 5 Feb", "1971年1月31日 打ち上げ → 2月5日 月面着陸")}</text>`;
+  const path = q<SVGPathElement>(svg, ".rk-path");
+  const ship = q<SVGGElement>(svg, ".rk-ship");
+  const len = path.getTotalLength();
+  path.style.strokeDasharray = `${len}`;
   void ctx.frames((t) => {
-    const k = ctx.reduced ? 1 : ease(clamp01(t / 1800));
-    const left = 1 - share * k;
-    fill.style.strokeDashoffset = `${C * (1 - left)}`;
-    num.textContent = `${Math.round(left * 100)}%`;
+    const k = ctx.reduced ? 1 : ease(clamp01(t / 3200));
+    path.style.strokeDashoffset = `${len * (1 - k)}`;
+    const p = path.getPointAtLength(len * k);
+    const p2 = path.getPointAtLength(Math.min(len, len * k + 1));
+    const ang = k >= 1 ? 150 : (Math.atan2(p2.y - p.y, p2.x - p.x) * 180) / Math.PI + 90;
+    ship.setAttribute("transform", `translate(${p.x} ${p.y}) rotate(${ang}) scale(1.3)`);
     return k < 1;
   });
 }
 
-// ------------------------------------------------------------ 6: Apollo 14 and Cone Crater
+// ------------------------------------------------------------ 4: the walk to Cone Crater, playing by itself
 function apollo(ctx: SlideCtx) {
   const el = ctx.el;
   const svg = q<SVGSVGElement>(el, ".ap-svg");
-  const range = q<HTMLInputElement>(el, ".ap-range");
-  const guessEl = q(el, ".ap-guess");
-  const go = q<HTMLButtonElement>(el, ".ap-go");
+  const read = q(el, ".ap-read");
   // 1 unit = 1 m; Cone Crater is about 340 m across
   const cx = 470;
   const cy = 170;
@@ -218,51 +159,48 @@ function apollo(ctx: SlideCtx) {
   const ang = (168 * Math.PI) / 180;
   const at = (d: number): [number, number] => [cx + (R + d) * Math.cos(ang), cy + (R + d) * Math.sin(ang)];
   const turn = at(25);
+  const rim = at(0);
   const path = `M -10 310 C 50 290 90 330 140 300 S 200 230 240 262 S ${turn[0] - 30} ${turn[1] + 30} ${turn[0]} ${turn[1]}`;
   svg.innerHTML = `
     <defs><radialGradient id="apC"><stop offset="0.75" stop-color="#1b1310"/><stop offset="1" stop-color="#3a2a20"/></radialGradient></defs>
     ${Array.from({ length: 9 }, (_, i) => `<path class="ap-wave" d="M 0 ${30 + i * 38} Q 160 ${10 + i * 38} 320 ${34 + i * 38} T 640 ${26 + i * 38}"/>`).join("")}
-    <circle cx="${cx}" cy="${cy}" r="${R}" fill="url(#apC)" class="ap-crater"/>
+    <circle cx="${cx}" cy="${cy}" r="${R}" fill="url(#apC)"/>
     <circle cx="${cx}" cy="${cy}" r="${R}" class="ap-rim"/>
     <text x="${cx}" y="${cy + 6}" class="ap-lbl">${tr("Cone Crater", "コーン・クレーター")}</text>
     <text x="16" y="336" class="ap-lbl ap-left">${tr("← lander, about 1.1 km", "← 着陸船 約1.1 km")}</text>
     <path d="${path}" class="ap-path"/>
-    <g class="ap-guessmark"><circle r="7"/><text y="-14">${tr("your guess", "あなたの予想")}</text></g>
+    <g class="ap-walker"><circle r="7"/></g>
     <g class="ap-turn" transform="translate(${turn[0]} ${turn[1]})"><circle r="8"/><text y="26">${tr("turned back", "ここで引き返した")}</text></g>
+    <g class="ap-gap"><line x1="${turn[0]}" y1="${turn[1]}" x2="${rim[0]}" y2="${rim[1]}"/><text x="${(turn[0] + rim[0]) / 2 + 6}" y="${(turn[1] + rim[1]) / 2 - 14}">${tr("tens of metres", "数十m")}</text></g>
     <g class="ap-scale" transform="translate(520 335)"><line x1="0" x2="100" y1="0" y2="0"/><text x="50" y="-6">100 m</text></g>`;
   const pathEl = q<SVGPathElement>(svg, ".ap-path");
-  const len = pathEl.getTotalLength();
-  pathEl.style.strokeDasharray = `${len}`;
-  pathEl.style.strokeDashoffset = `${len}`;
-  const mark = q<SVGGElement>(svg, ".ap-guessmark");
+  const walker = q<SVGGElement>(svg, ".ap-walker");
   const turnEl = q<SVGGElement>(svg, ".ap-turn");
   turnEl.style.opacity = "0";
-  const show = () => {
-    const [x, y] = at(Number(range.value));
-    mark.setAttribute("transform", `translate(${x} ${y})`);
-    guessEl.textContent = tr(`Your guess: ${range.value} m from the rim`, `あなたの予想：縁まで ${range.value} m`);
-  };
-  range.oninput = show;
-  range.disabled = false;
-  show();
-  go.disabled = false;
-  go.onclick = async () => {
-    go.disabled = true;
-    range.disabled = true;
-    await ctx.frames((t) => {
-      const k = ctx.reduced ? 1 : ease(clamp01(t / 2200));
-      pathEl.style.strokeDashoffset = `${len * (1 - k)}`;
-      return k < 1;
-    });
-    if (!ctx.alive()) return;
-    turnEl.style.opacity = "1";
-    guessEl.textContent = tr(`Your guess: ${range.value} m · Real: tens of metres (about 15–50 m)`, `あなたの予想：${range.value} m · 実際：数十m（約15〜50 m）`);
-    revealNext(el);
-    ctx.done();
-  };
+  q<SVGGElement>(svg, ".ap-gap").style.opacity = "0";
+  const len = pathEl.getTotalLength();
+  pathEl.style.strokeDasharray = `${len}`;
+  read.textContent = tr("Walking toward the rim…", "縁へ向かって歩いている…");
+  void ctx.frames((t) => {
+    const k = ctx.reduced ? 1 : ease(clamp01((t - 300) / 4200));
+    pathEl.style.strokeDashoffset = `${len * (1 - k)}`;
+    const p = pathEl.getPointAtLength(len * k);
+    walker.setAttribute("transform", `translate(${p.x} ${p.y})`);
+    if (k >= 1) {
+      turnEl.style.opacity = "1";
+      read.textContent = tr("Where is the rim? They turn back.", "縁はどこ？ ここで引き返した。");
+      ctx.done();
+    }
+    return k < 1;
+  });
+}
+function apolloReveal(_i: number, ctx: SlideCtx) {
+  q<SVGGElement>(ctx.el, ".ap-turn").style.opacity = "1";
+  q<SVGGElement>(ctx.el, ".ap-gap").style.opacity = "1";
+  q(ctx.el, ".ap-read").textContent = tr("The rim was only tens of metres away.", "縁はたった数十m先だった。");
 }
 
-// ------------------------------------------------------------ 7: a slope seen from eye height
+// ------------------------------------------------------------ 5: a slope seen from eye height
 const TRUE_SLOPE = 26;
 function drawSlope(cv: HTMLCanvasElement, deg: number, side: number | null) {
   const W = (cv.width = 640);
@@ -277,20 +215,15 @@ function drawSlope(cv: HTMLCanvasElement, deg: number, side: number | null) {
   const f = W * 1.1;
   const horizon = H * 0.58;
   const t = Math.tan((deg * Math.PI) / 180);
-  // a hill 30 m ahead: its face climbs at deg for 22 m (horizontal), then a flat top; the sides
-  // fall away so it reads as a slope, not a wall
+  // a hill 26 m ahead: its face climbs at deg for 22 m, then a flat top; the sides fall away
   const z0 = 26;
   const run = 22;
   const half = 26;
   const height = (x: number, z: number) => {
     const along = z < z0 ? 0 : Math.min(run, z - z0) * t;
-    const side = Math.min(1, Math.max(0, (half - Math.abs(x)) / 10));
-    return along * side;
+    return along * Math.min(1, Math.max(0, (half - Math.abs(x)) / 10));
   };
-  const proj = (x: number, z: number): [number, number] => {
-    const y = height(x, z);
-    return [W / 2 + (f * x) / z, horizon - (f * (y - eye)) / z];
-  };
+  const proj = (x: number, z: number): [number, number] => [W / 2 + (f * x) / z, horizon - (f * (height(x, z) - eye)) / z];
   const step = 2;
   for (let z = 90; z >= 4; z -= step) {
     for (let x = -60; x < 60; x += step) {
@@ -298,12 +231,11 @@ function drawSlope(cv: HTMLCanvasElement, deg: number, side: number | null) {
       const b = proj(x + step, z);
       const cc = proj(x + step, z + step);
       const d = proj(x, z + step);
-      // light from the upper left: faces that climb toward the viewer are brighter
       const dy = height(x + 1, z + 1) - height(x + 1, z);
       const dx = height(x + 1, z + 1) - height(x, z + 1);
       const light = Math.max(0.5, Math.min(1.25, 0.7 + dy * 0.7 - dx * 0.5));
       const fog = Math.min(0.75, z / 120);
-      const mix = (v: number, sky: number) => (v * light * (1 - fog) + sky * fog) | 0;
+      const mix = (v: number, s: number) => (v * light * (1 - fog) + s * fog) | 0;
       c.fillStyle = `rgb(${mix(165, 214)},${mix(108, 168)},${mix(74, 130)})`;
       c.beginPath();
       c.moveTo(...a);
@@ -316,7 +248,6 @@ function drawSlope(cv: HTMLCanvasElement, deg: number, side: number | null) {
       c.stroke();
     }
   }
-  // a few rocks of unknown size: no help in judging distance
   for (const [x, z, r] of [[-6, 9, 0.35], [4, 14, 0.5], [-14, 20, 0.6], [10, 33, 0.7], [-3, 38, 0.5]] as const) {
     const [px, py] = proj(x, z);
     const rad = (f * r) / z;
@@ -326,7 +257,6 @@ function drawSlope(cv: HTMLCanvasElement, deg: number, side: number | null) {
     c.fill();
   }
   if (side !== null) {
-    // side view of the real slope, bottom right
     const x0 = W - 210;
     const y0 = H - 30;
     c.fillStyle = "rgba(16,13,11,0.85)";
@@ -349,6 +279,7 @@ function drawSlope(cv: HTMLCanvasElement, deg: number, side: number | null) {
     c.lineWidth = 1;
   }
 }
+let eyesCheck: (() => void) | null = null;
 function eyes(ctx: SlideCtx) {
   const el = ctx.el;
   const cv = q<HTMLCanvasElement>(el, ".eye-cv");
@@ -360,140 +291,183 @@ function eyes(ctx: SlideCtx) {
   range.oninput = show;
   show();
   go.disabled = false;
-  go.onclick = () => {
+  eyesCheck = () => {
     go.disabled = true;
     drawSlope(cv, TRUE_SLOPE, TRUE_SLOPE);
     read.textContent = tr(`Your guess: ${range.value}° · Real: ${TRUE_SLOPE}°`, `あなたの予想：${range.value}° · 本当は：${TRUE_SLOPE}°`);
+  };
+  go.onclick = () => {
+    eyesCheck?.();
     revealNext(el);
     ctx.done();
   };
 }
 
-// ------------------------------------------------------------ 8: a rover photo matched to the orbital map
+// ------------------------------------------------------------ 6: Perseverance, and how it finds itself
+function drawRover(svg: SVGSVGElement) {
+  // a generic six-wheeled Mars rover with a camera mast (our illustration)
+  svg.innerHTML = `
+    <ellipse cx="210" cy="234" rx="170" ry="12" class="rv-shadow"/>
+    <g class="rv-legs"><path d="M120 170 L92 214 M120 170 L150 214 M300 170 L272 214 M300 170 L330 214 M210 176 L210 214"/></g>
+    ${[92, 150, 210, 272, 330].map((x) => `<circle cx="${x}" cy="214" r="20" class="rv-wheel"/><circle cx="${x}" cy="214" r="7" class="rv-hub"/>`).join("")}
+    <rect x="96" y="132" width="230" height="44" rx="6" class="rv-body"/>
+    <rect x="96" y="132" width="230" height="10" rx="4" class="rv-deck"/>
+    <path d="M326 140 L360 128 L366 150 L330 164 Z" class="rv-rtg"/>
+    <path d="M128 132 L128 54" class="rv-mast"/>
+    <rect x="106" y="30" width="48" height="26" rx="5" class="rv-head"/>
+    <circle cx="120" cy="43" r="5" class="rv-eye"/><circle cx="140" cy="43" r="5" class="rv-eye"/>
+    <path d="M96 160 L66 150 L48 176" class="rv-arm"/>
+    <path d="M154 43 L260 4 L260 82 Z" class="rv-beam"/>
+    <text x="210" y="258" class="rv-t">${tr("Mars rover (illustration) · about 3 m long", "火星探査車（イラスト）· 長さ約3 m")}</text>`;
+}
 async function robot(ctx: SlideCtx) {
-  const cv = q<HTMLCanvasElement>(ctx.el, ".robot-cv");
+  const el = ctx.el;
+  drawRover(q(el, ".rover-svg"));
+  el.classList.remove("shoot", "match");
+  const cv = q<HTMLCanvasElement>(el, ".robot-cv");
   const W = (cv.width = 720);
-  const H = (cv.height = 480);
+  const H = (cv.height = 420);
   const c = cv.getContext("2d")!;
   const [img, grid, pick] = await Promise.all([ortho, navGrid, cells]);
   if (!ctx.alive()) return;
-  // 360 × 240 m of real orbital image around a rocky spot, at 2 px per metre
   const [px, py] = cellPixel(grid, pick.rock);
-  const sx = Math.max(0, Math.min(img.width - 360, px - 180));
-  const sy = Math.max(0, Math.min(img.height - 240, py - 120));
-  const T = 50; // the rover's view, metres across
+  const MW = 360;
+  const MH = 210;
+  const sx = Math.max(0, Math.min(img.width - MW, px - MW / 2));
+  const sy = Math.max(0, Math.min(img.height - MH, py - MH / 2));
+  const T = 50;
   const tx = px - sx - T / 2;
   const ty = py - sy - T / 2;
-  // a random walk of guesses that closes in on the true spot
+  // a wandering search that closes in on the true spot
   const path: [number, number][] = [];
-  let gx = 40;
-  let gy = 150;
+  let gx = 30;
+  let gy = 140;
   for (let i = 0; i < 22; i++) {
     const k = i / 21;
     gx += (tx - gx) * (0.12 + 0.5 * k) + (1 - k) * (Math.random() - 0.5) * 120;
-    gy += (ty - gy) * (0.12 + 0.5 * k) + (1 - k) * (Math.random() - 0.5) * 90;
-    gx = Math.max(0, Math.min(360 - T, gx));
-    gy = Math.max(0, Math.min(240 - T, gy));
+    gy += (ty - gy) * (0.12 + 0.5 * k) + (1 - k) * (Math.random() - 0.5) * 80;
+    gx = Math.max(0, Math.min(MW - T, gx));
+    gy = Math.max(0, Math.min(MH - T, gy));
     path.push([gx, gy]);
   }
   path.push([tx, ty]);
-  const S = 2;
-  await ctx.frames((t) => {
-    const total = 4200;
-    const k = ctx.reduced ? 1 : Math.min(1, t / total);
-    const f = k * (path.length - 1);
-    const i = Math.floor(f);
-    const a = path[i];
-    const b = path[Math.min(path.length - 1, i + 1)];
-    const u = ease(f - i);
-    const x = a[0] + (b[0] - a[0]) * u;
-    const y = a[1] + (b[1] - a[1]) * u;
-    c.drawImage(img, sx, sy, 360, 240, 0, 0, W, H);
+  const S = W / MW;
+  let started = -1;
+  void ctx.frames((t) => {
+    const phase = el.classList.contains("match") ? 2 : el.classList.contains("shoot") ? 1 : 0;
+    if (phase === 2 && started < 0) started = t;
+    c.drawImage(img, sx, sy, MW, MH, 0, 0, W, H);
     c.fillStyle = "rgba(10,8,6,0.25)";
     c.fillRect(0, 0, W, H);
-    // the rover's own view (inset): the same ground, seen a little differently
-    c.save();
-    c.filter = "contrast(1.25) brightness(1.1) sepia(0.4)";
-    c.drawImage(img, sx + tx, sy + ty, T, T, 18, 18, 130, 130);
-    c.restore();
-    c.strokeStyle = "#f4ede6";
-    c.lineWidth = 2;
-    c.strokeRect(18, 18, 130, 130);
     c.fillStyle = "#f4ede6";
-    c.font = "600 13px system-ui, sans-serif";
-    c.fillText(tr("Rover's photo", "探査車の写真"), 22, 166);
-    const found = k >= 1;
-    c.strokeStyle = found ? "#5fd3a0" : "#ff6b2c";
-    c.lineWidth = found ? 4 : 2;
-    c.strokeRect(x * S, y * S, T * S, T * S);
-    const dist = Math.hypot(x - tx, y - ty);
-    const sim = Math.max(0, 1 - dist / 140);
-    c.fillStyle = "rgba(16,13,11,0.85)";
-    c.fillRect(W - 220, H - 52, 204, 36);
-    c.fillStyle = found ? "#5fd3a0" : "#ffb27a";
-    c.fillRect(W - 212, H - 30, 188 * sim, 6);
-    c.fillStyle = "#f4ede6";
-    c.fillText(found ? tr("Match: position to about 25 cm", "一致：位置は約25 cm") : tr("Comparing with the orbital map…", "軌道からの地図と照合中…"), W - 212, H - 36);
-    if (found) ctx.done();
-    return !found;
+    c.font = "600 14px system-ui, sans-serif";
+    c.fillText(tr("Map made from orbit (HiRISE)", "軌道から撮った地図（HiRISE）"), 16, H - 16);
+    if (phase >= 1) {
+      // the rover's own photo, seen a little differently
+      c.save();
+      c.filter = "contrast(1.25) brightness(1.1) sepia(0.4)";
+      c.drawImage(img, sx + tx, sy + ty, T, T, 16, 16, 130, 130);
+      c.restore();
+      c.strokeStyle = "#f4ede6";
+      c.lineWidth = 2;
+      c.strokeRect(16, 16, 130, 130);
+      c.fillStyle = "#f4ede6";
+      c.fillText(tr("Rover's photo", "探査車の写真"), 20, 166);
+    }
+    if (phase === 2) {
+      const k = ctx.reduced ? 1 : Math.min(1, (t - started) / 3600);
+      const f = k * (path.length - 1);
+      const i = Math.floor(f);
+      const a = path[i];
+      const b = path[Math.min(path.length - 1, i + 1)];
+      const u = ease(f - i);
+      const x = a[0] + (b[0] - a[0]) * u;
+      const y = a[1] + (b[1] - a[1]) * u;
+      const found = k >= 1;
+      c.strokeStyle = found ? "#5fd3a0" : "#ff6b2c";
+      c.lineWidth = found ? 4 : 2;
+      c.strokeRect(x * S, y * S, T * S, T * S);
+      c.fillStyle = "rgba(16,13,11,0.85)";
+      c.fillRect(W - 262, 16, 246, 36);
+      c.fillStyle = found ? "#5fd3a0" : "#ffb27a";
+      c.fillText(found ? tr("Match: position to about 25 cm", "一致：位置は約25 cm") : tr("Comparing with the map…", "地図と照合中…"), W - 250, 39);
+      if (found) ctx.done();
+    }
   });
 }
+function robotReveal(i: number, ctx: SlideCtx) {
+  if (i === 0) ctx.el.classList.add("shoot");
+  if (i === 1) ctx.el.classList.add("match");
+}
 
-// ------------------------------------------------------------ 9: dunes vs rock, matched for real
-async function unique(ctx: SlideCtx) {
+// ------------------------------------------------------------ 7: what a position check needs
+function needs(ctx: SlideCtx) {
   const el = ctx.el;
-  const picks = Array.from(el.querySelectorAll<HTMLElement>(".pick"));
-  const [img, grid, pick] = await Promise.all([ortho, navGrid, cells]);
-  if (!ctx.alive()) return;
-  const which = [pick.dune, pick.rock];
-  const grays = which.map((i) => cropGray(img, ...cellPixel(grid, i)));
-  picks.forEach((p, k) => {
-    p.classList.remove("chosen", "right", "wrong");
-    const view = q<HTMLCanvasElement>(p, ".pk-view");
-    const heat = q<HTMLCanvasElement>(p, ".pk-heat");
-    heat.width = heat.height = 1;
-    heat.getContext("2d")!.clearRect(0, 0, 1, 1);
-    q(p, ".pk-read").textContent = "";
-    view.width = view.height = 80;
-    const vc = view.getContext("2d")!;
-    const d = vc.createImageData(80, 80);
-    grays[k].forEach((v, j) => d.data.set([v, v, v, 255], j * 4));
-    vc.putImageData(d, 0, 0);
-  });
-  let ran = false;
-  el.querySelectorAll<HTMLButtonElement>(".pick-btn").forEach((b) => {
-    b.disabled = false;
-    b.onclick = async () => {
-      if (ran) return;
-      ran = true;
-      b.closest(".pick")!.classList.add("chosen");
-      el.querySelectorAll<HTMLButtonElement>(".pick-btn").forEach((x) => (x.disabled = true));
-      const results = grays.map(match);
-      await Promise.all(
-        picks.map((p, k) => playMatch(q(p, ".pk-view"), q(p, ".pk-heat"), results[k], ctx.reduced ? 0 : 1600, ctx.alive)),
-      );
-      if (!ctx.alive()) return;
-      picks.forEach((p, k) => {
-        const r = results[k];
-        p.classList.add(k === 1 ? "right" : "wrong");
-        q(p, ".pk-read").innerHTML =
-          k === 0
-            ? tr(`Dunes · closest look-alike <b>${r.best.toFixed(2)}</b>: easy to confuse`, `砂丘 · 一番似た別の場所 <b>${r.best.toFixed(2)}</b>：取り違えやすい`)
-            : tr(`Rock · closest look-alike <b>${r.best.toFixed(2)}</b>: only one match`, `岩 · 一番似た別の場所 <b>${r.best.toFixed(2)}</b>：一致は1か所だけ`);
-      });
-      revealNext(el);
-      ctx.done();
-    };
-  });
+  const [shade, horizon, often] = Array.from(el.querySelectorAll<SVGSVGElement>(".n-svg"));
+  // shadow: a rock casting a long shadow; a camera in the sun works, in the shadow it does not
+  shade.innerHTML = `
+    <circle cx="190" cy="26" r="14" class="ns-sun"/>
+    <path d="M0 96 L220 96 L220 130 L0 130 Z" class="ns-ground"/>
+    <path d="M70 96 L96 46 L126 96 Z" class="ns-rock"/>
+    <path d="M70 96 L126 96 L20 118 L4 108 Z" class="ns-shadow"/>
+    <g transform="translate(40 104)"><circle r="10" class="ns-cam bad"/><path d="M-5 -5 L5 5 M5 -5 L-5 5" class="ns-mark"/></g>
+    <g transform="translate(168 110)"><circle r="10" class="ns-cam ok"/><path d="M-5 0 L-1 4 L6 -4" class="ns-mark"/></g>`;
+  // landmarks: Mount Sharp and buttes on the horizon
+  horizon.innerHTML = `
+    <path d="M0 90 L30 84 L60 60 L80 42 L104 30 L128 44 L150 66 L170 80 L220 86 L220 130 L0 130 Z" class="nh-far"/>
+    <path d="M20 96 L34 80 L50 80 L58 96 Z M150 96 L160 84 L178 84 L186 96 Z" class="nh-butte"/>
+    <path d="M0 96 L220 96 L220 130 L0 130 Z" class="ns-ground"/>
+    <text x="104" y="22" class="nh-t">${tr("Mount Sharp", "シャープ山")}</text>
+    <text x="40" y="72" class="nh-t">${tr("butte", "ビュート")}</text>`;
+  often.innerHTML = `<path d="M10 100 C 60 70 120 120 210 60" class="no-path"/><circle class="no-circ" r="4"/><circle class="no-dot" r="4"/>`;
+  el.querySelectorAll<HTMLCanvasElement>(".nu-heat").forEach((h) => (h.width = h.height = 1));
+  q(el, ".no-read").textContent = "";
+}
+async function needsReveal(i: number, ctx: SlideCtx) {
+  const el = ctx.el;
+  if (i === 0) {
+    // dunes vs rock, matched for real on the HiRISE image
+    const [img, grid, pick] = await Promise.all([ortho, navGrid, cells]);
+    if (!ctx.alive()) return;
+    const heats = Array.from(el.querySelectorAll<HTMLCanvasElement>(".nu-heat"));
+    [pick.dune, pick.rock].forEach((cell, k) => {
+      const m = match(cropGray(img, ...cellPixel(grid, cell)));
+      void playMatch(document.createElement("canvas"), heats[k], m, ctx.reduced ? 0 : 1400, ctx.alive);
+    });
+  } else if (i === 3) {
+    // the error circle grows as you walk and snaps back at each photo check
+    const svg = el.querySelectorAll<SVGSVGElement>(".n-svg")[2];
+    const path = q<SVGPathElement>(svg, ".no-path");
+    const circ = q<SVGCircleElement>(svg, ".no-circ");
+    const dot = q<SVGCircleElement>(svg, ".no-dot");
+    const read = q(el, ".no-read");
+    const len = path.getTotalLength();
+    void ctx.frames((t) => {
+      const k = (t / 7000) % 1;
+      const p = path.getPointAtLength(len * k);
+      const sinceFix = (k * 3) % 1; // three checks along the way
+      const err = 2 + 16 * sinceFix;
+      for (const c of [circ, dot]) {
+        c.setAttribute("cx", String(p.x));
+        c.setAttribute("cy", String(p.y));
+      }
+      circ.setAttribute("r", String(err * 1.4));
+      read.textContent = sinceFix < 0.08 ? tr("📷 photo check → 2 m", "📷 写真で確認 → 2 m") : tr(`position error ${err.toFixed(0)} m`, `位置の誤差 ${err.toFixed(0)} m`);
+    });
+  }
 }
 
 startDeck({
-  phone: { enter: phone },
-  compass: { enter: compass },
-  earth: { enter: earth },
-  oxygen: { enter: oxygen },
-  apollo: { enter: apollo },
-  eyes: { enter: eyes },
-  robot: { enter: (c) => void robot(c) },
-  unique: { enter: (c) => void unique(c) },
+  problems: { enter: problems, reveal: problemsReveal },
+  "apollo-intro": { enter: apolloIntro },
+  apollo: { enter: apollo, reveal: apolloReveal },
+  eyes: {
+    enter: eyes,
+    // "Next" before checking also shows the answer
+    reveal: (i) => {
+      if (i === 0) eyesCheck?.();
+    },
+  },
+  robot: { enter: (c) => void robot(c), reveal: robotReveal },
+  needs: { enter: needs, reveal: (i, c) => void needsReveal(i, c) },
 });
