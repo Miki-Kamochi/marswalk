@@ -161,9 +161,9 @@ export class World {
     this.sunDisc.position.copy(camera.position).addScaledVector(dir, 5000);
     // The sun remains a reliable direction cue even at the storm peak.
     (this.sunDisc.material as THREE.SpriteMaterial).opacity = 1;
-    // Clear periods preserve the skyline; storm peaks erase terrain beyond several hundred metres.
-    this.fog.density = 0.00005 + 0.0022 * Math.pow(dust, 3);
-    const sky = HAZE.clone().multiplyScalar(0.35 + 0.65 * day).lerp(new THREE.Color(0x8a5a36), dust * 0.75);
+    // Dust softens the distant horizon without hiding the middle-distance ground.
+    this.fog.density = 0.00004 + 0.00018 * dust * dust;
+    const sky = HAZE.clone().multiplyScalar(0.35 + 0.65 * day).lerp(new THREE.Color(0x8a5a36), dust * 0.4);
     (this.scene.background as THREE.Color).copy(sky);
     this.fog.color.copy(sky);
   }

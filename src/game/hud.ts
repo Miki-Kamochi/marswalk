@@ -58,7 +58,7 @@ export class Hud {
     $('heading').textContent = `方位 ${Math.round((state.heading * 180 / Math.PI % 360 + 360) % 360)}° · ${state.speed}×`;
     $('radius').textContent = `存在可能性円 · 半径 ${Math.ceil(nav.region.current.radius)} m`;
     $('scanStatus').textContent = state.scan; $('alert').textContent = state.message;
-    $('weather').textContent = state.dust > 0.8 ? '砂嵐 · 中距離の地表も視認困難' : state.dust > 0.45 ? '砂嵐接近 · 視界低下中' : '薄い砂塵 · 視界安定';
+    $('weather').textContent = state.dust > 0.5 ? '砂塵濃度上昇 · 遠景が霞む' : state.dust > 0.3 ? '砂塵が増加中' : '薄い砂塵 · 視界安定';
     $('scanBtn').textContent = state.scan.startsWith('撮影') ? '撮影中…' : 'スキャン [右クリック / E]';
     $('targetList').innerHTML = targets.map((t, i) => `<span class="${t.collected ? 'done' : ''}">${t.collected ? '✓' : i + 1} ${t.name}</span>`).join('');
     if (state.time - this.lastDraw > 0.15 || this.lastDraw < 0) {

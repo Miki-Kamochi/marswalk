@@ -100,6 +100,7 @@ async function main() {
     $('speedReadout').textContent = `${speed}×`;
   }
   controls.onMap = toggleMap; controls.onScan = scan;
+  controls.onMenu = () => { controls.release(); location.assign(import.meta.env.BASE_URL); };
   $('mapBtn').addEventListener('click', toggleMap);
   $('scanBtn').addEventListener('click', scan);
   document.querySelectorAll<HTMLButtonElement>('[data-speed]').forEach(button => button.addEventListener('click', () => setSpeed(Number(button.dataset.speed))));

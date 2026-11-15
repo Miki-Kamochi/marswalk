@@ -64,8 +64,8 @@ try {
   await writeFile(join(profile,'map.png'),Buffer.from(shot.data,'base64'));
   await evaluate(`(() => {
     const g=__mw,check=(c,n)=>{if(!c)throw Error(n)};
-    dispatchEvent(new KeyboardEvent('keydown',{code:'Escape'}));
-    check(!g.hud.mapOpen,'Escape closes map');
+    dispatchEvent(new KeyboardEvent('keydown',{code:'KeyM'}));
+    check(!g.hud.mapOpen,'M closes map');
     const pin=JSON.stringify(g.nav.region.pins[0]);
     dispatchEvent(new KeyboardEvent('keydown',{code:'KeyW'}));
     for(let i=0;i<20;i++)g.tick(.1);

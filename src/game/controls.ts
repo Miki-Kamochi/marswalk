@@ -14,6 +14,8 @@ export class Controls {
   /** called on M / the map button */
   onMap: () => void = () => {};
   onScan: () => void = () => {};
+  /** called on Escape to leave the walking simulation */
+  onMenu: () => void = () => {};
   mapOpen = false;
 
   private keys = new Set<string>();
@@ -30,9 +32,10 @@ export class Controls {
     addEventListener("keydown", (e) => {
       if (e.repeat) return;
       this.keys.add(e.code);
+      if (e.code === "Escape") { e.preventDefault(); this.onMenu(); return; }
       if (!this.enabled) return;
       if (e.code === "KeyE" || e.code === "Space") this.onScan();
-      if (e.code === "KeyM" || (e.code === "Escape" && this.mapOpen)) { e.preventDefault(); this.onMap(); }
+      if (e.code === "KeyM") { e.preventDefault(); this.onMap(); }
     });
     addEventListener("keyup", (e) => this.keys.delete(e.code));
     addEventListener("blur", () => this.keys.clear());
