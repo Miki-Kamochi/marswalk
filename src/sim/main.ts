@@ -103,20 +103,31 @@ async function main() {
     beyond: 0,
     /** the same walk without a plan: a straight line, and Curiosity's own path where it passes both ends */
     naive: [] as Naive[],
+    /** more stops after the destination, in visiting order: the clicked cell, the cell used, a name */
+    more: [] as { target: number; dest: number; name: string }[],
     /** the selected route's details dropdown, and the profile strip, both closed at first */
     detailsOpen: false,
     stripOpen: false,
   };
   let token = 0;
   let view: View3D | null = null;
+  /** every stop of the walk in visiting order (the destination first) */
+  const stops = () => [state.dest, ...state.more.map((m) => m.dest)].filter((c) => c >= 0);
+  /** replay the search on the map while planning (not with reduced motion) */
+  const animate = !matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // ---------------------------------------------------------------- saved plan
   /** the plan being edited; created on the first destination, then saved on every change */
   let project: Project | null = saved ?? null;
   let restoring = false;
   const nameInput = $<HTMLInputElement>("planName");
-  const defaultName = () =>
-    state.dest < 0 ? tr("New plan", "新しい計画") : state.destName ? tr(`To ${state.destName}`, `${state.destName}へ`) : nameOf(state.dest);
+  const defaultName = () => {
+    if (state.dest < 0) return tr("New plan", "新しい計画");
+    const first = state.destName || nameOf(state.dest);
+    const n = state.more.length;
+    if (!n) return state.destName ? tr(`To ${first}`, `${first}へ`) : first;
+    return tr(`${first} + ${n} more`, `${first}ほか${n}か所`);
+  };
   function renderName() {
     if (document.activeElement !== nameInput) nameInput.value = project?.custom ? project.name : defaultName();
   }
@@ -135,6 +146,7 @@ async function main() {
       destName: state.destName,
       destE: state.dest >= 0 ? grid.east(state.dest) : undefined,
       destN: state.dest >= 0 ? grid.northOf(state.dest) : undefined,
+      more: state.more.length ? state.more.map((m) => ({ target: m.target, name: m.name })) : undefined,
       selected: state.selected,
       o2: state.o2,
       errorLimit: cfg.errorLimit,
@@ -166,17 +178,18 @@ async function main() {
   const pushRoutes = () => {
     view?.setRoutes(state.routes, state.selected, state.back);
     view?.setNaive(state.naive.map((n) => n.cells));
-    view?.setEnds(state.home, state.dest);
+    view?.setEnds(state.home, stops());
   };
   const fit = () => {
     const sel = state.routes.find((r) => r.profile === state.selected);
     if (sel) view?.fitCells([...sel.cells, state.home]);
-    else if (state.dest >= 0) view?.fitCells([state.home, state.dest]);
+    else if (state.dest >= 0) view?.fitCells([state.home, ...stops()]);
   };
 
   // ---------------------------------------------------------------- planning
   async function replan(fitAfter = true) {
     const my = ++token;
+    view?.stopAnimation();
     state.routes = [];
     state.naive = [];
     state.back = [];
@@ -190,6 +203,12 @@ async function main() {
       state.problem = res.problem;
       state.back = res.back;
     }
+    // extra stops: a stop that cannot be walked to is left out of the walk (and shown as such)
+    for (const m of state.more) {
+      const r = planner.resolve(m.target);
+      m.dest = r.problem ? -1 : r.dest;
+    }
+    if (state.dest >= 0 && !state.problem && state.more.some((m) => m.dest >= 0)) state.back = planner.wayHome(stops()[stops().length - 1]);
     state.busy = state.dest >= 0 && !state.problem;
     renderAll();
     pushRoutes();
@@ -200,10 +219,25 @@ async function main() {
     for (const p of ORDER) {
       await breathe();
       if (my !== token) return;
-      const r = planner.route(state.dest, p, state.o2);
+      // the first route is planned with its search recorded, and the map replays it
+      const show = animate && !!view && p === ORDER[0];
+      planner.trace = show ? [] : null;
+      const r = planner.routeVia(stops(), p, state.o2);
+      const trace = planner.trace;
+      planner.trace = null;
       if (r) state.routes.push(r);
       if (p === ORDER[ORDER.length - 1]) state.busy = false;
       renderRoutes();
+      if (show && r && trace && view) {
+        if (fitAfter) view.fitCells([...r.cells, state.home]);
+        view.setRoutes([], null, []);
+        view.setEnds(state.home, stops());
+        await view.playSearch(trace, Math.min(1800, 700 + trace.length / 120));
+        if (my !== token) return;
+        await view.drawIn(state.routes, state.selected, state.back, 650);
+        if (my !== token) return;
+        continue;
+      }
       pushRoutes();
       if (p === state.selected && fitAfter) fit();
     }
@@ -214,17 +248,31 @@ async function main() {
     save();
   }
 
-  async function setDest(cell: number, name = "") {
-    state.target = cell < 0 ? -2 : cell;
-    state.destName = name;
+  /** Choose the destination, or with add (shift held) add a stop after the ones already chosen. */
+  async function setDest(cell: number, name = "", add = false) {
+    if (add && state.dest >= 0 && cell >= 0) {
+      if (cell === state.target || state.more.some((m) => m.target === cell)) return;
+      state.more.push({ target: cell, dest: -1, name });
+    } else {
+      state.target = cell < 0 ? -2 : cell;
+      state.destName = name;
+      state.more = [];
+    }
+    await replan();
+  }
+
+  async function removeStop(i: number) {
+    state.more.splice(i, 1);
     await replan();
   }
 
   function clearDest() {
     token++;
+    view?.stopAnimation();
     state.target = -1;
     state.dest = -1;
     state.destName = "";
+    state.more = [];
     state.routes = [];
     state.naive = [];
     state.back = [];
@@ -304,16 +352,18 @@ async function main() {
     state.naive = [];
     if (state.home < 0 || state.dest < 0 || !state.routes.length) return;
     const from: [number, number] = [grid.east(state.home), grid.northOf(state.home)];
-    const to: [number, number] = [grid.east(state.dest), grid.northOf(state.dest)];
+    const pts = stops().map((c) => [grid.east(c), grid.northOf(c)] as [number, number]);
     const paths: [Naive["id"], [number, number][] | null][] = [
-      ["line", [from, to]],
-      ["rover", roverPath(from, to)],
+      ["line", [from, ...pts]],
+      ["rover", pts.length === 1 ? roverPath(from, pts[0]) : null],
     ];
     for (const [id, pts] of paths) {
       if (!pts) continue;
       const cells = cellsAlong(pts);
       if (cells.length < 2) continue;
-      const out = planner.evaluate(cells, "short", state.o2);
+      // the stops along the line, so the work at each one is counted like on the planned routes
+      const at = pts.map(([e, n]) => cells.lastIndexOf(grid.index(e, n))).filter((i) => i > 0);
+      const out = planner.evaluate(cells, "short", state.o2, at.length === pts.length ? at : undefined);
       const back = planner.evaluate([...cells].reverse(), "short", state.o2);
       let unsafe = 0;
       for (let i = 1; i < cells.length; i++) {
@@ -359,6 +409,7 @@ async function main() {
     to.placeholder = tr("Choose destination", "目的地を選択");
     if (document.activeElement !== to) to.value = state.dest >= 0 ? state.destName || nameOf(state.dest) : "";
     $("clearTo").hidden = state.dest < 0 && !to.value;
+    renderMore();
     const showChips = state.dest < 0 && !state.problem && !state.pickStart;
     $("hint").innerHTML = state.pickStart
       ? esc(tr("Click the map where the walk starts and ends.", "地図をクリックして、出発・帰還地点を選んでください。"))
@@ -368,6 +419,23 @@ async function main() {
             state.home !== baseCell && state.home >= 0 ? `<button data-quick="home-base">↺ ${esc(t("baseCamp"))}</button>` : ""
           }</span>`
         : "";
+  }
+
+  /** The stops after the destination, and how to add one. */
+  function renderMore() {
+    const box = $("moreStops");
+    if (state.dest < 0 || state.pickStart) {
+      box.innerHTML = "";
+      return;
+    }
+    const rows = state.more.map(
+      (m, i) => `<li class="${m.dest < 0 ? "bad" : ""}"><span class="n">${i + 2}</span><span class="nm">${esc(m.name || (m.dest >= 0 ? nameOf(m.dest) : t("noGo")))}</span>
+        <button class="clear" data-remove-stop="${i}" aria-label="${esc(tr("Remove stop", "立ち寄り先を外す"))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg></button></li>`,
+    );
+    const used = new Set([state.target, ...state.more.map((m) => m.target)]);
+    const left = targets.filter((p) => !used.has(grid.index(p.easting, p.northing)) && !used.has(cellOfPlace(p)));
+    const add = left.map((p) => `<button data-add="${p.id}">+ ${esc(placeName(p.id, p.name).replace(/（[^）]*）|\s*\([^)]*\)/, ""))}</button>`).join("");
+    box.innerHTML = `${rows.length ? `<ol>${rows.join("")}</ol>` : ""}<p class="addhint">${esc(tr("Shift+click the map to add a stop", "Shiftを押しながら地図をクリックで立ち寄り先を追加"))}</p>${add ? `<span class="chiprow add">${add}</span>` : ""}`;
   }
 
   function why(r: Route): string {
@@ -550,13 +618,24 @@ async function main() {
 
   // ---------------------------------------------------------------- events
   $("card").addEventListener("click", (e) => {
+    const rm = (e.target as HTMLElement).closest<HTMLElement>("[data-remove-stop]");
+    if (rm) {
+      void removeStop(Number(rm.dataset.removeStop));
+      return;
+    }
+    const ad = (e.target as HTMLElement).closest<HTMLElement>("[data-add]");
+    if (ad) {
+      const p = positions.places.find((p) => p.id === ad.dataset.add);
+      if (p) void setDest(cellOfPlace(p), placeName(p.id, p.name), true);
+      return;
+    }
     const el = (e.target as HTMLElement).closest<HTMLElement>("[data-route], [data-quick]");
     if (!el) return;
     if (el.dataset.route) select(el.dataset.route as Profile);
     else if (el.dataset.quick === "home-base") void setHome(baseCell);
     else {
       const p = positions.places.find((p) => p.id === el.dataset.quick);
-      if (p) void setDest(cellOfPlace(p), placeName(p.id, p.name));
+      if (p) void setDest(cellOfPlace(p), placeName(p.id, p.name), (e as MouseEvent).shiftKey);
     }
   });
   $("stripBtn").addEventListener("click", () => {
@@ -714,10 +793,10 @@ async function main() {
   try {
     await revealed();
     view = await View3D.create($("map"), grid, {
-      onPick: (e, n) => {
+      onPick: (e, n, add) => {
         const cell = grid.index(e, n);
         if (state.pickStart) void setHome(cell);
-        else void setDest(cell);
+        else void setDest(cell, "", add);
       },
       onHover: (e, n) => renderStatus(e === null || n === null ? -1 : grid.index(e, n)),
       onCamera: (heading, flat) => {
@@ -749,7 +828,12 @@ async function main() {
     renderSliders();
     await setHome(p.home >= 0 ? p.home : baseCell);
     restoring = false;
-    if (p.target >= 0) await setDest(p.target, p.destName);
+    if (p.target >= 0) {
+      state.target = p.target;
+      state.destName = p.destName;
+      state.more = (p.more ?? []).map((m) => ({ target: m.target, dest: -1, name: m.name }));
+      await replan();
+    }
   } else {
     if (params.has("project")) history.replaceState(null, "", `${location.pathname}?area=${AREA}`);
     await setHome(baseCell);

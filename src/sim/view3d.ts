@@ -34,8 +34,8 @@ export type SceneMode = "block" | "land";
 const TILT_3D = 0.95; // radians from straight down
 
 export interface ViewEvents {
-  /** the user clicked the ground at this map position */
-  onPick(easting: number, northing: number): void;
+  /** the user clicked the ground at this map position; add: shift was held (add a stop) */
+  onPick(easting: number, northing: number, add: boolean): void;
   onHover(easting: number | null, northing: number | null): void;
   /** the camera turned: heading in radians (0 = north up), and whether the view is 2D */
   onCamera(heading: number, flat: boolean): void;
@@ -75,8 +75,8 @@ const drawStart = (c: CanvasRenderingContext2D) => {
   c.fillStyle = "#14110f";
   c.fillRect(27, 27, 10, 10);
 };
-/** destination: a survey flag on a stake (anchored at the foot of the stake) */
-const drawPin = (c: CanvasRenderingContext2D) => {
+/** destination: a survey flag on a stake (anchored at the foot of the stake), numbered if n > 0 */
+const drawPin = (c: CanvasRenderingContext2D, n = 0) => {
   c.fillStyle = "#14110f";
   c.fillRect(27, 4, 8, 60);
   c.beginPath();
@@ -94,6 +94,13 @@ const drawPin = (c: CanvasRenderingContext2D) => {
   c.lineTo(33, 23);
   c.closePath();
   c.fill();
+  if (n > 0) {
+    c.fillStyle = "#14110f";
+    c.font = "bold 13px system-ui, sans-serif";
+    c.textAlign = "center";
+    c.textBaseline = "middle";
+    c.fillText(String(n), 41, 15.5);
+  }
 };
 /** photo check: a small diamond */
 const drawCheck = (c: CanvasRenderingContext2D) => {
@@ -132,6 +139,8 @@ export class View3D {
     uLimit: { value: cellTexture() },
     uOverlayOn: { value: 0 },
     uLimitOn: { value: 0 },
+    uSearch: { value: cellTexture() },
+    uSearchOn: { value: 0 },
     uBounds: { value: new THREE.Vector4() },
   };
   private routes = new THREE.Group();
@@ -142,6 +151,8 @@ export class View3D {
   private block = new THREE.Group();
   private mode: SceneMode = "block";
   private landBg = new THREE.Color();
+  /** bumped by each search replay / route draw, so a newer one stops the older */
+  private animGen = 0;
   private pending = false;
   private utc: number;
   private el: HTMLElement;
@@ -181,7 +192,7 @@ export class View3D {
       sh.fragmentShader = sh.fragmentShader
         .replace(
           "#include <common>",
-          "#include <common>\nuniform sampler2D uOverlay;\nuniform sampler2D uLimit;\nuniform float uOverlayOn;\nuniform float uLimitOn;\nvarying vec2 vCell;",
+          "#include <common>\nuniform sampler2D uOverlay;\nuniform sampler2D uLimit;\nuniform float uOverlayOn;\nuniform float uLimitOn;\nuniform sampler2D uSearch;\nuniform float uSearchOn;\nvarying vec2 vCell;",
         )
         .replace(
           "#include <color_fragment>",
@@ -189,6 +200,8 @@ export class View3D {
           if (vCell.x >= 0.0 && vCell.x <= 1.0 && vCell.y >= 0.0 && vCell.y <= 1.0) {
             if (uOverlayOn > 0.5) { vec4 o = texture2D(uOverlay, vCell); diffuseColor.rgb = mix(diffuseColor.rgb, o.rgb, o.a); }
             if (uLimitOn > 0.5) { vec4 m = texture2D(uLimit, vCell); diffuseColor.rgb = mix(diffuseColor.rgb, m.rgb, m.a); }
+            // the route search being replayed: explored ground glows, newest brightest
+            if (uSearchOn > 0.5) { vec4 sr = texture2D(uSearch, vCell); diffuseColor.rgb += sr.rgb * sr.a * 0.7; }
           }`,
         );
     };
@@ -241,7 +254,7 @@ export class View3D {
     dom.addEventListener("pointerup", (e) => {
       if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 6) {
         const hit = this.pick(e.clientX, e.clientY);
-        if (hit) ev.onPick(hit[0], hit[1]);
+        if (hit) ev.onPick(hit[0], hit[1], e.shiftKey);
       }
       down = null;
     });
@@ -434,6 +447,13 @@ export class View3D {
     this.setTexture(this.uniforms.uLimit, this.uniforms.uLimitOn, cv);
   }
 
+  /** Stop any search replay or route drawing (a new plan started). */
+  stopAnimation(): void {
+    this.animGen++;
+    this.uniforms.uSearchOn.value = 0;
+    this.request();
+  }
+
   /** Routes like a map app: the selected one in the accent colour with a dark casing, the others grey. */
   setRoutes(routes: Route[], selected: Profile | null, back: number[]): void {
     this.clear(this.routes);
@@ -472,15 +492,102 @@ export class View3D {
     this.request();
   }
 
-  setEnds(home: number, dest: number): void {
+  /** The start, and a flag at every stop (numbered when there is more than one). */
+  setEnds(home: number, stops: number[]): void {
     this.clear(this.ends);
     const at = (cell: number, s: THREE.Sprite) => {
       s.position.copy(this.world.worldPos(this.grid.east(cell), this.grid.northOf(cell), LIFT));
       this.ends.add(s);
     };
     if (home >= 0) at(home, sprite(drawStart, 0.028));
-    if (dest >= 0) at(dest, sprite(drawPin, 0.05, 0.0));
+    stops.forEach((cell, i) => {
+      if (cell < 0) return;
+      const n = stops.length > 1 ? i + 1 : 0;
+      at(cell, sprite((c) => drawPin(c, n), 0.05, 0.0));
+    });
     this.request();
+  }
+
+  /**
+   * Replay the planner's search: every cell it explored, in the order it explored them, lights up
+   * and fades, so a wave spreads over the real terrain from the start until it finds the goal.
+   * Resolves when done (at once if `ms` is 0).
+   */
+  playSearch(trace: number[], ms: number): Promise<void> {
+    const g = this.grid;
+    const cv = document.createElement("canvas");
+    cv.width = g.width;
+    cv.height = g.height;
+    const ctx = cv.getContext("2d")!;
+    // a fresh texture each time: a texture cannot change size once it is on the GPU
+    const u = this.uniforms.uSearch;
+    const tex = cellTexture();
+    tex.image = cv;
+    u.value.dispose();
+    u.value = tex;
+    this.uniforms.uSearchOn.value = 1;
+    const t0 = performance.now();
+    const fadeMs = 450;
+    const gen = ++this.animGen;
+    let done = 0;
+    return new Promise((resolve) => {
+      const frame = () => {
+        if (gen !== this.animGen) return resolve();
+        const t = performance.now() - t0;
+        const k = ms > 0 ? Math.min(1, t / ms) : 1;
+        // ease out: fast at first, slowing as it closes in on the goal
+        const upto = Math.floor(trace.length * (1 - (1 - k) ** 2));
+        // older glow fades
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.fillStyle = k < 1 ? "rgba(0,0,0,0.07)" : `rgba(0,0,0,${Math.min(1, 0.04 + (t - ms) / fadeMs)})`;
+        ctx.fillRect(0, 0, cv.width, cv.height);
+        ctx.globalCompositeOperation = "source-over";
+        // the newest cells: a bright front
+        ctx.fillStyle = "rgba(255, 150, 70, 1)";
+        for (; done < upto; done++) {
+          const c = trace[done];
+          ctx.fillRect(c % g.width, Math.floor(c / g.width), 1, 1);
+        }
+        u.value.needsUpdate = true;
+        this.request();
+        if (t < ms + fadeMs) requestAnimationFrame(frame);
+        else {
+          this.uniforms.uSearchOn.value = 0;
+          this.request();
+          resolve();
+        }
+      };
+      requestAnimationFrame(frame);
+      // the route can start drawing while the glow fades
+      setTimeout(resolve, ms);
+    });
+  }
+
+  /** Draw the selected route growing from the start to the end over `ms`. */
+  drawIn(routes: Route[], selected: Profile | null, back: number[], ms: number): Promise<void> {
+    const sel = routes.find((r) => r.profile === selected);
+    if (!sel || ms <= 0) {
+      this.setRoutes(routes, selected, back);
+      return Promise.resolve();
+    }
+    const t0 = performance.now();
+    const gen = ++this.animGen;
+    return new Promise((resolve) => {
+      const frame = () => {
+        if (gen !== this.animGen) return resolve();
+        const k = Math.min(1, (performance.now() - t0) / ms);
+        const e = 1 - (1 - k) ** 3;
+        const n = Math.max(2, Math.ceil(sel.cells.length * e));
+        const part = { ...sel, cells: sel.cells.slice(0, n), photos: sel.photos.filter((i) => i < n) };
+        this.setRoutes([part], selected, k < 1 ? [] : back);
+        if (k < 1) requestAnimationFrame(frame);
+        else {
+          this.setRoutes(routes, selected, back);
+          resolve();
+        }
+      };
+      requestAnimationFrame(frame);
+    });
   }
 
   setExtras(places: boolean, traverse: boolean): void {

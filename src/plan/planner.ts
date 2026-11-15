@@ -66,6 +66,8 @@ export interface Route {
   errorOut: Float32Array;
   /** vertex indices where a photo fix is taken */
   photos: number[];
+  /** vertex index of each stop, in visiting order (the last one is the destination) */
+  stops: number[];
   stats: RouteStats;
 }
 
@@ -156,6 +158,12 @@ export class Planner {
   /** energy (J) to walk home from each cell, and to reach each cell from home */
   toHome: Float32Array;
   fromHome: Float32Array;
+  /**
+   * When set, search() appends each cell the first time it explores it, in order: the planner's
+   * real work, which the map replays as the "calculating" animation.
+   */
+  trace: number[] | null = null;
+  private seen: Uint8Array;
 
   private len: number[];
   private speed = new Float32Array(SLOPE_STEPS + 1);
@@ -183,6 +191,7 @@ export class Planner {
     this.run = new Float32Array(states);
     this.parent = new Int32Array(states);
     this.closed = new Uint8Array(states);
+    this.seen = new Uint8Array(grid.size);
     this.toHome = new Float32Array(grid.size).fill(Infinity);
     this.fromHome = new Float32Array(grid.size).fill(Infinity);
     this.flatEnergy = energyPerMetre(0, cfg);
@@ -320,6 +329,10 @@ export class Planner {
       if (closed[s]) continue;
       closed[s] = 1;
       const a = (s / RUN_BUCKETS) | 0;
+      if (this.trace && !this.seen[a]) {
+        this.seen[a] = 1;
+        this.trace.push(a);
+      }
       if (a === goal) {
         const cells: number[] = [];
         for (let t = s; t >= 0; t = parent[t]) cells.push((t / RUN_BUCKETS) | 0);
@@ -358,8 +371,12 @@ export class Planner {
   }
 
   /** Walk a path and work out everything shown about it. o2Start: share of a full tank at the start. */
-  evaluate(cells: number[], profile: Profile, o2Start: number): Route {
+  evaluate(cells: number[], profile: Profile, o2Start: number, stops: number[] = [cells.length - 1]): Route {
     const { cfg, grid } = this;
+    // stops before the last: work there (counted in the energy so far) and a position check
+    const midStop = new Set(stops.slice(0, -1));
+    const workJ = cfg.workSeconds * cfg.workWatts;
+    let midWork = 0;
     const { fixable, good } = grid;
     const { elev, sand } = grid.layers;
     const n = cells.length;
@@ -409,7 +426,7 @@ export class Planner {
       if (good[b] < 0.5) caution += L;
       if (fixable[b] && u > cfg.fixError) {
         // take a photo fix when the error has grown, on arrival, or before a stretch without fixes
-        let need = u >= cfg.photoTrigger || i === n - 1;
+        let need = u >= cfg.photoTrigger || i === n - 1 || midStop.has(i);
         if (!need && !fixable[cells[i + 1]]) {
           let ahead = 0;
           let j = i;
@@ -427,10 +444,15 @@ export class Planner {
         }
       }
       errorOut[i] = u;
+      if (midStop.has(i)) {
+        energy[i] += workJ;
+        midWork += workJ;
+      }
       minMargin = Math.min(minMargin, o2Start - cfg.reserve - (energy[i] + this.toHome[b]) / tank);
     }
-    const o2Out = energy[n - 1] / tank;
-    const o2Work = (cfg.workSeconds * cfg.workWatts) / tank;
+    // walking only; the work at every stop is counted on its own
+    const o2Out = (energy[n - 1] - midWork) / tank;
+    const o2Work = (stops.length * workJ) / tank;
     const o2Back = this.toHome[cells[n - 1]] / tank;
     const o2Left = o2Start - o2Out - o2Work - o2Back;
     const stats: RouteStats = {
@@ -453,7 +475,7 @@ export class Planner {
       errorOk: maxError <= cfg.errorLimit + 1e-6,
       o2Ok: minMargin >= 0 && o2Left >= cfg.reserve - 1e-9,
     };
-    return { profile, cells, dist, time, energy, errorIn, errorOut, photos, stats };
+    return { profile, cells, dist, time, energy, errorIn, errorOut, photos, stops, stats };
   }
 
   /** The least-oxygen way home from a cell, by walking down the "energy to walk home" map. */
@@ -493,9 +515,28 @@ export class Planner {
 
   /** One route from home to a walkable, reachable cell. o2Start: share of a full tank at the start. */
   route(dest: number, profile: Profile, o2Start = 1): Route | null {
-    // if no path keeps the position error under the limit, show the best one anyway, flagged
-    const cells = this.search(this.home, dest, profile, true) ?? this.search(this.home, dest, profile, false);
-    return cells ? this.evaluate(cells, profile, o2Start) : null;
+    return this.routeVia([dest], profile, o2Start);
+  }
+
+  /**
+   * One route from home through several stops in the given order, each leg planned on its own.
+   * The position is checked at every stop (the crew spends the work time there), so each leg starts
+   * with a fresh position, like the walk from home.
+   */
+  routeVia(stops: number[], profile: Profile, o2Start = 1): Route | null {
+    if (this.trace) this.seen.fill(0);
+    const cells: number[] = [this.home];
+    const at: number[] = [];
+    for (const stop of stops) {
+      const from = cells[cells.length - 1];
+      // if no path keeps the position error under the limit, show the best one anyway, flagged
+      const leg = from === stop ? [stop] : (this.search(from, stop, profile, true) ?? this.search(from, stop, profile, false));
+      if (!leg) return null;
+      cells.push(...leg.slice(1));
+      at.push(cells.length - 1);
+    }
+    if (cells.length < 2) return null;
+    return this.evaluate(cells, profile, o2Start, at);
   }
 
   /** Plan the four routes from home to a cell. */

@@ -202,3 +202,32 @@ for (const [area, maxNoGo] of [["buttes", 15], ["gediz", 60]] as const) test(`re
     }
   }
 });
+
+test("a walk through several stops visits each in order and counts the work at every one", () => {
+  const dir = new URL("../../public/data/gediz/", import.meta.url);
+  const meta = JSON.parse(readFileSync(new URL("meta.json", dir), "utf8"));
+  const nav = meta.nav.grid;
+  const bytes = new Uint8Array(readFileSync(new URL(nav.file, dir)));
+  const playBuf = readFileSync(new URL(meta.grids.play.file, dir));
+  const play = new Uint16Array(playBuf.buffer, playBuf.byteOffset, playBuf.byteLength / 2);
+  const grid = new NavGrid(nav, { ...decodeNav(nav, bytes), elev: cellElevations(meta.grids.play, play, nav) }, DEFAULTS);
+  const places = JSON.parse(readFileSync(new URL("positions.json", dir), "utf8")).places;
+  const cellOf = (id: string) => {
+    const p = places.find((p: { id: string }) => p.id === id);
+    return grid.nearestOpen(grid.index(p.easting, p.northing));
+  };
+  const planner = new Planner(grid, DEFAULTS);
+  assert.ok(planner.setHome(cellOf("base")));
+  const a = cellOf("stop_sulfur_field");
+  const b = cellOf("stop_marker_band");
+  const one = planner.routeVia([a], "mix")!;
+  planner.trace = [];
+  const two = planner.routeVia([a, b], "mix")!;
+  assert.ok(planner.trace.length > 1000, "the search was recorded");
+  planner.trace = null;
+  assert.deepEqual(two.stops.map((i) => two.cells[i]), [a, b]);
+  assert.equal(two.cells[0], planner.home);
+  assert.ok(Math.abs(two.stats.o2Work - 2 * one.stats.o2Work) < 1e-9);
+  assert.ok(two.stats.distance > one.stats.distance);
+  assert.ok(Math.abs(two.stats.o2Left - (1 - two.stats.o2Out - two.stats.o2Work - two.stats.o2Back)) < 1e-6);
+});

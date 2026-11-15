@@ -26,6 +26,8 @@ export interface Project {
   /** destination position, so the home screen can fly there */
   destE?: number;
   destN?: number;
+  /** more stops after the destination, visited in this order (shift+click in the planner) */
+  more?: { target: number; name: string }[];
   selected: Profile;
   o2: number;
   errorLimit: number;
