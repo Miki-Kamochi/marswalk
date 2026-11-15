@@ -11,7 +11,7 @@ export class Hud {
   private map = $('minimap') as HTMLCanvasElement;
   private fixMap = $('fixMap') as HTMLCanvasElement;
   private lastDraw = -1;
-  constructor(private world: World, url: string, private route: MapPoint[] = [], private plannedScans: MapPoint[] = []) {
+  constructor(private world: World, url: string, private route: MapPoint[] = []) {
     this.imagery.onload = () => { this.lastDraw = -1; }; this.imagery.src = url;
     addEventListener('resize', () => this.resize());
   }
@@ -79,10 +79,6 @@ export class Hud {
       ctx.strokeStyle = 'rgba(2,18,24,.9)'; ctx.lineWidth = Math.max(4, W / 130); ctx.beginPath();
       this.route.forEach((p, i) => i ? ctx.lineTo(X(p.e), Y(p.n)) : ctx.moveTo(X(p.e), Y(p.n))); ctx.stroke();
       ctx.strokeStyle = '#ff9a58'; ctx.lineWidth = Math.max(2, W / 260); ctx.stroke();
-      for (const p of this.plannedScans) {
-        ctx.fillStyle = '#fff4bd'; ctx.strokeStyle = '#6d3b21'; ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.arc(X(p.e), Y(p.n), Math.max(3, W / 180), 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-      }
     }
     const circle = (r: Region, historic: boolean, label = '') => {
       const radius = r.radius * scale; ctx.setLineDash(historic ? [4, 4] : []); ctx.strokeStyle = historic ? '#3fbad3' : '#91f2ff'; ctx.lineWidth = historic ? 1.5 : 2;

@@ -15,7 +15,6 @@ export interface WalkPlan {
   grid: NavGrid;
   route: Route;
   points: MapPoint[];
-  plannedScans: MapPoint[];
   start: MapPoint;
   target: MapPoint & { name: string };
   timeLimit: number;
@@ -53,14 +52,10 @@ export async function loadWalkPlan(world: World, projectId: string | null): Prom
   if (!planner.setHome(home)) throw new Error("計画の出発地点が歩行可能範囲にありません。");
   const resolved = planner.resolve(target);
   if (resolved.problem || resolved.dest < 0) throw new Error(`計画経路を再現できません: ${resolved.problem ?? "unknown"}`);
-  const outbound = planner.route(resolved.dest, project?.selected ?? "mix", project?.o2 ?? 1);
-  if (!outbound) throw new Error("選択した経路を再計算できませんでした。");
-  // This preview begins at the planned destination and follows the selected line home.
-  // Re-evaluate in that direction because uphill/downhill walking time is asymmetric.
-  const route = planner.evaluate([...outbound.cells].reverse(), outbound.profile, project?.o2 ?? 1);
+  const route = planner.route(resolved.dest, project?.selected ?? "mix", project?.o2 ?? 1);
+  if (!route) throw new Error("選択した経路を再計算できませんでした。");
 
   const points = route.cells.map((cell) => pointAt(grid, cell));
-  const plannedScans = route.photos.map((index) => pointAt(grid, route.cells[index]));
   const valueAt = (e: number, n: number, values: Float32Array, fallback: number) => {
     const i = grid.index(e, n);
     return i >= 0 && Number.isFinite(values[i]) ? values[i] : fallback;
@@ -71,9 +66,8 @@ export async function loadWalkPlan(world: World, projectId: string | null): Prom
     grid,
     route,
     points,
-    plannedScans,
-    start: pointAt(grid, resolved.dest),
-    target: { ...pointAt(grid, home), name: "帰還地点" },
+    start: pointAt(grid, home),
+    target: { ...pointAt(grid, resolved.dest), name: project?.destName || "採取地点" },
     timeLimit: Math.ceil(route.stats.duration),
     // Planner duration uses this same Tobler off-path model for every edge.
     speedForGrade: (grade) => walkingSpeed(grade, cfg),

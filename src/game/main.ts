@@ -48,8 +48,8 @@ async function main() {
     world.scene.add(site);
     return site;
   });
-  const hud = new Hud(world, dataUrl(world.meta.images.color.file), plan.points, plan.plannedScans);
-  $('missionName').textContent = `${plan.target.name}へ戻る`;
+  const hud = new Hud(world, dataUrl(world.meta.images.color.file), plan.points);
+  $('missionName').textContent = `${plan.target.name}へ向かい試料を回収する`;
   $('planSummary').textContent = `${plan.project?.name || '既定の計画'} · ${Math.round(plan.route.stats.distance)} m · 計画所要 ${Math.ceil(timeLimit / 60)}分 · ${plan.route.stats.photoCount}回の測位を想定`;
   if (plan.project) $('plannerLink').setAttribute('href', `/sim.html?project=${encodeURIComponent(plan.project.id)}`);
   const pano = new Panorama();
@@ -74,7 +74,7 @@ async function main() {
   function begin() {
     $('start').style.display = 'none'; $('end').style.display = 'none'; phase = 'collect'; controls.enabled = true; hud.show(true);
     if (!controls.touch) controls.capture();
-    say('全体マップの計画経路を辿り、制限時間内に帰還してください。');
+    say('全体マップの計画経路を辿り、制限時間内に試料を回収してください。');
   }
   function toggleMap() {
     if (phase !== 'collect' || fixT >= 0) return;
@@ -106,8 +106,8 @@ async function main() {
 
   function finish(success: boolean, reason = '') {
     phase = 'done'; scanT = fixT = -1; controls.enabled = false; controls.release(); hud.toggleMap(false); hud.hideLocalization(); controls.mapOpen = false; hud.show(false);
-    $('endTitle').textContent = success ? '帰還完了。' : '強制帰還';
-    $('endLead').textContent = success ? '計画経路の帰還地点へ制限時間内に到着しました。' : reason;
+    $('endTitle').textContent = success ? '試料の採取を完了。' : '強制帰還';
+    $('endLead').textContent = success ? '計画された採取地点へ制限時間内に到着しました。' : reason;
     $('endStats').textContent = `回収 ${targets.filter(t => t.collected).length}/${targets.length} · 歩行 ${Math.round(player.walked)} m · 経過 ${Math.floor(missionS / 60)}分${String(Math.floor(missionS % 60)).padStart(2, '0')}秒 · スキャン ${nav.region.pins.length} 回`;
     $('end').style.display = 'flex';
   }
@@ -116,7 +116,7 @@ async function main() {
       if (target.collected || Math.hypot(player.e - target.e, player.n - target.n) > COLLECTION_RADIUS) continue;
       target.collected = true; setSampleCollected(sites[target.index], true);
       const count = targets.filter(t => t.collected).length;
-      say(`${target.name}：到着（${count}/${targets.length}）`);
+      say(`${target.name}：試料回収完了（${count}/${targets.length}）`);
       if (count === targets.length) finish(true);
     }
   }
