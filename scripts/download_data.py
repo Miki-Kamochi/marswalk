@@ -82,7 +82,7 @@ def ortho_window(bounds, dest, pool=4):
 
 def gale_dem():
     print("Gale 1 m DEM window (MSL Gale merged DEM, USGS / MSL project)")
-    dest = RAW / "gale_mosaic" / "gale_dem_1m_window.tif"
+    dest = DEM_WINDOW
     if have(dest):
         return
     w, s, e, n = FETCH_BOUNDS
@@ -94,7 +94,7 @@ def gale_dem():
 
 def gale_ortho():
     print("Gale orthophoto window, 25 cm pooled to 1 m (MRO HiRISE mosaic, USGS / MSL project)")
-    ortho_window(FETCH_BOUNDS, RAW / "gale_mosaic" / "gale_ortho_1m_window.tif")
+    ortho_window(FETCH_BOUNDS, ORTHO_WINDOW)
     ortho_window(COLOR_CAL_BOUNDS, RAW / "gale_mosaic" / "gale_ortho_1m_colorcal.tif")
 
 

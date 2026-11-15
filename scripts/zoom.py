@@ -10,9 +10,9 @@ name = sys.argv[1]
 w, s, e, n = map(float, sys.argv[2:6])
 k = float(sys.argv[6]) if len(sys.argv) > 6 else 1.0
 FW, FS, FE, FN = FETCH_BOUNDS
-with rasterio.open(RAW / "gale_mosaic" / "gale_ortho_1m_window.tif") as ds:
+with rasterio.open(ORTHO_WINDOW) as ds:
     g = ds.read(1)
-with rasterio.open(RAW / "gale_mosaic" / "gale_dem_1m_window.tif") as ds:
+with rasterio.open(DEM_WINDOW) as ds:
     z = ds.read(1)
 r0, r1, c0, c1 = int(FN - n), int(FN - s), int(w - FW), int(e - FW)
 g, z = g[r0:r1, c0:c1], z[r0:r1, c0:c1]
@@ -43,6 +43,6 @@ if pp.exists():
     for p in json.loads(pp.read_text())["places"]:
         if w < p["easting"] < e and s < p["northing"] < n:
             x, y = P(p["easting"], p["northing"]); d.ellipse([x-5, y-5, x+5, y+5], outline=(255, 0, 255), width=2); d.text((x + 7, y - 5), p["id"], fill=(255, 0, 255))
-out = ROOT / "data" / "interim" / f"zoom_{name}.png"
+out = INTERIM / f"zoom_{name}.png"
 im.save(out)
 print("wrote", out.name, im.size, "elev %.0f..%.0f" % (z.min(), z.max()), "contours every 5 m")

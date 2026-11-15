@@ -5,20 +5,40 @@ Map frame used everywhere: Mars equirectangular, sphere R=3396190 m, lat_0=0, lo
   easting  = R * lon_east_radians
   northing = R * lat_radians
 """
+import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 RAW = ROOT / "data" / "raw"
-PUBLIC_DATA = ROOT / "public" / "data"
 
 MARS_RADIUS_M = 3396190.0
 
-# Raw fetch window around Curiosity's Murray Buttes -> Vera Rubin Ridge route
-# (west, south, east, north) in metres. 4.0 km x 4.5 km.
-FETCH_BOUNDS = (8140200.0, -281300.0, 8144200.0, -276800.0)
+# Map areas. Each one is processed on its own into public/data/<area>/ and
+# data/interim/<area>/. Pick one with the MARSWALK_AREA environment variable (default: buttes).
+#   fetch  raw window read from the USGS mosaics (west, south, east, north), metres
+#   play   area actually shipped to the browser, a subset of fetch
+#   crism  whether CRISM observation FRT0000B6F1 (below) covers it
+AREAS = {
+    # Curiosity's Murray Buttes -> Bagnold Dunes -> Vera Rubin Ridge route (sols ~1350-2300):
+    # mostly gentle plain. 4.0 x 4.5 km fetched, 3.0 x 3.6 km played.
+    "buttes": dict(fetch=(8140200.0, -281300.0, 8144200.0, -276800.0),
+                   play=(8140700.0, -280900.0, 8143700.0, -277300.0), crism=True),
+    # just south of it, up the foothills of Mount Sharp (sols ~3150-4630): Greenheugh pediment,
+    # Marker Band valley, Gediz Vallis ridge and channel. Steep, broken ground.
+    "gediz": dict(fetch=(8142200.0, -284900.0, 8146200.0, -280400.0),
+                  play=(8142700.0, -284500.0, 8145700.0, -280900.0), crism=False),
+}
+AREA = os.environ.get("MARSWALK_AREA", "buttes")
+if AREA not in AREAS:
+    raise SystemExit(f"MARSWALK_AREA must be one of {', '.join(AREAS)}")
+FETCH_BOUNDS = AREAS[AREA]["fetch"]
+PLAY_BOUNDS = AREAS[AREA]["play"]
+HAS_CRISM = AREAS[AREA]["crism"]
 
-# Play area actually shipped to the browser (subset of FETCH_BOUNDS). 3.0 km x 3.6 km.
-PLAY_BOUNDS = (8140700.0, -280900.0, 8143700.0, -277300.0)
+PUBLIC_DATA = ROOT / "public" / "data" / AREA
+INTERIM = ROOT / "data" / "interim" / AREA
+DEM_WINDOW = RAW / "gale_mosaic" / f"gale_dem_1m_{AREA}.tif"      # 1 m DEM over FETCH_BOUNDS
+ORTHO_WINDOW = RAW / "gale_mosaic" / f"gale_ortho_1m_{AREA}.tif"  # 1 m orthophoto over FETCH_BOUNDS
 
 USGS = "https://planetarymaps.usgs.gov/mosaic"
 GALE_DEM_URL = f"{USGS}/Mars/MSL/MSL_Gale_DEM_Mosaic_1m_v3.tif"            # 1 m, float32

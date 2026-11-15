@@ -54,11 +54,22 @@ async function main() {
   const world = await World.load((m) => ($("loading").textContent = m), lowDetail);
   const sand = await loadRaster(world.meta.layers.sand.raw, world.meta.layers.sand.bounds);
   const controls = new Controls(renderer.domElement);
-  const camp = world.place("forward_camp");
-  const stop = world.place("stop_vera_rubin_ridge");
+  const walk = world.positions.walk ?? {
+    camp: "forward_camp",
+    stop: "stop_vera_rubin_ridge",
+    route: "eva1_from_forward_camp",
+    title: "",
+    brief: "",
+    objective: "EVA-1 · Collect hematite at Vera Rubin Ridge",
+    secured: "Hematite sample secured: it formed in water, billions of years ago.",
+  };
+  if (walk.title) $("evaTitle").textContent = walk.title;
+  if (walk.brief) $("evaBrief").textContent = walk.brief;
+  const camp = world.place(walk.camp);
+  const stop = world.place(walk.stop);
   const home = { e: camp.easting, n: camp.northing, name: "the rover" };
   const site = { e: stop.easting, n: stop.northing, name: "the sample site" };
-  const routePts = (world.positions.route.find((r) => r.id === "eva1_from_forward_camp")?.points ?? [
+  const routePts = (world.positions.route.find((r) => r.id === walk.route)?.points ?? [
     [home.e, home.n],
     [site.e, site.n],
   ]) as [number, number][];
@@ -167,7 +178,7 @@ async function main() {
     unaided = [[player.e, player.n]];
     unaidedHeading = bearing(player.e, player.n, home.e, home.n);
     hud.clearCoach();
-    say("Hematite sample secured: it formed in water, billions of years ago. The forecast dust front is here. Head back to the rover.", "warn", 7);
+    say(`${walk.secured} The forecast dust front is here. Head back to the rover.`, "warn", 7);
   }
 
   function scan() {
@@ -335,7 +346,7 @@ async function main() {
       hud.update(
         nav,
         {
-          objective: phase === "outbound" ? "EVA-1 · Collect hematite at Vera Rubin Ridge" : "EVA-1 · Return to the rover",
+          objective: phase === "outbound" ? walk.objective : "EVA-1 · Return to the rover",
           clock: `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")} local solar time`,
           o2Fraction: o2S / (O2_MINUTES * 60),
           o2Minutes: o2Min,

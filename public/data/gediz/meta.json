@@ -1,0 +1,207 @@
+{
+ "grids": {
+  "play": {
+   "file": "terrain/play_2m.u16",
+   "width": 1500,
+   "height": 1800,
+   "cell": 2,
+   "west": 8142701.0,
+   "north": -280901.0,
+   "zMin": -4106.7557373046875,
+   "zScale": 0.010176797838240456,
+   "nodata": 0,
+   "source": "MSL Gale Merged DEM 1 m v3 (USGS; MRO HiRISE stereo)",
+   "encoding": "uint16 little-endian, row 0 = north; elevation = zMin + (v - 1) * zScale"
+  },
+  "surround": {
+   "file": "terrain/surround_8m.u16",
+   "width": 500,
+   "height": 562,
+   "cell": 8,
+   "west": 8142204.0,
+   "north": -280404.0,
+   "zMin": -4184.481864929199,
+   "zScale": 0.01211592428349603,
+   "nodata": 0,
+   "source": "MSL Gale Merged DEM 1 m v3 (USGS; MRO HiRISE stereo)",
+   "encoding": "uint16 little-endian, row 0 = north; elevation = zMin + (v - 1) * zScale"
+  },
+  "mid": {
+   "file": "terrain/mid_60m.u16",
+   "width": 549,
+   "height": 957,
+   "cell": 60.0,
+   "west": 8128023.492786024,
+   "north": -244811.075189438,
+   "zMin": -4624.715766059027,
+   "zScale": 0.06558429873773096,
+   "nodata": 0,
+   "source": "MSL Gale Merged DEM 1 m v3 (USGS; MRO HiRISE/CTX + MEX HRSC), decimated",
+   "encoding": "uint16 little-endian, row 0 = north; elevation = zMin + (v - 1) * zScale"
+  },
+  "far": {
+   "file": "terrain/far_463m.u16",
+   "width": 561,
+   "height": 561,
+   "cell": 463.0935415503709,
+   "west": 8038146.147460564,
+   "north": -190099.8988064271,
+   "zMin": -4607.0,
+   "zScale": 0.09085360271004364,
+   "nodata": 0,
+   "source": "MGS MOLA MEGDR 463 m global DEM (USGS mosaic)",
+   "encoding": "uint16 little-endian, row 0 = north; elevation = zMin + (v - 1) * zScale"
+  }
+ },
+ "frame": {
+  "projection": "Mars equirectangular, sphere R=3396190 m, lat_0=0, lon_0=0 (IAU 2000)",
+  "radius": 3396190.0,
+  "play": {
+   "west": 8142700.0,
+   "south": -284500.0,
+   "east": 8145700.0,
+   "north": -280900.0
+  },
+  "fetch": {
+   "west": 8142200.0,
+   "south": -284900.0,
+   "east": 8146200.0,
+   "north": -280400.0
+  },
+  "origin": {
+   "easting": 8144200.0,
+   "northing": -282700.0,
+   "elevation": -3807.4,
+   "note": "suggested local origin: x = E - easting, z = -(N - northing), y = elev - elevation"
+  }
+ },
+ "images": {
+  "ortho": {
+   "file": "imagery/ortho_1m.jpg",
+   "bounds": {
+    "west": 8142700.0,
+    "south": -284500.0,
+    "east": 8145700.0,
+    "north": -280900.0
+   },
+   "metersPerPixel": 1,
+   "source": "MSL Gale Orthophoto Mosaic 25 cm v3 (USGS; MRO HiRISE)"
+  },
+  "color": {
+   "file": "imagery/color_2m.jpg",
+   "bounds": {
+    "west": 8142700.0,
+    "south": -284500.0,
+    "east": 8145700.0,
+    "north": -280900.0
+   },
+   "metersPerPixel": 2,
+   "source": "MSL Gale Orthophoto Mosaic 25 cm v3 (USGS; MRO HiRISE)",
+   "colour": "brightness from the HiRISE mosaic; hue from the HiRISE blue-green/red filter ratio (PSP_009650_1755 colour strip) per brightness level - approximate natural colour",
+   "calibration": {
+    "dx": -68,
+    "dy": -111,
+    "corr": 0.9181369793359208
+   }
+  },
+  "surround": {
+   "file": "imagery/surround_4m.jpg",
+   "metersPerPixel": 4,
+   "source": "MSL Gale Orthophoto Mosaic 25 cm v3 (USGS; MRO HiRISE)",
+   "bounds": {
+    "west": 8142200.0,
+    "south": -284900.0,
+    "east": 8146200.0,
+    "north": -280400.0
+   }
+  }
+ },
+ "layers": {
+  "slope": {
+   "file": "layers/slope.png",
+   "bounds": {
+    "west": 8142700.0,
+    "south": -284500.0,
+    "east": 8145700.0,
+    "north": -280900.0
+   },
+   "raw": "layers/slope_raw.png",
+   "rawEncoding": "value = slope degrees * 2",
+   "legend": [
+    0,
+    10,
+    15,
+    25,
+    35,
+    45
+   ],
+   "legendUnit": "deg",
+   "source": "derived from MSL Gale Merged DEM 1 m (MRO HiRISE), 2 m posts, ~6 m baseline"
+  },
+  "sand": {
+   "file": "layers/sand.png",
+   "bounds": {
+    "west": 8142700.0,
+    "south": -284500.0,
+    "east": 8145700.0,
+    "north": -280900.0
+   },
+   "raw": "layers/sand_raw.png",
+   "rawEncoding": "255 = dark sand",
+   "description": "dark sand / dune hazard mask",
+   "source": "derived from HiRISE orthophoto brightness (dark, smooth patches > 2500 m2)"
+  }
+ },
+ "nav": {
+  "grid": {
+   "file": "nav/nav_6m.bin",
+   "width": 500,
+   "height": 600,
+   "cell": 6,
+   "west": 8142703.0,
+   "north": -280903.0,
+   "encoding": "uint8, one full grid per channel in the order listed, row 0 = north",
+   "channels": [
+    {
+     "name": "tilt",
+     "encoding": "degrees * 4",
+     "description": "slope of the plane fitted to each 6 m patch"
+    },
+    {
+     "name": "rough",
+     "encoding": "metres * 250",
+     "description": "RMS distance of the 1 m elevation samples from that plane"
+    },
+    {
+     "name": "step",
+     "encoding": "metres * 100",
+     "description": "largest height difference between neighbouring 1 m samples, plane removed"
+    },
+    {
+     "name": "sand",
+     "encoding": "fraction * 255",
+     "description": "share of the cell covered by dark sand"
+    },
+    {
+     "name": "loc",
+     "encoding": "score * 255",
+     "description": "predicted success of matching a ground photo to the orbital image"
+    },
+    {
+     "name": "hematite",
+     "encoding": "0 = no CRISM coverage; 1..255 = relative band depth",
+     "description": "CRISM BD860_2, 0.86 um band depth (hematite)"
+    }
+   ],
+   "localizability": {
+    "templateM": 32,
+    "searchM": 24,
+    "excludeM": 5,
+    "noiseDN": 6.0,
+    "imageMetersPerPixel": 1,
+    "formula": "sqrt(var / (var + noise^2)) * (1 - highest correlation with another spot)"
+   },
+   "source": "MSL Gale Merged DEM 1 m v3 and Orthophoto Mosaic v3 resampled to 1 m (USGS; MRO HiRISE)"
+  }
+ }
+}

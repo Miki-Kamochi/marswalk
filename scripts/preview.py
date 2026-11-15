@@ -5,7 +5,7 @@ from PIL import Image, ImageDraw
 from config import *
 
 Image.MAX_IMAGE_PIXELS = None
-OUT = ROOT / "data" / "interim"
+OUT = INTERIM
 PW, PS, PE, PN = PLAY_BOUNDS
 
 

@@ -3,6 +3,7 @@
  * four routes, like directions in a map app. Every route stays on safe ground, keeps the
  * position known, and leaves enough oxygen to walk home.
  */
+import { AREA, AREAS, areaOf } from "../data/areas";
 import { toLonLat } from "../data/frame";
 import { dataUrl, loadGrid, loadJson, loadMeta, type Place, type Positions } from "../data/loader";
 import { DEFAULTS, type PlanConfig } from "../plan/config";
@@ -39,6 +40,12 @@ async function main() {
   initLang();
   const params = new URLSearchParams(location.search);
   const cfg: PlanConfig = { ...DEFAULTS };
+  // a saved plan opens in its own area
+  const saved = getProject(params.get("project") ?? "");
+  if (saved && areaOf(saved.area) !== AREA) {
+    location.replace(`?area=${areaOf(saved.area)}&project=${saved.id}`);
+    return;
+  }
   // the data loads during the page-change animation; the heavy work waits until it is over
   const meta = await loadMeta();
   const nav = meta.nav.grid;
@@ -87,7 +94,7 @@ async function main() {
 
   // ---------------------------------------------------------------- saved plan
   /** the plan being edited; created on the first destination, then saved on every change */
-  let project: Project | null = getProject(params.get("project") ?? "") ?? null;
+  let project: Project | null = saved ?? null;
   let restoring = false;
   const nameInput = $<HTMLInputElement>("planName");
   const defaultName = () =>
@@ -100,8 +107,8 @@ async function main() {
     if (!project) {
       if (state.target < 0 && !force) return;
       const now = Date.now();
-      project = { id: newProjectId(), name: "", home: -1, target: -1, destName: "", selected: "mix", o2: 1, errorLimit: cfg.errorLimit, created: now, updated: now };
-      history.replaceState(null, "", `?project=${project.id}`);
+      project = { id: newProjectId(), area: AREA, name: "", home: -1, target: -1, destName: "", selected: "mix", o2: 1, errorLimit: cfg.errorLimit, created: now, updated: now };
+      history.replaceState(null, "", `?area=${AREA}&project=${project.id}`);
     }
     const sel = state.routes.find((r) => r.profile === state.selected);
     Object.assign(project, {
@@ -251,7 +258,7 @@ async function main() {
     if (best && bestD < 45) return placeName(best.id, best.name);
     // a point on the map: say what it is near, not its coordinates
     if (best && bestD < 1500) {
-      const name = placeName(best.id, best.name).replace(/（ヘマタイト）|\s*\(hematite\)/i, "");
+      const name = placeName(best.id, best.name).replace(/（[^）]*）|\s*\([^)]*\)/, "");
       return tr(`Near ${name}`, `${name}付近`);
     }
     const g = toLonLat(e, n);
@@ -554,6 +561,21 @@ async function main() {
     });
   });
 
+  // ---------------------------------------------------------------- area
+  // two map areas; switching opens a new plan in the other one (the current plan stays saved)
+  function renderAreas() {
+    $("areas").innerHTML = AREAS.map(
+      (a) =>
+        `<a href="/sim.html?area=${a.id}" role="tab" aria-selected="${a.id === AREA}" title="${esc(tr(...a.what))}">${esc(tr(...a.name))}</a>`,
+    ).join("");
+  }
+  renderAreas();
+  document.addEventListener("langchange", renderAreas);
+  $<HTMLAnchorElement>("walkBtn").href = `/game.html?area=${AREA}`;
+  // the hematite layer exists only where CRISM saw the ground
+  const hemTile = document.querySelector<HTMLElement>('.tile[data-layer="hematite"]');
+  if (hemTile && !meta.layers.hematite) hemTile.hidden = true;
+
   // ---------------------------------------------------------------- start
   renderSliders();
   renderLayers();
@@ -581,7 +603,7 @@ async function main() {
   $("boot").remove();
   // sim.html?layer=safety|loc|hematite opens with that heat map
   const layer = params.get("layer");
-  if (layer === "safety" || layer === "loc" || layer === "hematite") state.overlay = layer;
+  if (layer === "safety" || layer === "loc" || (layer === "hematite" && meta.layers.hematite)) state.overlay = layer;
   pushOverlay();
   if (project) {
     // reopen a saved plan with its settings
@@ -598,7 +620,7 @@ async function main() {
     restoring = false;
     if (p.target >= 0) await setDest(p.target, p.destName);
   } else {
-    if (params.has("project")) history.replaceState(null, "", location.pathname);
+    if (params.has("project")) history.replaceState(null, "", `${location.pathname}?area=${AREA}`);
     await setHome(baseCell);
     // the home screen can ask for a destination: sim.html?dest=<place id>
     const wanted = positions.places.find((p) => p.id === params.get("dest"));

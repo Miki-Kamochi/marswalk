@@ -190,9 +190,9 @@ export class View3D {
     }
     const fb = world.meta.frame.fetch;
     const path = world.traverse.waypoints.filter((w) => w[1] > fb.west && w[1] < fb.east && w[2] > fb.south && w[2] < fb.north);
-    if (path.length > 1) {
-      this.traverse.add(this.line(path.map((w) => world.worldPos(w[1], w[2], LIFT)), "#ffffff", 1.5, { opacity: 0.7, dashed: true }));
-    }
+    // skip the odd waypoint with no elevation under it (a gap in the elevation model)
+    const pts = path.map((w) => world.worldPos(w[1], w[2], LIFT)).filter((v) => Number.isFinite(v.y));
+    if (pts.length > 1) this.traverse.add(this.line(pts, "#ffffff", 1.5, { opacity: 0.7, dashed: true }));
     this.traverse.visible = false;
 
     const base = world.place("base");

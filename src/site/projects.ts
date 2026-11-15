@@ -3,6 +3,7 @@
  * device. Every read and write is wrapped, so a blocked storage simply means no saved plans.
  */
 import type { Profile } from "../plan/planner";
+import type { AreaId } from "../data/areas";
 
 export interface PlanSummary {
   profile: Profile;
@@ -14,6 +15,8 @@ export interface PlanSummary {
 export interface Project {
   id: string;
   name: string;
+  /** the map area; plans saved before there were areas have none and are in "buttes" */
+  area?: AreaId;
   /** true once the user typed a name; otherwise the name follows the destination */
   custom?: boolean;
   /** planner grid cells; -1 = not chosen */

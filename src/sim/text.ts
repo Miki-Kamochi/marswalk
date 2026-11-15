@@ -95,6 +95,11 @@ const PLACE: Record<string, string> = {
   stop_bagnold_dunes: "バグノルド砂丘の縁",
   stop_vera_rubin_ridge: "ヴェラ・ルービン・リッジ（ヘマタイト）",
   forward_camp: "前進キャンプ（候補）",
+  stop_marker_band: "マーカーバンド谷",
+  stop_gediz_ridge: "ゲディズ・ヴァリス・リッジ",
+  stop_sulfur_field: "ゲディズ・ヴァリス水路（硫黄の石）",
+  greenheugh_gatorback: "グリーンヒュー・ペディメント（ワニの背の岩）",
+  gediz_ridge_crest: "ゲディズ・ヴァリス・リッジの頂",
 };
 export const placeName = (id: string, english: string) => tr(english, PLACE[id] ?? english);
 

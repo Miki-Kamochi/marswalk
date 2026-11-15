@@ -155,8 +155,9 @@ test("oxygen: the walk-back limit shrinks with the tank and far targets fail the
   assert.ok(Math.abs(near.stats.o2Left - (0.3 - near.stats.o2Out - near.stats.o2Work - near.stats.o2Back)) < 1e-6);
 });
 
-test("real Gale Crater data: the science stops can be reached from Base Camp", () => {
-  const dir = new URL("../../public/data/", import.meta.url);
+// every map area: the science stops can be reached from Base Camp on all four routes
+for (const [area, maxNoGo] of [["buttes", 15], ["gediz", 60]] as const) test(`real Gale Crater data (${area}): the science stops can be reached from Base Camp`, () => {
+  const dir = new URL(`../../public/data/${area}/`, import.meta.url);
   const meta = JSON.parse(readFileSync(new URL("meta.json", dir), "utf8"));
   const nav = meta.nav.grid;
   const bytes = new Uint8Array(readFileSync(new URL(nav.file, dir)));
@@ -165,7 +166,7 @@ test("real Gale Crater data: the science stops can be reached from Base Camp", (
   const grid = new NavGrid(nav, { ...decodeNav(nav, bytes), elev: cellElevations(meta.grids.play, play, nav) }, DEFAULTS);
   const share = (a: Uint8Array) => (a.reduce((s, v) => s + v, 0) / a.length) * 100;
   console.log(`  no-go ${share(grid.blocked).toFixed(1)} % of cells, photo fix expected to work on ${share(grid.fixable).toFixed(1)} %`);
-  assert.ok(share(grid.blocked) < 15);
+  assert.ok(share(grid.blocked) < maxNoGo);
 
   const places = JSON.parse(readFileSync(new URL("positions.json", dir), "utf8")).places;
   const cellOf = (id: string) => {
@@ -179,7 +180,9 @@ test("real Gale Crater data: the science stops can be reached from Base Camp", (
   let reach = 0;
   for (let i = 0; i < grid.size; i++) if (planner.fromHome[i] < Infinity) reach++;
   console.log(`  reachable from Base Camp: ${((reach / grid.size) * 100).toFixed(1)} % of cells`);
-  for (const id of ["stop_murray_buttes", "stop_bagnold_dunes", "stop_vera_rubin_ridge"]) {
+  const stops = places.filter((p: { kind: string }) => p.kind === "stop").map((p: { id: string }) => p.id);
+  assert.ok(stops.length >= 3);
+  for (const id of stops) {
     t0 = performance.now();
     const res = planner.plan(cellOf(id));
     const ms = performance.now() - t0;

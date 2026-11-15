@@ -1,5 +1,6 @@
-/** Loaders for the processed NASA data in /public/data (see scripts/process_data.py). */
+/** Loaders for the processed NASA data in /public/data/<area>/ (see scripts/process_data.py). */
 import type { NavMeta } from "../plan/grid";
+import { AREA, type AreaId } from "./areas";
 
 export interface Bounds {
   west: number;
@@ -70,6 +71,8 @@ export interface Place {
 export interface Positions {
   places: Place[];
   route: { id: string; points: [number, number][]; lengthM: number }[];
+  /** the walk preview's EVA in this area; without it, the Vera Rubin Ridge walk */
+  walk?: { camp: string; stop: string; route: string; title: string; brief: string; objective: string; secured: string };
 }
 
 export interface Traverse {
@@ -78,10 +81,12 @@ export interface Traverse {
   playAreaSols: [number, number];
 }
 
-const BASE = `${import.meta.env.BASE_URL}data/`;
+/** Folder of an area's data; the page's area (?area=) unless another is named. */
+const dir = (area: AreaId = AREA) => `${import.meta.env.BASE_URL}data/${area}/`;
+const BASE = dir();
 
-export async function loadJson<T>(rel: string): Promise<T> {
-  const r = await fetch(BASE + rel);
+export async function loadJson<T>(rel: string, area?: AreaId): Promise<T> {
+  const r = await fetch(dir(area) + rel);
   if (!r.ok) throw new Error(`${rel}: HTTP ${r.status}`);
   return (await r.json()) as T;
 }

@@ -1,0 +1,1668 @@
+{
+ "frame": "Mars equirectangular metres (see meta.json)",
+ "eyeHeightM": 1.7,
+ "places": [
+  {
+   "id": "base",
+   "name": "Base Camp",
+   "kind": "base",
+   "easting": 8144725.7,
+   "northing": -281058.4,
+   "elevation": -4045.9,
+   "lon": 137.40645,
+   "lat": -4.74163,
+   "chosenFrom": "flattest sand-free 30 m pad within 150 m of Curiosity's sol 3154 position",
+   "note": "Habitat site at the foot of the Greenheugh pediment, on the clay-to-sulfate transition.",
+   "checks": {
+    "distanceFromBaseM": 0,
+    "bearingFromBaseDeg": 0,
+    "slopeDegMean30m": 5.5,
+    "sandFraction20m": 0.0,
+    "crismHematiteIndex": null
+   }
+  },
+  {
+   "id": "greenheugh_gatorback",
+   "name": "Greenheugh pediment (gator-back rocks)",
+   "kind": "landmark",
+   "easting": 8143807.3,
+   "northing": -281476.2,
+   "elevation": -3977.4,
+   "lon": 137.39095,
+   "lat": -4.74867,
+   "chosenFrom": "Curiosity waypoint, sol 3420",
+   "note": "Curiosity climbed the pediment in March 2022, met fields of knife-edged, wind-carved 'gator-back' sandstone and turned around to protect its wheels.",
+   "curiositySol": 3420,
+   "checks": {
+    "distanceFromBaseM": 1009,
+    "bearingFromBaseDeg": 246,
+    "slopeDegMean30m": 9.5,
+    "sandFraction20m": 0.0,
+    "crismHematiteIndex": null,
+    "targetHeightM": 1.0,
+    "visibleFromBase": false,
+    "sightLineClearanceM": -19.4,
+    "blockedAtM": 807
+   }
+  },
+  {
+   "id": "stop_marker_band",
+   "name": "Marker Band valley",
+   "kind": "stop",
+   "easting": 8144136.0,
+   "northing": -282212.2,
+   "elevation": -3859.8,
+   "lon": 137.3965,
+   "lat": -4.76109,
+   "chosenFrom": "Curiosity waypoint, sol 3687",
+   "note": "Rippled rock in the marker band: the clearest evidence of waves in an ancient lake that Curiosity has found (Mastcam panorama, sol 3684, December 2022).",
+   "curiositySol": 3687,
+   "checks": {
+    "distanceFromBaseM": 1296,
+    "bearingFromBaseDeg": 207,
+    "slopeDegMean30m": 14.4,
+    "sandFraction20m": 0.09,
+    "crismHematiteIndex": null,
+    "targetHeightM": 1.7,
+    "visibleFromBase": false,
+    "sightLineClearanceM": -52.9,
+    "blockedAtM": 543
+   }
+  },
+  {
+   "id": "stop_gediz_ridge",
+   "name": "Gediz Vallis ridge",
+   "kind": "stop",
+   "easting": 8144383.0,
+   "northing": -282938.2,
+   "elevation": -3771.7,
+   "lon": 137.40067,
+   "lat": -4.77334,
+   "chosenFrom": "Curiosity waypoint, sol 3924",
+   "note": "Ridge of boulders swept down Mount Sharp by floods and debris flows. Curiosity reached it on its fourth try on sol 3923 (14 August 2023); steep slopes and gator-back rocks had blocked the earlier attempts.",
+   "curiositySol": 3924,
+   "checks": {
+    "distanceFromBaseM": 1911,
+    "bearingFromBaseDeg": 190,
+    "slopeDegMean30m": 19.1,
+    "sandFraction20m": 0.0,
+    "crismHematiteIndex": null,
+    "targetHeightM": 1.7,
+    "visibleFromBase": false,
+    "sightLineClearanceM": -36.8,
+    "blockedAtM": 1087
+   }
+  },
+  {
+   "id": "stop_sulfur_field",
+   "name": "Gediz Vallis channel (sulfur stones)",
+   "kind": "stop",
+   "easting": 8144868.8,
+   "northing": -283671.3,
+   "elevation": -3688.5,
+   "lon": 137.40886,
+   "lat": -4.78571,
+   "chosenFrom": "Curiosity waypoint, sol 4200",
+   "note": "Main goal. Curiosity's wheel crushed a rock here on sol 4200 (30 May 2024) and revealed yellow crystals of pure sulfur, never seen on Mars before. Orbiters had missed the field of sulfur stones.",
+   "curiositySol": 4200,
+   "checks": {
+    "distanceFromBaseM": 2617,
+    "bearingFromBaseDeg": 177,
+    "slopeDegMean30m": 10.7,
+    "sandFraction20m": 0.0,
+    "crismHematiteIndex": null,
+    "targetHeightM": 1.7,
+    "visibleFromBase": false,
+    "sightLineClearanceM": -116.8,
+    "blockedAtM": 651
+   }
+  },
+  {
+   "id": "forward_camp",
+   "name": "Forward camp (option)",
+   "kind": "camp",
+   "easting": 8144453.5,
+   "northing": -282963.1,
+   "elevation": -3778.2,
+   "lon": 137.40186,
+   "lat": -4.77376,
+   "chosenFrom": "Curiosity waypoint, sol 3934",
+   "note": "Optional rover park below Gediz Vallis ridge, to shorten the walk to the sulfur stones.",
+   "curiositySol": 3934,
+   "checks": {
+    "distanceFromBaseM": 1924,
+    "bearingFromBaseDeg": 188,
+    "slopeDegMean30m": 11.1,
+    "sandFraction20m": 0.0,
+    "crismHematiteIndex": null,
+    "targetHeightM": 1.7,
+    "visibleFromBase": false,
+    "sightLineClearanceM": -58.4,
+    "blockedAtM": 1115
+   }
+  },
+  {
+   "id": "knob_1",
+   "name": "Knob A",
+   "kind": "landmark",
+   "easting": 8144349.0,
+   "northing": -282017.0,
+   "elevation": -3845.8,
+   "lon": 137.40009,
+   "lat": -4.7578,
+   "chosenFrom": "summit of a distinct knob or mesa found in the HiRISE elevation model (height above local floor > 9 m)",
+   "heightAboveSurroundings": 42.5,
+   "footprintM2": 12120,
+   "checks": {
+    "distanceFromBaseM": 1030,
+    "bearingFromBaseDeg": 201,
+    "slopeDegMean30m": 30.6,
+    "sandFraction20m": 0.41,
+    "crismHematiteIndex": null,
+    "targetHeightM": 1.0,
+    "visibleFromBase": false,
+    "sightLineClearanceM": -5.4,
+    "blockedAtM": 751
+   }
+  },
+  {
+   "id": "knob_2",
+   "name": "Knob B",
+   "kind": "landmark",
+   "easting": 8144415.0,
+   "northing": -282495.0,
+   "elevation": -3782.7,
+   "lon": 137.40121,
+   "lat": -4.76586,
+   "chosenFrom": "summit of a distinct knob or mesa found in the HiRISE elevation model (height above local floor > 9 m)",
+   "heightAboveSurroundings": 43.9,
+   "footprintM2": 30376,
+   "checks": {
+    "distanceFromBaseM": 1470,
+    "bearingFromBaseDeg": 192,
+    "slopeDegMean30m": 28.9,
+    "sandFraction20m": 0.04,
+    "crismHematiteIndex": null,
+    "targetHeightM": 1.0,
+    "visibleFromBase": true,
+    "sightLineClearanceM": 2.0
+   }
+  },
+  {
+   "id": "knob_3",
+   "name": "Knob C",
+   "kind": "landmark",
+   "easting": 8142879.0,
+   "northing": -282597.0,
+   "elevation": -3916.7,
+   "lon": 137.37529,
+   "lat": -4.76758,
+   "chosenFrom": "summit of a distinct knob or mesa found in the HiRISE elevation model (height above local floor > 9 m)",
+   "heightAboveSurroundings": 37.6,
+   "footprintM2": 6212,
+   "checks": {
+    "distanceFromBaseM": 2404,
+    "bearingFromBaseDeg": 230,
+    "slopeDegMean30m": 41.4,
+    "sandFraction20m": 0.07,
+    "crismHematiteIndex": null,
+    "targetHeightM": 1.0,
+    "visibleFromBase": false,
+    "sightLineClearanceM": -109.0,
+    "blockedAtM": 1497
+   }
+  },
+  {
+   "id": "knob_4",
+   "name": "Knob D",
+   "kind": "landmark",
+   "easting": 8143543.0,
+   "northing": -282759.0,
+   "elevation": -3824.6,
+   "lon": 137.3865,
+   "lat": -4.77032,
+   "chosenFrom": "summit of a distinct knob or mesa found in the HiRISE elevation model (height above local floor > 9 m)",
+   "heightAboveSurroundings": 30.9,
+   "footprintM2": 24376,
+   "checks": {
+    "distanceFromBaseM": 2071,
+    "bearingFromBaseDeg": 215,
+    "slopeDegMean30m": 24.2,
+    "sandFraction20m": 0.3,
+    "crismHematiteIndex": null,
+    "targetHeightM": 1.0,
+    "visibleFromBase": false,
+    "sightLineClearanceM": -94.6,
+    "blockedAtM": 453
+   }
+  },
+  {
+   "id": "knob_5",
+   "name": "Knob E",
+   "kind": "landmark",
+   "easting": 8142877.0,
+   "northing": -283267.0,
+   "elevation": -3836.7,
+   "lon": 137.37526,
+   "lat": -4.77889,
+   "chosenFrom": "summit of a distinct knob or mesa found in the HiRISE elevation model (height above local floor > 9 m)",
+   "heightAboveSurroundings": 31.8,
+   "footprintM2": 8716,
+   "checks": {
+    "distanceFromBaseM": 2880,
+    "bearingFromBaseDeg": 220,
+    "slopeDegMean30m": 28.4,
+    "sandFraction20m": 0.07,
+    "crismHematiteIndex": null,
+    "targetHeightM": 1.0,
+    "visibleFromBase": false,
+    "sightLineClearanceM": -118.9,
+    "blockedAtM": 1541
+   }
+  },
+  {
+   "id": "knob_6",
+   "name": "Knob F",
+   "kind": "landmark",
+   "easting": 8144015.0,
+   "northing": -283393.0,
+   "elevation": -3672.4,
+   "lon": 137.39446,
+   "lat": -4.78101,
+   "chosenFrom": "summit of a distinct knob or mesa found in the HiRISE elevation model (height above local floor > 9 m)",
+   "heightAboveSurroundings": 35.1,
+   "footprintM2": 23828,
+   "checks": {
+    "distanceFromBaseM": 2440,
+    "bearingFromBaseDeg": 197,
+    "slopeDegMean30m": 18.8,
+    "sandFraction20m": 0.06,
+    "crismHematiteIndex": null,
+    "targetHeightM": 1.0,
+    "visibleFromBase": false,
+    "sightLineClearanceM": -1.5,
+    "blockedAtM": 1107
+   }
+  },
+  {
+   "id": "knob_7",
+   "name": "Knob G",
+   "kind": "landmark",
+   "easting": 8143131.0,
+   "northing": -283577.0,
+   "elevation": -3745.1,
+   "lon": 137.37955,
+   "lat": -4.78412,
+   "chosenFrom": "summit of a distinct knob or mesa found in the HiRISE elevation model (height above local floor > 9 m)",
+   "heightAboveSurroundings": 31.2,
+   "footprintM2": 31640,
+   "checks": {
+    "distanceFromBaseM": 2981,
+    "bearingFromBaseDeg": 212,
+    "slopeDegMean30m": 26.3,
+    "sandFraction20m": 0.53,
+    "crismHematiteIndex": null,
+    "targetHeightM": 1.0,
+    "visibleFromBase": false,
+    "sightLineClearanceM": -99.9,
+    "blockedAtM": 481
+   }
+  },
+  {
+   "id": "knob_8",
+   "name": "Knob H",
+   "kind": "landmark",
+   "easting": 8143653.0,
+   "northing": -283943.0,
+   "elevation": -3670.8,
+   "lon": 137.38835,
+   "lat": -4.79029,
+   "chosenFrom": "summit of a distinct knob or mesa found in the HiRISE elevation model (height above local floor > 9 m)",
+   "heightAboveSurroundings": 34.2,
+   "footprintM2": 28128,
+   "checks": {
+    "distanceFromBaseM": 3078,
+    "bearingFromBaseDeg": 200,
+    "slopeDegMean30m": 28.5,
+    "sandFraction20m": 0.02,
+    "crismHematiteIndex": null,
+    "targetHeightM": 1.0,
+    "visibleFromBase": false,
+    "sightLineClearanceM": -66.6,
+    "blockedAtM": 1027
+   }
+  },
+  {
+   "id": "gediz_ridge_crest",
+   "name": "Gediz Vallis ridge crest",
+   "kind": "landmark",
+   "easting": 8144495.0,
+   "northing": -283187.0,
+   "elevation": -3740.7,
+   "lon": 137.40256,
+   "lat": -4.77754,
+   "chosenFrom": "highest ground within 250 m of the ridge stop (HiRISE elevation model)",
+   "checks": {
+    "distanceFromBaseM": 2141,
+    "bearingFromBaseDeg": 186,
+    "slopeDegMean30m": 7.4,
+    "sandFraction20m": 0.0,
+    "crismHematiteIndex": null,
+    "targetHeightM": 1.0,
+    "visibleFromBase": false,
+    "sightLineClearanceM": -74.0,
+    "blockedAtM": 1159
+   }
+  },
+  {
+   "id": "mount_sharp_summit",
+   "name": "Mount Sharp (Aeolis Mons) summit",
+   "kind": "backdrop",
+   "easting": 8171517.1,
+   "northing": -318839.9,
+   "elevation": 771.0,
+   "lon": 137.85844,
+   "lat": -5.37902,
+   "chosenFrom": "highest MOLA point within 30 km of the centre of the mound",
+   "checks": {
+    "distanceFromBaseM": 46317,
+    "bearingFromBaseDeg": 145,
+    "targetHeightM": 0.0,
+    "visibleFromBase": false,
+    "sightLineClearanceM": -976.1,
+    "blockedAtM": 14675
+   }
+  },
+  {
+   "id": "crater_rim_north",
+   "name": "Gale crater rim (north)",
+   "kind": "backdrop",
+   "easting": 8116872.0,
+   "northing": -263268.7,
+   "elevation": -2118.0,
+   "lon": 136.93654,
+   "lat": -4.4415,
+   "chosenFrom": "MOLA point on the northern rim with the highest elevation angle seen from the base",
+   "elevationAngleDeg": 3.06,
+   "checks": {
+    "distanceFromBaseM": 33050,
+    "bearingFromBaseDeg": 303,
+    "targetHeightM": 0.0,
+    "visibleFromBase": true,
+    "sightLineClearanceM": 2.0
+   }
+  },
+  {
+   "id": "mount_sharp_skyline",
+   "name": "Mount Sharp skyline (as seen from base)",
+   "kind": "backdrop",
+   "easting": 8160402.8,
+   "northing": -286886.4,
+   "elevation": -250.0,
+   "lon": 137.67093,
+   "lat": -4.83995,
+   "chosenFrom": "MOLA point on the mound with the highest elevation angle seen from the base",
+   "elevationAngleDeg": 12.65,
+   "checks": {
+    "distanceFromBaseM": 16725,
+    "bearingFromBaseDeg": 110,
+    "targetHeightM": 0.0,
+    "visibleFromBase": false,
+    "sightLineClearanceM": -25.8,
+    "blockedAtM": 697
+   }
+  }
+ ],
+ "route": [
+  {
+   "id": "eva1_from_base",
+   "description": "Base Camp to the sulfur stones along Curiosity's proven path",
+   "points": [
+    [
+     8144725.7,
+     -281058.4
+    ],
+    [
+     8144675.7,
+     -281018.4
+    ],
+    [
+     8144641.5,
+     -281046.7
+    ],
+    [
+     8144602.6,
+     -281057.3
+    ],
+    [
+     8144552.2,
+     -281069.1
+    ],
+    [
+     8144550.7,
+     -281075.8
+    ],
+    [
+     8144524.5,
+     -281074.0
+    ],
+    [
+     8144498.9,
+     -281088.4
+    ],
+    [
+     8144469.9,
+     -281106.1
+    ],
+    [
+     8144444.9,
+     -281105.7
+    ],
+    [
+     8144422.3,
+     -281103.1
+    ],
+    [
+     8144388.4,
+     -281115.8
+    ],
+    [
+     8144376.5,
+     -281122.4
+    ],
+    [
+     8144354.7,
+     -281135.3
+    ],
+    [
+     8144339.1,
+     -281155.3
+    ],
+    [
+     8144310.5,
+     -281170.2
+    ],
+    [
+     8144305.0,
+     -281167.4
+    ],
+    [
+     8144286.6,
+     -281168.0
+    ],
+    [
+     8144263.1,
+     -281181.8
+    ],
+    [
+     8144245.9,
+     -281187.7
+    ],
+    [
+     8144223.0,
+     -281208.5
+    ],
+    [
+     8144205.0,
+     -281234.3
+    ],
+    [
+     8144164.4,
+     -281218.2
+    ],
+    [
+     8144135.2,
+     -281208.6
+    ],
+    [
+     8144129.8,
+     -281201.6
+    ],
+    [
+     8144125.1,
+     -281208.5
+    ],
+    [
+     8144112.6,
+     -281221.4
+    ],
+    [
+     8144109.5,
+     -281240.0
+    ],
+    [
+     8144100.9,
+     -281260.2
+    ],
+    [
+     8144085.4,
+     -281284.1
+    ],
+    [
+     8144071.5,
+     -281310.8
+    ],
+    [
+     8144055.7,
+     -281350.8
+    ],
+    [
+     8144046.8,
+     -281356.4
+    ],
+    [
+     8144048.6,
+     -281362.4
+    ],
+    [
+     8144022.4,
+     -281346.1
+    ],
+    [
+     8144017.2,
+     -281342.5
+    ],
+    [
+     8144023.2,
+     -281385.7
+    ],
+    [
+     8144023.7,
+     -281405.8
+    ],
+    [
+     8144007.3,
+     -281417.1
+    ],
+    [
+     8144012.9,
+     -281430.8
+    ],
+    [
+     8144028.9,
+     -281448.7
+    ],
+    [
+     8144024.2,
+     -281490.2
+    ],
+    [
+     8144009.3,
+     -281545.3
+    ],
+    [
+     8143998.0,
+     -281568.9
+    ],
+    [
+     8143993.7,
+     -281581.0
+    ],
+    [
+     8143987.1,
+     -281619.4
+    ],
+    [
+     8143963.6,
+     -281625.1
+    ],
+    [
+     8143982.4,
+     -281639.1
+    ],
+    [
+     8143970.7,
+     -281627.6
+    ],
+    [
+     8143956.6,
+     -281622.8
+    ],
+    [
+     8143993.1,
+     -281586.3
+    ],
+    [
+     8143968.6,
+     -281545.0
+    ],
+    [
+     8143953.2,
+     -281527.6
+    ],
+    [
+     8143935.9,
+     -281526.3
+    ],
+    [
+     8143930.6,
+     -281515.3
+    ],
+    [
+     8143904.0,
+     -281505.9
+    ],
+    [
+     8143885.4,
+     -281504.9
+    ],
+    [
+     8143872.8,
+     -281498.4
+    ],
+    [
+     8143864.6,
+     -281493.2
+    ],
+    [
+     8143847.8,
+     -281470.6
+    ],
+    [
+     8143833.1,
+     -281472.1
+    ],
+    [
+     8143819.4,
+     -281477.8
+    ],
+    [
+     8143807.3,
+     -281476.2
+    ],
+    [
+     8143814.5,
+     -281478.8
+    ],
+    [
+     8143833.7,
+     -281472.2
+    ],
+    [
+     8143865.8,
+     -281494.7
+    ],
+    [
+     8143867.5,
+     -281500.7
+    ],
+    [
+     8143882.1,
+     -281502.3
+    ],
+    [
+     8143893.6,
+     -281512.0
+    ],
+    [
+     8143928.4,
+     -281516.3
+    ],
+    [
+     8143934.6,
+     -281523.1
+    ],
+    [
+     8143939.7,
+     -281543.1
+    ],
+    [
+     8143964.6,
+     -281568.9
+    ],
+    [
+     8143995.6,
+     -281585.1
+    ],
+    [
+     8144028.0,
+     -281622.2
+    ],
+    [
+     8144041.2,
+     -281645.3
+    ],
+    [
+     8144046.4,
+     -281655.9
+    ],
+    [
+     8144065.5,
+     -281690.4
+    ],
+    [
+     8144081.3,
+     -281714.0
+    ],
+    [
+     8144077.5,
+     -281720.7
+    ],
+    [
+     8144068.7,
+     -281725.7
+    ],
+    [
+     8144061.3,
+     -281756.2
+    ],
+    [
+     8144075.1,
+     -281768.9
+    ],
+    [
+     8144090.3,
+     -281787.8
+    ],
+    [
+     8144097.5,
+     -281825.8
+    ],
+    [
+     8144121.4,
+     -281829.9
+    ],
+    [
+     8144129.5,
+     -281848.5
+    ],
+    [
+     8144136.0,
+     -281880.1
+    ],
+    [
+     8144150.1,
+     -281881.4
+    ],
+    [
+     8144155.2,
+     -281887.7
+    ],
+    [
+     8144152.6,
+     -281911.0
+    ],
+    [
+     8144167.0,
+     -281955.0
+    ],
+    [
+     8144171.2,
+     -281964.8
+    ],
+    [
+     8144151.2,
+     -281984.6
+    ],
+    [
+     8144157.0,
+     -281990.8
+    ],
+    [
+     8144167.2,
+     -282000.4
+    ],
+    [
+     8144180.0,
+     -282008.8
+    ],
+    [
+     8144184.7,
+     -281985.5
+    ],
+    [
+     8144200.9,
+     -281990.0
+    ],
+    [
+     8144214.6,
+     -282008.9
+    ],
+    [
+     8144227.5,
+     -282027.9
+    ],
+    [
+     8144240.0,
+     -282045.1
+    ],
+    [
+     8144249.8,
+     -282052.8
+    ],
+    [
+     8144262.4,
+     -282050.7
+    ],
+    [
+     8144263.5,
+     -282065.9
+    ],
+    [
+     8144275.8,
+     -282091.0
+    ],
+    [
+     8144274.6,
+     -282098.1
+    ],
+    [
+     8144295.3,
+     -282105.8
+    ],
+    [
+     8144307.9,
+     -282122.3
+    ],
+    [
+     8144313.7,
+     -282128.1
+    ],
+    [
+     8144329.2,
+     -282154.0
+    ],
+    [
+     8144332.8,
+     -282164.7
+    ],
+    [
+     8144320.3,
+     -282173.9
+    ],
+    [
+     8144307.7,
+     -282185.7
+    ],
+    [
+     8144299.8,
+     -282193.6
+    ],
+    [
+     8144283.7,
+     -282194.0
+    ],
+    [
+     8144265.1,
+     -282199.0
+    ],
+    [
+     8144217.8,
+     -282231.6
+    ],
+    [
+     8144196.8,
+     -282234.7
+    ],
+    [
+     8144156.3,
+     -282230.8
+    ],
+    [
+     8144141.8,
+     -282224.2
+    ],
+    [
+     8144136.1,
+     -282215.1
+    ],
+    [
+     8144128.0,
+     -282217.0
+    ],
+    [
+     8144075.7,
+     -282209.0
+    ],
+    [
+     8144072.5,
+     -282198.5
+    ],
+    [
+     8144030.0,
+     -282192.8
+    ],
+    [
+     8144027.8,
+     -282187.1
+    ],
+    [
+     8144062.2,
+     -282192.9
+    ],
+    [
+     8144106.4,
+     -282208.8
+    ],
+    [
+     8144124.7,
+     -282216.7
+    ],
+    [
+     8144134.1,
+     -282227.3
+    ],
+    [
+     8144136.0,
+     -282212.2
+    ],
+    [
+     8144140.4,
+     -282217.3
+    ],
+    [
+     8144151.5,
+     -282238.4
+    ],
+    [
+     8144176.8,
+     -282266.2
+    ],
+    [
+     8144210.3,
+     -282320.8
+    ],
+    [
+     8144207.7,
+     -282343.9
+    ],
+    [
+     8144212.3,
+     -282358.2
+    ],
+    [
+     8144219.1,
+     -282380.2
+    ],
+    [
+     8144225.4,
+     -282405.5
+    ],
+    [
+     8144230.2,
+     -282409.3
+    ],
+    [
+     8144228.3,
+     -282434.0
+    ],
+    [
+     8144231.9,
+     -282442.8
+    ],
+    [
+     8144201.8,
+     -282359.5
+    ],
+    [
+     8144209.8,
+     -282359.6
+    ],
+    [
+     8144230.7,
+     -282452.4
+    ],
+    [
+     8144237.7,
+     -282476.9
+    ],
+    [
+     8144237.3,
+     -282485.4
+    ],
+    [
+     8144229.9,
+     -282496.9
+    ],
+    [
+     8144227.0,
+     -282510.1
+    ],
+    [
+     8144224.6,
+     -282519.4
+    ],
+    [
+     8144213.6,
+     -282537.1
+    ],
+    [
+     8144219.4,
+     -282552.2
+    ],
+    [
+     8144235.5,
+     -282565.2
+    ],
+    [
+     8144242.2,
+     -282577.3
+    ],
+    [
+     8144245.7,
+     -282583.8
+    ],
+    [
+     8144242.9,
+     -282596.3
+    ],
+    [
+     8144253.7,
+     -282610.8
+    ],
+    [
+     8144260.1,
+     -282624.5
+    ],
+    [
+     8144245.2,
+     -282648.1
+    ],
+    [
+     8144250.4,
+     -282654.3
+    ],
+    [
+     8144259.8,
+     -282647.4
+    ],
+    [
+     8144276.9,
+     -282644.7
+    ],
+    [
+     8144296.6,
+     -282651.8
+    ],
+    [
+     8144333.3,
+     -282659.2
+    ],
+    [
+     8144348.6,
+     -282662.9
+    ],
+    [
+     8144360.2,
+     -282650.2
+    ],
+    [
+     8144386.2,
+     -282655.4
+    ],
+    [
+     8144423.6,
+     -282676.4
+    ],
+    [
+     8144427.7,
+     -282686.7
+    ],
+    [
+     8144434.9,
+     -282696.7
+    ],
+    [
+     8144398.3,
+     -282718.6
+    ],
+    [
+     8144383.4,
+     -282714.0
+    ],
+    [
+     8144356.8,
+     -282708.8
+    ],
+    [
+     8144332.9,
+     -282723.1
+    ],
+    [
+     8144313.4,
+     -282724.9
+    ],
+    [
+     8144293.3,
+     -282734.8
+    ],
+    [
+     8144282.6,
+     -282742.7
+    ],
+    [
+     8144290.9,
+     -282762.5
+    ],
+    [
+     8144313.9,
+     -282779.9
+    ],
+    [
+     8144322.9,
+     -282794.0
+    ],
+    [
+     8144351.8,
+     -282810.7
+    ],
+    [
+     8144364.6,
+     -282812.5
+    ],
+    [
+     8144375.4,
+     -282828.7
+    ],
+    [
+     8144384.3,
+     -282842.2
+    ],
+    [
+     8144390.2,
+     -282866.3
+    ],
+    [
+     8144409.6,
+     -282895.3
+    ],
+    [
+     8144392.0,
+     -282915.2
+    ],
+    [
+     8144380.7,
+     -282935.2
+    ],
+    [
+     8144432.5,
+     -282950.2
+    ],
+    [
+     8144453.5,
+     -282963.1
+    ],
+    [
+     8144475.4,
+     -282982.6
+    ],
+    [
+     8144485.6,
+     -283004.0
+    ],
+    [
+     8144499.3,
+     -283019.5
+    ],
+    [
+     8144519.8,
+     -283033.7
+    ],
+    [
+     8144539.6,
+     -283049.7
+    ],
+    [
+     8144563.2,
+     -283068.7
+    ],
+    [
+     8144586.1,
+     -283080.0
+    ],
+    [
+     8144612.7,
+     -283100.0
+    ],
+    [
+     8144616.3,
+     -283106.6
+    ],
+    [
+     8144614.8,
+     -283118.3
+    ],
+    [
+     8144613.2,
+     -283124.1
+    ],
+    [
+     8144632.5,
+     -283134.1
+    ],
+    [
+     8144641.8,
+     -283149.8
+    ],
+    [
+     8144645.8,
+     -283158.5
+    ],
+    [
+     8144651.9,
+     -283163.1
+    ],
+    [
+     8144655.5,
+     -283168.4
+    ],
+    [
+     8144654.9,
+     -283184.2
+    ],
+    [
+     8144683.2,
+     -283189.6
+    ],
+    [
+     8144690.3,
+     -283186.5
+    ],
+    [
+     8144701.1,
+     -283204.0
+    ],
+    [
+     8144699.8,
+     -283221.9
+    ],
+    [
+     8144693.9,
+     -283254.4
+    ],
+    [
+     8144689.4,
+     -283288.8
+    ],
+    [
+     8144697.2,
+     -283297.9
+    ],
+    [
+     8144703.2,
+     -283305.5
+    ],
+    [
+     8144709.1,
+     -283317.4
+    ],
+    [
+     8144719.8,
+     -283319.2
+    ],
+    [
+     8144737.1,
+     -283323.7
+    ],
+    [
+     8144757.0,
+     -283332.5
+    ],
+    [
+     8144779.3,
+     -283340.0
+    ],
+    [
+     8144781.3,
+     -283356.9
+    ],
+    [
+     8144783.6,
+     -283373.0
+    ],
+    [
+     8144788.7,
+     -283392.8
+    ],
+    [
+     8144783.6,
+     -283418.1
+    ],
+    [
+     8144783.6,
+     -283432.5
+    ],
+    [
+     8144785.5,
+     -283455.5
+    ],
+    [
+     8144785.1,
+     -283465.0
+    ],
+    [
+     8144790.7,
+     -283479.1
+    ],
+    [
+     8144788.9,
+     -283495.3
+    ],
+    [
+     8144785.6,
+     -283502.1
+    ],
+    [
+     8144778.4,
+     -283516.9
+    ],
+    [
+     8144792.9,
+     -283526.6
+    ],
+    [
+     8144799.0,
+     -283537.1
+    ],
+    [
+     8144809.7,
+     -283542.7
+    ],
+    [
+     8144821.2,
+     -283549.8
+    ],
+    [
+     8144840.6,
+     -283564.7
+    ],
+    [
+     8144870.3,
+     -283581.2
+    ],
+    [
+     8144883.6,
+     -283609.2
+    ],
+    [
+     8144862.9,
+     -283608.7
+    ],
+    [
+     8144843.6,
+     -283621.2
+    ],
+    [
+     8144854.8,
+     -283633.7
+    ],
+    [
+     8144863.6,
+     -283637.2
+    ],
+    [
+     8144879.5,
+     -283658.4
+    ],
+    [
+     8144900.5,
+     -283664.7
+    ],
+    [
+     8144902.6,
+     -283673.7
+    ],
+    [
+     8144872.8,
+     -283678.7
+    ],
+    [
+     8144868.8,
+     -283671.3
+    ]
+   ],
+   "lengthM": 5576,
+   "straightLineM": 2617,
+   "totalClimbM": 436
+  },
+  {
+   "id": "eva1_from_forward_camp",
+   "description": "Forward camp to the sulfur stones (short option)",
+   "points": [
+    [
+     8144453.5,
+     -282963.1
+    ],
+    [
+     8144475.4,
+     -282982.6
+    ],
+    [
+     8144485.6,
+     -283004.0
+    ],
+    [
+     8144499.3,
+     -283019.5
+    ],
+    [
+     8144519.8,
+     -283033.7
+    ],
+    [
+     8144539.6,
+     -283049.7
+    ],
+    [
+     8144563.2,
+     -283068.7
+    ],
+    [
+     8144586.1,
+     -283080.0
+    ],
+    [
+     8144612.7,
+     -283100.0
+    ],
+    [
+     8144616.3,
+     -283106.6
+    ],
+    [
+     8144614.8,
+     -283118.3
+    ],
+    [
+     8144613.2,
+     -283124.1
+    ],
+    [
+     8144632.5,
+     -283134.1
+    ],
+    [
+     8144641.8,
+     -283149.8
+    ],
+    [
+     8144645.8,
+     -283158.5
+    ],
+    [
+     8144651.9,
+     -283163.1
+    ],
+    [
+     8144655.5,
+     -283168.4
+    ],
+    [
+     8144654.9,
+     -283184.2
+    ],
+    [
+     8144683.2,
+     -283189.6
+    ],
+    [
+     8144690.3,
+     -283186.5
+    ],
+    [
+     8144701.1,
+     -283204.0
+    ],
+    [
+     8144699.8,
+     -283221.9
+    ],
+    [
+     8144693.9,
+     -283254.4
+    ],
+    [
+     8144689.4,
+     -283288.8
+    ],
+    [
+     8144697.2,
+     -283297.9
+    ],
+    [
+     8144703.2,
+     -283305.5
+    ],
+    [
+     8144709.1,
+     -283317.4
+    ],
+    [
+     8144719.8,
+     -283319.2
+    ],
+    [
+     8144737.1,
+     -283323.7
+    ],
+    [
+     8144757.0,
+     -283332.5
+    ],
+    [
+     8144779.3,
+     -283340.0
+    ],
+    [
+     8144781.3,
+     -283356.9
+    ],
+    [
+     8144783.6,
+     -283373.0
+    ],
+    [
+     8144788.7,
+     -283392.8
+    ],
+    [
+     8144783.6,
+     -283418.1
+    ],
+    [
+     8144783.6,
+     -283432.5
+    ],
+    [
+     8144785.5,
+     -283455.5
+    ],
+    [
+     8144785.1,
+     -283465.0
+    ],
+    [
+     8144790.7,
+     -283479.1
+    ],
+    [
+     8144788.9,
+     -283495.3
+    ],
+    [
+     8144785.6,
+     -283502.1
+    ],
+    [
+     8144778.4,
+     -283516.9
+    ],
+    [
+     8144792.9,
+     -283526.6
+    ],
+    [
+     8144799.0,
+     -283537.1
+    ],
+    [
+     8144809.7,
+     -283542.7
+    ],
+    [
+     8144821.2,
+     -283549.8
+    ],
+    [
+     8144840.6,
+     -283564.7
+    ],
+    [
+     8144870.3,
+     -283581.2
+    ],
+    [
+     8144883.6,
+     -283609.2
+    ],
+    [
+     8144862.9,
+     -283608.7
+    ],
+    [
+     8144843.6,
+     -283621.2
+    ],
+    [
+     8144854.8,
+     -283633.7
+    ],
+    [
+     8144863.6,
+     -283637.2
+    ],
+    [
+     8144879.5,
+     -283658.4
+    ],
+    [
+     8144900.5,
+     -283664.7
+    ],
+    [
+     8144902.6,
+     -283673.7
+    ],
+    [
+     8144872.8,
+     -283678.7
+    ],
+    [
+     8144868.8,
+     -283671.3
+    ]
+   ],
+   "lengthM": 1063,
+   "straightLineM": 821
+  }
+ ],
+ "walk": {
+  "camp": "forward_camp",
+  "stop": "stop_sulfur_field",
+  "route": "eva1_from_forward_camp",
+  "title": "EVA-1: The Sulfur Stones",
+  "brief": "Walk 1060 m from the rover up Gediz Vallis channel and collect a sample of the sulfur stones. Curiosity found pure sulfur here in 2024 by crushing a rock with its wheel; orbiters had missed it.",
+  "objective": "EVA-1 \u00b7 Collect sulfur in Gediz Vallis channel",
+  "secured": "Sulfur sample secured: pure sulfur, never seen on Mars before Curiosity."
+ }
+}
